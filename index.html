@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NS Dental Care | Hospital Dashboard & Patient Portal</title>
+    <title>NS Dental Care | Hospital Management & Developer Control System</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -20,78 +20,82 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/60 sticky top-0 z-50">
+    <!-- TOP HEADER / CLINIC CONTACT BAR -->
+    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('public-home')">
-                <div class="bg-sky-500 text-slate-950 p-2 rounded-xl shadow-lg shadow-sky-500/20 font-bold">
+                <div class="bg-sky-500 text-slate-950 p-2 rounded-xl font-bold shadow-lg shadow-sky-500/20">
                     <i data-lucide="activity" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-white tracking-wide flex items-center gap-2">
-                        NS Dental Care 
-                        <span class="text-xs bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded border border-sky-500/30">Hospital Portal</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">#17-1-305/P/1, Santosh Nagar, Edi Bazar, Hyderabad</p>
+                    <h1 class="text-xl font-bold text-white tracking-wide">NS Dental Care</h1>
+                    <p class="text-xs text-slate-400">#17-1-305/P/1, Behind Water Tank, Santosh Nagar, Hyderabad | 📞 +91 9876543210</p>
                 </div>
             </div>
 
-            <!-- Header Quick Controls -->
+            <!-- Quick Login & Actions Top Right -->
             <div class="flex items-center space-x-3">
-                <button onclick="navigateTo('public-booking')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-lg shadow-sky-500/10">
+                <button onclick="navigateTo('public-booking')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-2 shadow-lg shadow-sky-500/10">
                     <i data-lucide="calendar-plus" class="w-4 h-4"></i> Book Your Appointment
                 </button>
-                <button onclick="openAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 rounded-lg text-sm font-medium border border-slate-600 flex items-center gap-2">
-                    <i data-lucide="user" class="w-4 h-4"></i> Staff Portal
+                <button onclick="openAuthModal('login')" class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 rounded-xl text-sm font-medium border border-slate-600 flex items-center gap-2">
+                    <i data-lucide="lock" class="w-4 h-4"></i> Staff / Admin Portal
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- MAIN APP CONTAINER -->
+    <!-- MAIN APP WRAPPER -->
     <div class="flex-1 flex flex-col">
 
-        <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
-        <section id="public-home" class="max-w-7xl mx-auto px-4 py-10 w-full space-y-10">
-            <!-- Hero Banner -->
-            <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-sky-950/80 border border-slate-700/80 rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
-                <div class="max-w-2xl relative z-10">
-                    <span class="bg-sky-500/20 text-sky-300 text-xs font-semibold px-3 py-1 rounded-full border border-sky-500/30 uppercase tracking-widest">Multi-Specialty Dental Center</span>
-                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-4 mb-4 leading-tight">Advanced Clinical Care & Patient Dashboard</h2>
-                    <p class="text-slate-300 text-sm sm:text-base mb-8 leading-relaxed">Providing high-precision dental treatments in Santosh Nagar, Hyderabad. Check appointment statuses, medical histories, and consultations online.</p>
-                    <div class="flex flex-wrap gap-4">
+        <!-- ================= SECTION 1: PUBLIC LANDING & GREETING PAGE ================= -->
+        <section id="public-home" class="max-w-7xl mx-auto px-4 py-8 w-full space-y-10">
+            <!-- Hero Card -->
+            <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-sky-950/80 border border-slate-700 rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="max-w-xl space-y-4">
+                    <span class="bg-sky-500/20 text-sky-300 text-xs font-semibold px-3 py-1 rounded-full border border-sky-500/30 uppercase tracking-widest">Multi-Specialty Dental Clinic</span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">Advanced Clinical Dentistry & Patient Care</h2>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">Providing specialized root canal treatments, implants, orthodontics, and cosmetic surgeries in Santosh Nagar, Hyderabad.</p>
+                    <div class="flex flex-wrap gap-4 pt-2">
                         <button onclick="navigateTo('public-booking')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm shadow-xl transition flex items-center gap-2">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Book Your Appointment
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Book Your Appointment
                         </button>
                         <button onclick="navigateTo('track-appointment')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 px-6 py-3 rounded-xl font-semibold text-sm transition flex items-center gap-2">
                             <i data-lucide="search" class="w-4 h-4"></i> Track Appointment Status
                         </button>
                     </div>
                 </div>
+
+                <!-- Right Side Staff Direct Access Widget -->
+                <div class="bg-slate-900/90 border border-slate-700 p-6 rounded-2xl w-full md:w-80 space-y-4 shadow-xl">
+                    <h3 class="text-sm font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i> Quick Portal Access
+                    </h3>
+                    <p class="text-xs text-slate-400">Direct portal logins for attending surgeons, reception assistants, and site administration.</p>
+                    <div class="space-y-2">
+                        <button onclick="quickLoginAs('doctor')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl text-xs font-semibold flex justify-between items-center border border-slate-700">
+                            <span>Doctor Login</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-sky-400"></i>
+                        </button>
+                        <button onclick="quickLoginAs('assistant')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl text-xs font-semibold flex justify-between items-center border border-slate-700">
+                            <span>Assistant Login</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-sky-400"></i>
+                        </button>
+                        <button onclick="quickLoginAs('developer')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl text-xs font-semibold flex justify-between items-center border border-slate-700">
+                            <span>Developer Portal (9290)</span>
+                            <i data-lucide="code" class="w-4 h-4 text-sky-400"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Doctor Roster -->
+            <!-- Attending Doctors Dynamic Roster -->
             <div>
                 <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <i data-lucide="stethoscope" class="text-sky-400"></i> Attending Dental Surgeons
                 </h3>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex items-center gap-5 shadow-lg">
-                        <div class="w-16 h-16 bg-sky-500/20 border border-sky-500/40 rounded-2xl flex items-center justify-center text-sky-400 font-bold text-xl">Dr. A</div>
-                        <div>
-                            <h4 class="text-lg font-bold text-white">Dr. Mohammed Salahuddin Ayub</h4>
-                            <p class="text-sm text-sky-400 font-medium">Chief Dental Surgeon</p>
-                            <p class="text-xs text-slate-400 mt-1">Root Canal, Dental Implants & Oral Surgery</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex items-center gap-5 shadow-lg">
-                        <div class="w-16 h-16 bg-indigo-500/20 border border-indigo-500/40 rounded-2xl flex items-center justify-center text-indigo-400 font-bold text-xl">Dr. S</div>
-                        <div>
-                            <h4 class="text-lg font-bold text-white">Dr. Tabassum Samreen Alam</h4>
-                            <p class="text-sm text-indigo-400 font-medium">Consultant Dental Surgeon</p>
-                            <p class="text-xs text-slate-400 mt-1">Orthodontics, Braces & Cosmetic Care</p>
-                        </div>
-                    </div>
+                <div id="doctorsRoster" class="grid md:grid-cols-2 gap-6">
+                    <!-- Rendered Dynamically -->
                 </div>
             </div>
         </section>
@@ -104,14 +108,14 @@
                 </button>
                 <h2 class="text-xl font-bold text-white">Track Your Appointment</h2>
                 <div class="flex gap-2">
-                    <input type="text" id="trackQuery" class="flex-1 bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Enter Appointment ID (e.g. NSD-1001) or Mobile #">
+                    <input type="text" id="trackQuery" class="flex-1 bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500" placeholder="Enter Appointment ID (e.g. NSD-1001) or Phone #">
                     <button onclick="searchAppointment()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm">Search</button>
                 </div>
             </div>
             <div id="trackResult" class="hidden-section bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-3"></div>
         </section>
 
-        <!-- ================= SECTION 3: BOOK YOUR APPOINTMENT ================= -->
+        <!-- ================= SECTION 3: PUBLIC APPOINTMENT FORM ================= -->
         <section id="public-booking" class="hidden-section max-w-2xl mx-auto px-4 py-10 w-full">
             <div class="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-2xl shadow-2xl space-y-6">
                 <div>
@@ -119,39 +123,38 @@
                         <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Home
                     </button>
                     <h2 class="text-2xl font-bold text-white">Book Your Appointment</h2>
-                    <p class="text-xs text-slate-400">NS Dental Care — Santosh Nagar, Hyderabad</p>
+                    <p class="text-xs text-slate-400">NS Dental Care — Santosh Nagar, Edi Bazar, Hyderabad</p>
                 </div>
 
                 <form onsubmit="handlePublicBooking(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Patient Full Name *</label>
-                        <input type="text" id="bk_name" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Patient Name">
+                        <input type="text" id="bk_name" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500" placeholder="Full Name">
                     </div>
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Mobile Number (WhatsApp) *</label>
-                            <input type="tel" id="bk_phone" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="+91 9876543210">
+                            <input type="tel" id="bk_phone" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500" placeholder="+91 9876543210">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email Address</label>
-                            <input type="email" id="bk_email" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="patient@gmail.com">
+                            <input type="email" id="bk_email" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500" placeholder="patient@gmail.com">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Attending Doctor *</label>
-                        <select id="bk_doctor" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white">
-                            <option value="Dr. Mohammed Salahuddin Ayub">Dr. Mohammed Salahuddin Ayub</option>
-                            <option value="Dr. Tabassum Samreen Alam">Dr. Tabassum Samreen Alam</option>
+                        <select id="bk_doctor" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500">
+                            <!-- Dynamic Doctor Dropdown Options -->
                         </select>
                     </div>
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Preferred Date *</label>
-                            <input type="date" id="bk_date" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white">
+                            <input type="date" id="bk_date" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Time Slot *</label>
-                            <select id="bk_slot" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white">
+                            <select id="bk_slot" required class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500">
                                 <option value="11:00 AM - 01:00 PM">Morning (11:00 AM - 01:00 PM)</option>
                                 <option value="05:00 PM - 08:00 PM">Evening (05:00 PM - 08:00 PM)</option>
                                 <option value="08:00 PM - 10:30 PM">Night (08:00 PM - 10:30 PM)</option>
@@ -160,17 +163,17 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Purpose of Visit / Complaints</label>
-                        <textarea id="bk_reason" rows="2" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Toothache, dental checkup, root canal, etc."></textarea>
+                        <textarea id="bk_reason" rows="2" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white outline-none focus:border-sky-500" placeholder="Tooth pain, root canal, teeth cleaning, etc."></textarea>
                     </div>
 
                     <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-xl shadow-xl transition flex justify-center items-center gap-2">
-                        <i data-lucide="check-circle" class="w-5 h-5"></i> Confirm Booking
+                        <i data-lucide="check-circle" class="w-5 h-5"></i> Submit Booking & Notify Doctor
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- ================= SECTION 4: AUTH MODAL ================= -->
+        <!-- ================= SECTION 4: AUTHENTICATION MODAL ================= -->
         <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
             <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative space-y-5">
                 <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -193,15 +196,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email / Mobile Number / Username</label>
-                        <input type="text" id="lg_identifier" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Email / Mobile / Admin">
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email / Mobile / Admin User</label>
+                        <input type="text" id="lg_identifier" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Email / Mobile / admin">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
                         <input type="password" id="lg_password" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="••••••••">
                     </div>
                     <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg">
-                        Sign In
+                        Sign In to Portal
                     </button>
                 </form>
 
@@ -211,12 +214,12 @@
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Registering As *</label>
                         <select id="rg_role" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white">
                             <option value="doctor">Doctor (Requires Developer Approval)</option>
-                            <option value="assistant">Assistant (Requires Doctor Approval)</option>
+                            <option value="assistant">Assistant (Requires Doctor / Developer Approval)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Full Name *</label>
-                        <input type="text" id="rg_name" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Dr. / Staff Name">
+                        <input type="text" id="rg_name" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Name">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -225,7 +228,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email *</label>
-                            <input type="email" id="rg_email" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="name@nsdental.com">
+                            <input type="email" id="rg_email" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="email@nsdental.com">
                         </div>
                     </div>
                     <div>
@@ -233,20 +236,21 @@
                         <input type="password" id="rg_password" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="••••••••">
                     </div>
                     <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg">
-                        Submit Account for Approval
+                        Submit Account Request
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- ================= SECTION 5: ENTERPRISE DASHBOARD ================= -->
+        <!-- ================= SECTION 5: HOSPITAL MANAGEMENT DASHBOARD ================= -->
         <section id="dashboard" class="hidden-section flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-6 flex flex-wrap justify-between items-center gap-4">
+            <!-- Top Dashboard Bar -->
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-6 flex flex-wrap justify-between items-center gap-4 shadow-lg">
                 <div class="flex items-center gap-3">
                     <span id="dashRoleBadge" class="bg-sky-500/20 text-sky-300 text-xs font-bold px-3 py-1 rounded-full border border-sky-500/30 uppercase">Role</span>
                     <div>
                         <h2 id="dashWelcome" class="text-lg font-bold text-white">Welcome, Staff</h2>
-                        <p id="dashSub" class="text-xs text-slate-400">NS Dental Care Active Session</p>
+                        <p id="dashSub" class="text-xs text-slate-400">NS Dental Care Hospital Operating Portal</p>
                     </div>
                 </div>
                 <button onclick="logout()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-600 flex items-center gap-1.5">
@@ -254,26 +258,35 @@
                 </button>
             </div>
 
-            <!-- Dashboard Tabs -->
-            <div class="flex border-b border-slate-700 mb-6 gap-6 text-sm font-semibold">
-                <button id="tabBtnAppts" onclick="switchDashTab('appts')" class="text-sky-400 border-b-2 border-sky-400 pb-2">Appointments & Records</button>
-                <button id="tabBtnLedger" onclick="switchDashTab('ledger')" class="text-slate-400 hover:text-white pb-2">Financial Ledger</button>
-                <button id="tabBtnApprovals" onclick="switchDashTab('approvals')" class="text-slate-400 hover:text-white pb-2">Pending Approvals</button>
+            <!-- Dashboard Navigation Tabs -->
+            <div class="flex border-b border-slate-700 mb-6 gap-6 text-sm font-semibold overflow-x-auto">
+                <button id="tabBtnAppts" onclick="switchDashTab('appts')" class="text-sky-400 border-b-2 border-sky-400 pb-2 whitespace-nowrap">Appointments & Approvals</button>
+                <button id="tabBtnLedger" onclick="switchDashTab('ledger')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Financial Ledger & Billing</button>
+                <button id="tabBtnApprovals" onclick="switchDashTab('approvals')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">User Registration Approvals</button>
+                <button id="tabBtnDevControls" onclick="switchDashTab('dev')" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 flex items-center gap-1.5 whitespace-nowrap">
+                    <i data-lucide="code" class="w-4 h-4"></i> Developer Full Access Control
+                </button>
             </div>
 
-            <!-- TAB 1: APPOINTMENTS VIEW -->
+            <!-- TAB 1: APPOINTMENTS & APPROVALS -->
             <div id="viewAppts" class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-bold text-white">Patient Appointments Schedule</h3>
+                    <button onclick="openWalkInModal()" class="bg-sky-500/20 text-sky-300 border border-sky-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-sky-500/30">
+                        + Walk-in Patient Registration
+                    </button>
+                </div>
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-900/60 text-slate-400 uppercase border-b border-slate-700">
                                 <tr>
                                     <th class="p-3.5">Appt ID / Patient</th>
-                                    <th class="p-3.5">Mobile</th>
-                                    <th class="p-3.5">Doctor</th>
-                                    <th class="p-3.5">Date & Time</th>
+                                    <th class="p-3.5">Contact</th>
+                                    <th class="p-3.5">Doctor Assigned</th>
+                                    <th class="p-3.5">Date & Slot</th>
                                     <th class="p-3.5">Status</th>
-                                    <th class="p-3.5">Actions & EHR</th>
+                                    <th class="p-3.5">Actions & Controls</th>
                                 </tr>
                             </thead>
                             <tbody id="tblAppointments" class="divide-y divide-slate-700/60 text-slate-300"></tbody>
@@ -291,9 +304,9 @@
                                 <tr>
                                     <th class="p-3.5">Appt ID / Patient</th>
                                     <th class="p-3.5">Treatment Purpose</th>
-                                    <th class="p-3.5">Total Cost</th>
-                                    <th class="p-3.5">Paid</th>
-                                    <th class="p-3.5">Due</th>
+                                    <th class="p-3.5">Total Treatment Fee</th>
+                                    <th class="p-3.5">Paid Amount</th>
+                                    <th class="p-3.5">Remaining Due</th>
                                     <th class="p-3.5">Action</th>
                                 </tr>
                             </thead>
@@ -311,8 +324,8 @@
                             <thead class="bg-slate-900/60 text-slate-400 uppercase border-b border-slate-700">
                                 <tr>
                                     <th class="p-3.5">Name</th>
-                                    <th class="p-3.5">Role</th>
-                                    <th class="p-3.5">Contact</th>
+                                    <th class="p-3.5">Requested Role</th>
+                                    <th class="p-3.5">Contact Details</th>
                                     <th class="p-3.5">Status</th>
                                     <th class="p-3.5">Action</th>
                                 </tr>
@@ -322,67 +335,90 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB 4: FULL DEVELOPER MODE ACCESS PANEL -->
+            <div id="viewDev" class="hidden-section space-y-6">
+                <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4"></i> Developer Full Access Override Mode Active
+                        </h3>
+                        <p class="text-xs text-amber-200/80">You can edit doctor profile information, specializations, phone numbers, approve any account, and resolve website bugs.</p>
+                    </div>
+                    <button onclick="resetSystemData()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Reset All Local Storage Data</button>
+                </div>
+
+                <!-- Doctor Profile Editor -->
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h4 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="edit-3" class="text-sky-400"></i> Edit Attending Surgeons Profiles & Details
+                    </h4>
+                    <div id="devDoctorEditors" class="grid md:grid-cols-2 gap-6">
+                        <!-- Dynamic Doctor Profile Forms -->
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <!-- ================= SECTION 6: DOCTOR LETTERHEAD & PRESCRIPTION MODAL ================= -->
+        <!-- ================= SECTION 6: DIGITAL LETTERHEAD / PRESCRIPTION MODAL ================= -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
             <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-8 shadow-2xl relative space-y-6">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
                     <i data-lucide="x"></i>
                 </button>
 
-                <!-- Letterhead Banner -->
+                <!-- Letterhead Banner Header -->
                 <div class="border-b-2 border-sky-600 pb-4 flex justify-between items-start">
                     <div>
                         <h1 class="text-2xl font-bold text-sky-900 uppercase tracking-wide">NS DENTAL CARE</h1>
-                        <p class="text-xs font-semibold text-slate-600">Multi-Specialty Dental Clinic & Oral Implantology</p>
+                        <p class="text-xs font-semibold text-slate-600">Multi-Specialty Dental Clinic & Implant Center</p>
                         <p class="text-xs text-slate-500 mt-1">#17-1-305/P/1, Behind Water Tank, Santosh Nagar, Hyderabad - 500023</p>
                     </div>
                     <div class="text-right text-xs">
                         <p id="lh_doctor" class="font-bold text-slate-800">Dr. Mohammed Salahuddin Ayub</p>
-                        <p class="text-slate-500">B.D.S., Dental Surgeon</p>
+                        <p id="lh_spec" class="text-slate-500">Chief Dental Surgeon</p>
                     </div>
                 </div>
 
-                <!-- Patient & Appt Information -->
+                <!-- Patient Metadata Block -->
                 <div class="grid grid-cols-2 gap-4 text-xs bg-slate-100 p-3 rounded-lg">
                     <div>
-                        <p><strong>Patient ID:</strong> <span id="lh_pid">NSD-1001</span></p>
+                        <p><strong>Patient ID:</strong> <span id="lh_pid" class="font-mono text-sky-700">NSD-1001</span></p>
                         <p><strong>Patient Name:</strong> <span id="lh_pname">Mohammed Ali</span></p>
                     </div>
                     <div class="text-right">
                         <p><strong>Date:</strong> <span id="lh_date">2026-07-22</span></p>
-                        <p><strong>Phone:</strong> <span id="lh_phone">+91 9876543210</span></p>
+                        <p><strong>Contact Phone:</strong> <span id="lh_phone">+91 9876543210</span></p>
                     </div>
                 </div>
 
-                <!-- Rx Body -->
+                <!-- Rx Prescription Body -->
                 <div class="space-y-4 text-xs">
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Diagnosis & Clinical Notes:</label>
-                        <textarea id="lh_notes" rows="2" class="w-full border rounded p-2 text-xs" placeholder="Write clinical diagnosis notes here..."></textarea>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Diagnosis & Consultation Notes:</label>
+                        <textarea id="lh_notes" rows="2" class="w-full border border-slate-300 rounded p-2 text-xs outline-none focus:border-sky-600" placeholder="Clinical notes, findings, teeth affected..."></textarea>
                     </div>
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Prescription (Medicines / Treatment Advice):</label>
-                        <textarea id="lh_rx" rows="4" class="w-full border rounded p-2 text-xs" placeholder="e.g. 1. Amoxicillin 500mg - 1-0-1 (3 Days)&#10;2. Paracetamol 650mg - 1-0-1"></textarea>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Prescribed Medication & Advice:</label>
+                        <textarea id="lh_rx" rows="4" class="w-full border border-slate-300 rounded p-2 text-xs outline-none focus:border-sky-600" placeholder="1. Amoxicillin 500mg - 1-0-1 (3 Days)&#10;2. Paracetamol 650mg - 1-0-1 (As needed)"></textarea>
                     </div>
                 </div>
 
-                <!-- Doctor Signature Block -->
+                <!-- Signature Block -->
                 <div class="flex justify-between items-end pt-8">
                     <div>
                         <p class="text-xs font-bold text-slate-500">Next Follow-Up Date: ______________</p>
                     </div>
                     <div class="text-center">
-                        <div class="w-32 border-b border-slate-400 mb-1"></div>
-                        <p class="text-xs font-bold text-slate-800">Doctor's Signature</p>
+                        <div class="w-36 border-b border-slate-400 mb-1"></div>
+                        <p class="text-xs font-bold text-slate-800">Attending Dental Surgeon</p>
                     </div>
                 </div>
 
-                <!-- Print Controls -->
+                <!-- Action Controls -->
                 <div class="no-print flex justify-end gap-3 pt-4 border-t">
                     <button onclick="window.print()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center gap-1">
-                        <i data-lucide="printer" class="w-4 h-4"></i> Print Letterhead / Rx
+                        <i data-lucide="printer" class="w-4 h-4"></i> Print Prescription Letterhead
                     </button>
                 </div>
             </div>
@@ -390,27 +426,71 @@
 
     </div>
 
-    <!-- JS Logic -->
+    <!-- BOTTOM FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 text-slate-400 py-6 text-center text-xs">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <p>© 2026 NS Dental Care — Santosh Nagar, Hyderabad. All Rights Reserved.</p>
+            <div class="flex justify-center gap-4 text-slate-500">
+                <button onclick="openAuthModal('login')" class="hover:text-slate-300">Staff Portal Login</button>
+                <span>•</span>
+                <button onclick="quickLoginAs('developer')" class="hover:text-slate-300">Developer Dashboard</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
         lucide.createIcons();
 
-        let currentSession = null;
+        // Doctors Dynamic Registry
+        let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
+            { id: "doc1", name: "Dr. Mohammed Salahuddin Ayub", spec: "Chief Dental Surgeon (Implants & Root Canal)", phone: "+919876543210" },
+            { id: "doc2", name: "Dr. Tabassum Samreen Alam", spec: "Consultant Dental Surgeon (Orthodontics & Braces)", phone: "+919876543211" }
+        ];
+
         let users = JSON.parse(localStorage.getItem('ns_users')) || [
             { id: 1, name: "Dr. Mohammed Salahuddin Ayub", role: "doctor", phone: "+919876543210", email: "ayub@nsdental.com", password: "123", status: "Approved" },
             { id: 2, name: "Dr. Tabassum Samreen Alam", role: "doctor", phone: "+919876543211", email: "tabassum@nsdental.com", password: "123", status: "Approved" }
         ];
 
         let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
-            { id: "NSD-1001", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Mohammed Salahuddin Ayub", date: "2026-07-22", slot: "11:00 AM - 01:00 PM", status: "Confirmed", reason: "Root Canal" }
+            { id: "NSD-1001", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Mohammed Salahuddin Ayub", date: "2026-07-22", slot: "11:00 AM - 01:00 PM", status: "PENDING", reason: "Root Canal Treatment" }
         ];
 
         let ledgers = JSON.parse(localStorage.getItem('ns_ledgers')) || [
             { id: "NSD-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 500, dueAmount: 4500 }
         ];
 
+        let currentSession = null;
+
+        // Init App Data
+        function initApp() {
+            renderDoctorsRoster();
+            renderDoctorOptions();
+        }
+
         function navigateTo(id) {
             document.querySelectorAll('main, section').forEach(el => el.classList.add('hidden-section'));
             document.getElementById(id).classList.remove('hidden-section');
+        }
+
+        function renderDoctorsRoster() {
+            const container = document.getElementById('doctorsRoster');
+            container.innerHTML = doctors.map(d => `
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex items-center gap-5 shadow-lg">
+                    <div class="w-16 h-16 bg-sky-500/20 border border-sky-500/40 rounded-2xl flex items-center justify-center text-sky-400 font-bold text-xl">Dr</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white">${d.name}</h4>
+                        <p class="text-xs text-sky-400 font-medium">${d.spec}</p>
+                        <p class="text-xs text-slate-400 mt-1">📞 Contact: ${d.phone}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderDoctorOptions() {
+            const select = document.getElementById('bk_doctor');
+            select.innerHTML = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
         }
 
         function searchAppointment() {
@@ -421,14 +501,14 @@
 
             if(res) {
                 box.innerHTML = `
-                    <p class="text-xs text-sky-400 font-mono font-bold">Appointment Found: ${res.id}</p>
+                    <p class="text-xs text-sky-400 font-mono font-bold">Appointment Record: ${res.id}</p>
                     <h3 class="text-lg font-bold text-white">${res.name}</h3>
                     <p class="text-xs text-slate-300">Doctor: ${res.doctor}</p>
                     <p class="text-xs text-slate-300">Scheduled: ${res.date} (${res.slot})</p>
-                    <span class="inline-block mt-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-xs">Status: ${res.status}</span>
+                    <span class="inline-block mt-2 font-bold px-2.5 py-0.5 rounded text-xs ${res.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">Status: ${res.status}</span>
                 `;
             } else {
-                box.innerHTML = `<p class="text-xs text-rose-400">No appointment records found for "${q}". Please verify the Appointment ID or Mobile Number.</p>`;
+                box.innerHTML = `<p class="text-xs text-rose-400">No appointment records found for "${q}". Please verify the Appointment ID or Phone Number.</p>`;
             }
         }
 
@@ -437,19 +517,26 @@
             const apptId = "NSD-" + Math.floor(1000 + Math.random() * 9000);
             const name = document.getElementById('bk_name').value;
             const phone = document.getElementById('bk_phone').value;
-            const doctor = document.getElementById('bk_doctor').value;
+            const doctorName = document.getElementById('bk_doctor').value;
             const date = document.getElementById('bk_date').value;
             const slot = document.getElementById('bk_slot').value;
             const reason = document.getElementById('bk_reason').value;
 
-            const appt = { id: apptId, name, phone, doctor, date, slot, status: "Confirmed", reason };
+            const appt = { id: apptId, name, phone, doctor: doctorName, date, slot, status: "PENDING", reason };
             appointments.push(appt);
             localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
             ledgers.push({ id: apptId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0 });
             localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
-            alert(`Your appointment has been booked! Appt ID: ${apptId}`);
+            // Auto Trigger SMS / WhatsApp draft to doctor
+            const docObj = doctors.find(d => d.name === doctorName);
+            const docPhone = docObj ? docObj.phone.replace(/[^0-9]/g, '') : "919876543210";
+            const text = `*NEW PATIENT APPOINTMENT WAITING*%0A%0A*Appt ID:* ${apptId}%0A*Patient:* ${name}%0A*Phone:* ${phone}%0A*Date:* ${date}%0A*Slot:* ${slot}`;
+
+            alert(`Appointment Submitted! ID: ${apptId}. Redirecting to alert doctor on WhatsApp...`);
+            window.open(`https://wa.me/${docPhone}?text=${text}`, '_blank');
+
             navigateTo('public-home');
         }
 
@@ -474,6 +561,21 @@
             }
         }
 
+        function quickLoginAs(role) {
+            if (role === 'developer') {
+                const pwd = prompt("Enter Developer Security Code:");
+                if(pwd === "9290") {
+                    currentSession = { role: 'developer', name: 'Developer Admin Override' };
+                    openDashboard();
+                } else {
+                    alert("Incorrect Code!");
+                }
+            } else {
+                openAuthModal('login');
+                document.getElementById('lg_role').value = role;
+            }
+        }
+
         function handleRegistration(e) {
             e.preventDefault();
             const role = document.getElementById('rg_role').value;
@@ -485,7 +587,7 @@
             users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending" });
             localStorage.setItem('ns_users', JSON.stringify(users));
 
-            alert("Registration request submitted successfully!");
+            alert("Account request submitted successfully!");
             closeAuthModal();
         }
 
@@ -517,6 +619,14 @@
             navigateTo('dashboard');
             document.getElementById('dashRoleBadge').innerText = currentSession.role;
             document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
+
+            if (currentSession.role === 'developer') {
+                document.getElementById('tabBtnDevControls').classList.remove('hidden-section');
+                renderDevDoctorEditors();
+            } else {
+                document.getElementById('tabBtnDevControls').classList.add('hidden-section');
+            }
+
             renderAppointments();
             renderLedgers();
             renderApprovals();
@@ -534,12 +644,32 @@
                     <td class="p-3.5">${a.phone}</td>
                     <td class="p-3.5">${a.doctor}</td>
                     <td class="p-3.5">${a.date} (${a.slot})</td>
-                    <td class="p-3.5"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-xs">${a.status}</span></td>
-                    <td class="p-3.5 flex gap-2">
-                        <button onclick="openLetterhead('${a.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs hover:bg-sky-500/30">Write Rx Letterhead</button>
+                    <td class="p-3.5">
+                        <span class="font-bold px-2 py-0.5 rounded text-xs ${a.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">${a.status}</span>
+                    </td>
+                    <td class="p-3.5 flex flex-wrap gap-2">
+                        ${a.status !== 'APPROVED' ? `<button onclick="updateApptStatus('${a.id}', 'APPROVED')" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded text-xs hover:bg-emerald-500/30">Approve & Send SMS</button>` : ''}
+                        <button onclick="openLetterhead('${a.id}')" class="bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2 py-1 rounded text-xs hover:bg-sky-500/30">Write Rx Letterhead</button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function updateApptStatus(id, newStatus) {
+            const appt = appointments.find(a => a.id === id);
+            if(appt) {
+                appt.status = newStatus;
+                localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+
+                // Trigger SMS/WhatsApp alert to patient
+                const patientPhone = appt.phone.replace(/[^0-9]/g, '');
+                const text = `*NS DENTAL CARE - APPOINTMENT ${newStatus}*%0A%0AHello ${appt.name}, your appointment (ID: ${appt.id}) with ${appt.doctor} on ${appt.date} (${appt.slot}) has been ${newStatus}.%0A%0ALocation: #17-1-305/P/1, Santosh Nagar, Hyderabad.`;
+                
+                alert(`Appointment ${newStatus}! Redirecting to dispatch SMS / WhatsApp notification to patient...`);
+                window.open(`https://wa.me/${patientPhone}?text=${text}`, '_blank');
+
+                renderAppointments();
+            }
         }
 
         function renderLedgers() {
@@ -551,7 +681,7 @@
                     <td class="p-3.5 text-emerald-400">₹${l.paidAmount}</td>
                     <td class="p-3.5 text-amber-400">₹${l.dueAmount}</td>
                     <td class="p-3.5">
-                        <button onclick="editFee('${l.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Edit</button>
+                        <button onclick="editFee('${l.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Edit Fees</button>
                     </td>
                 </tr>
             `).join('');
@@ -562,11 +692,11 @@
             document.getElementById('tblApprovals').innerHTML = pending.map(u => `
                 <tr class="hover:bg-slate-700/30">
                     <td class="p-3.5 font-bold text-white">${u.name}</td>
-                    <td class="p-3.5 uppercase text-sky-400">${u.role}</td>
+                    <td class="p-3.5 uppercase text-sky-400 font-bold">${u.role}</td>
                     <td class="p-3.5">${u.email} / ${u.phone}</td>
                     <td class="p-3.5"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-xs">${u.status}</span></td>
                     <td class="p-3.5">
-                        <button onclick="approveAccount(${u.id})" class="bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded text-xs">Approve</button>
+                        <button onclick="approveAccount(${u.id})" class="bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded text-xs">Approve Account</button>
                     </td>
                 </tr>
             `).join('');
@@ -595,6 +725,45 @@
             }
         }
 
+        function renderDevDoctorEditors() {
+            const container = document.getElementById('devDoctorEditors');
+            container.innerHTML = doctors.map((d, index) => `
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-3">
+                    <h5 class="text-xs font-bold text-sky-400 uppercase">Doctor ${index + 1} Configuration</h5>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Doctor Name</label>
+                        <input type="text" id="dev_doc_name_${index}" value="${d.name}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Specialization & Qualifications</label>
+                        <input type="text" id="dev_doc_spec_${index}" value="${d.spec}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Phone Number (WhatsApp Alerts)</label>
+                        <input type="text" id="dev_doc_phone_${index}" value="${d.phone}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <button onclick="saveDevDoctor(${index})" class="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded text-xs">Save Updates</button>
+                </div>
+            `).join('');
+        }
+
+        function saveDevDoctor(index) {
+            doctors[index].name = document.getElementById(`dev_doc_name_${index}`).value;
+            doctors[index].spec = document.getElementById(`dev_doc_spec_${index}`).value;
+            doctors[index].phone = document.getElementById(`dev_doc_phone_${index}`).value;
+
+            localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+            alert(`Doctor ${index + 1} configuration saved!`);
+            initApp();
+        }
+
+        function resetSystemData() {
+            if(confirm("Are you sure you want to reset all website data?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         function openLetterhead(apptId) {
             const appt = appointments.find(a => a.id === apptId);
             if(appt) {
@@ -603,6 +772,10 @@
                 document.getElementById('lh_phone').innerText = appt.phone;
                 document.getElementById('lh_date').innerText = appt.date;
                 document.getElementById('lh_doctor').innerText = appt.doctor;
+                
+                const docObj = doctors.find(d => d.name === appt.doctor);
+                document.getElementById('lh_spec').innerText = docObj ? docObj.spec : "Dental Surgeon";
+
                 document.getElementById('letterheadModal').classList.remove('hidden');
                 document.getElementById('letterheadModal').classList.add('flex');
             }
@@ -617,11 +790,20 @@
             document.getElementById('viewAppts').classList.add('hidden-section');
             document.getElementById('viewLedger').classList.add('hidden-section');
             document.getElementById('viewApprovals').classList.add('hidden-section');
+            document.getElementById('viewDev').classList.add('hidden-section');
 
             if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
             if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
             if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');
+            if(tab === 'dev') document.getElementById('viewDev').classList.remove('hidden-section');
         }
+
+        function openWalkInModal() {
+            navigateTo('public-booking');
+        }
+
+        // Run Initialization
+        initApp();
     </script>
 </body>
 </html>

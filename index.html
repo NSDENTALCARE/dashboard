@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NS Dental Care | Hospital Portal & Clinical Dashboard</title>
+    <title>NS Dental Care | Hospital Management & Staff Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -20,7 +20,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- TOP CLINIC HEADER BAR -->
+    <!-- TOP HEADER BAR -->
     <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('public-home')">
@@ -29,11 +29,11 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-white tracking-wide">NS Dental Care</h1>
-                    <p class="text-xs text-slate-400">#17-1-305/P/1, Santosh Nagar, Edi Bazar, Hyderabad | 📞 Clinic Contact: +91 9876543210</p>
+                    <p class="text-xs text-slate-400">#17-1-305/P/1, Santosh Nagar, Edi Bazar, Hyderabad | 📞 Clinic: +91 9876543210</p>
                 </div>
             </div>
 
-            <!-- Header Quick Action Controls -->
+            <!-- Header Access Controls -->
             <div class="flex items-center space-x-2">
                 <button onclick="navigateTo('public-booking')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center gap-1.5">
                     <i data-lucide="calendar-plus" class="w-4 h-4"></i> Book Appointment
@@ -51,17 +51,17 @@
         </div>
     </header>
 
-    <!-- MAIN WRAPPER -->
+    <!-- MAIN CONTAINER -->
     <div class="flex-1 flex flex-col">
 
         <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
         <section id="public-home" class="max-w-7xl mx-auto px-4 py-8 w-full space-y-10">
-            <!-- Hero Banner -->
+            <!-- Hero Card -->
             <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-sky-950/80 border border-slate-700 rounded-2xl p-8 sm:p-12 shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
                 <div class="max-w-xl space-y-4">
-                    <span class="bg-sky-500/20 text-sky-300 text-xs font-semibold px-3 py-1 rounded-full border border-sky-500/30 uppercase tracking-widest">Multi-Specialty Clinical Dentistry</span>
-                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">Advanced Patient Care & Management</h2>
-                    <p class="text-slate-300 text-sm leading-relaxed">Providing high-precision dental treatments in Santosh Nagar, Hyderabad. Check appointment schedules, medical histories, and consultation fees online.</p>
+                    <span class="bg-sky-500/20 text-sky-300 text-xs font-semibold px-3 py-1 rounded-full border border-sky-500/30 uppercase tracking-widest">Multi-Specialty Dentistry</span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">Advanced Patient Care & Clinical Dashboard</h2>
+                    <p class="text-slate-300 text-sm leading-relaxed">Providing high-precision dental treatments in Santosh Nagar, Hyderabad. Check appointment schedules, histories, and consultation fees online.</p>
                     <div class="flex flex-wrap gap-4 pt-2">
                         <button onclick="navigateTo('public-booking')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">
                             <i data-lucide="check-circle" class="w-4 h-4"></i> Book Your Appointment
@@ -72,26 +72,26 @@
                     </div>
                 </div>
 
-                <!-- Public Portal Access Box -->
+                <!-- Staff Access Widget -->
                 <div class="bg-slate-900/90 border border-slate-700 p-6 rounded-2xl w-full md:w-80 space-y-4 shadow-xl">
                     <h3 class="text-sm font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2">
                         <i data-lucide="shield-check" class="w-4 h-4"></i> Staff Portal Access
                     </h3>
-                    <p class="text-xs text-slate-400">Quick links for staff members to access their clinical portals.</p>
+                    <p class="text-xs text-slate-400">Log in or create a staff account to access patient management controls.</p>
                     <div class="space-y-3">
                         <button onclick="openSeparateLogin('doctor')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl text-xs font-semibold flex justify-between items-center border border-slate-700">
-                            <span>Doctor Login Portal</span>
+                            <span>Doctor Portal</span>
                             <i data-lucide="stethoscope" class="w-4 h-4 text-sky-400"></i>
                         </button>
                         <button onclick="openSeparateLogin('assistant')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl text-xs font-semibold flex justify-between items-center border border-slate-700">
-                            <span>Assistant Login Portal</span>
+                            <span>Assistant Portal</span>
                             <i data-lucide="user-check" class="w-4 h-4 text-sky-400"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Doctor Roster -->
+            <!-- Attending Surgeons Roster -->
             <div>
                 <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <i data-lucide="stethoscope" class="text-sky-400"></i> Attending Dental Surgeons
@@ -108,7 +108,7 @@
                 </button>
                 <h2 class="text-xl font-bold text-white">Track Your Appointment</h2>
                 <div class="flex gap-2">
-                    <input type="text" id="trackQuery" class="flex-1 bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Appointment ID (e.g. NSD-1001) or Phone #">
+                    <input type="text" id="trackQuery" class="flex-1 bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Appointment ID or Phone #">
                     <button onclick="searchAppointment()" class="bg-sky-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm">Search</button>
                 </div>
             </div>
@@ -154,7 +154,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Purpose of Visit / Complaints</label>
-                        <textarea id="bk_reason" rows="2" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Tooth pain, root canal, teeth cleaning, etc."></textarea>
+                        <textarea id="bk_reason" rows="2" class="w-full bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white" placeholder="Tooth pain, root canal, teeth cleaning..."></textarea>
                     </div>
                     <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-xl shadow-xl flex justify-center items-center gap-2">
                         <i data-lucide="check-circle" class="w-5 h-5"></i> Submit Booking
@@ -163,27 +163,81 @@
             </div>
         </section>
 
-        <!-- ================= SECTION 4: LOGIN MODAL ================= -->
+        <!-- ================= SECTION 4: SEPARATE AUTHENTICATION & RECOVERY MODAL ================= -->
         <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
             <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative space-y-4">
                 <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
                     <i data-lucide="x"></i>
                 </button>
 
-                <h3 id="modalRoleTitle" class="text-lg font-bold text-sky-400 uppercase tracking-wide">Portal Login</h3>
+                <!-- Sub-Navigation Header -->
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <h3 id="modalRoleTitle" class="text-base font-bold text-sky-400 uppercase tracking-wide">PORTAL LOGIN</h3>
+                    <div class="flex gap-2 text-xs">
+                        <button id="subTabLogin" onclick="switchAuthMode('login')" class="text-sky-400 font-bold">Login</button>
+                        <span>•</span>
+                        <button id="subTabReg" onclick="switchAuthMode('register')" class="text-slate-400 hover:text-white">Register</button>
+                    </div>
+                </div>
 
+                <!-- 1. LOGIN FORM -->
                 <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <input type="hidden" id="lg_role_hidden">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email / Phone / Username</label>
-                        <input type="text" id="lg_identifier" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Username / Email">
+                        <input type="text" id="lg_identifier" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Email / Phone">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
                         <input type="password" id="lg_password" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="••••••••">
                     </div>
+                    <div class="flex justify-end">
+                        <button type="button" onclick="switchAuthMode('forgot')" class="text-xs text-sky-400 hover:underline">Forgot Password?</button>
+                    </div>
                     <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg">
-                        Access Portal
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- 2. REGISTER FORM FOR DOCTOR & ASSISTANT -->
+                <form id="form-register" onsubmit="handleStaffRegistration(event)" class="hidden-section space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Full Name *</label>
+                        <input type="text" id="rg_name" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Dr. / Staff Name">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Mobile / WhatsApp Number *</label>
+                        <input type="tel" id="rg_phone" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="+91 9876543210">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email Address *</label>
+                        <input type="email" id="rg_email" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="staff@nsdental.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Choose Password *</label>
+                        <input type="password" id="rg_password" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg">
+                        Create Account Request
+                    </button>
+                </form>
+
+                <!-- 3. FORGOT PASSWORD REQUEST FORM -->
+                <form id="form-forgot" onsubmit="handleForgotPassword(event)" class="hidden-section space-y-3">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        If an <strong class="text-sky-400">Assistant</strong> requests a password reset, a request is sent to the <strong class="text-sky-400">Doctor</strong> for approval.
+                        If a <strong class="text-sky-400">Doctor</strong> requests a reset, a request is sent to the <strong class="text-amber-400">Developer Admin</strong>.
+                    </p>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Registered Phone or Email</label>
+                        <input type="text" id="fg_identifier" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Enter Email or Phone">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Requested New Password</label>
+                        <input type="password" id="fg_new_password" required class="w-full bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-sm text-white" placeholder="Enter new password">
+                    </div>
+                    <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-lg">
+                        Submit Reset Request
                     </button>
                 </form>
             </div>
@@ -191,8 +245,8 @@
 
         <!-- ================= SECTION 5: CLINICAL DASHBOARD ================= -->
         <section id="dashboard" class="hidden-section flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-            <!-- Top Dashboard Status Bar -->
-            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-6 flex flex-wrap justify-between items-center gap-4">
+            <!-- Header Bar -->
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl mb-6 flex flex-wrap justify-between items-center gap-4 shadow-lg">
                 <div>
                     <span id="dashRoleBadge" class="bg-sky-500/20 text-sky-300 text-xs font-bold px-3 py-1 rounded-full border border-sky-500/30 uppercase">Role</span>
                     <h2 id="dashWelcome" class="text-lg font-bold text-white mt-1">Welcome</h2>
@@ -203,13 +257,14 @@
                 </button>
             </div>
 
-            <!-- Dashboard Navigation Tabs -->
+            <!-- Navigation Tabs -->
             <div class="flex border-b border-slate-700 mb-6 gap-6 text-sm font-semibold overflow-x-auto">
                 <button id="tabBtnAppts" onclick="switchDashTab('appts')" class="text-sky-400 border-b-2 border-sky-400 pb-2 whitespace-nowrap">Appointments Schedule</button>
-                <button id="tabBtnLedger" onclick="switchDashTab('ledger')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Treatment Cost & Billing Ledger</button>
-                <button id="tabBtnDoctorEdit" onclick="switchDashTab('docEdit')" class="hidden-section text-emerald-400 hover:text-emerald-300 pb-2 whitespace-nowrap">Edit Doctor Details</button>
+                <button id="tabBtnLedger" onclick="switchDashTab('ledger')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Treatment Cost & Ledger</button>
+                <button id="tabBtnResetRequests" onclick="switchDashTab('resets')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Password & User Approvals</button>
+                <button id="tabBtnDoctorEdit" onclick="switchDashTab('docEdit')" class="hidden-section text-emerald-400 hover:text-emerald-300 pb-2 whitespace-nowrap">Edit Doctor Profile</button>
                 <button id="tabBtnSecurity" onclick="switchDashTab('security')" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Account Password</button>
-                <button id="tabBtnDev" onclick="switchDashTab('dev')" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Developer Controls</button>
+                <button id="tabBtnDev" onclick="switchDashTab('dev')" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Developer Mode</button>
             </div>
 
             <!-- TAB 1: APPOINTMENTS VIEW -->
@@ -235,10 +290,6 @@
 
             <!-- TAB 2: FINANCIAL LEDGER & MANUAL BILLING -->
             <div id="viewLedger" class="space-y-4 hidden-section">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-white">Manual Financial Adjustment Ledger</h3>
-                    <p class="text-xs text-slate-400">Enter total cost, paid amount, and remaining balance due.</p>
-                </div>
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -258,9 +309,32 @@
                 </div>
             </div>
 
-            <!-- TAB 3: DOCTOR EDIT PROFILE -->
+            <!-- TAB 3: PASSWORD RESET APPROVALS TABLE -->
+            <div id="viewResets" class="space-y-4 hidden-section">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <div class="p-4 border-b border-slate-700">
+                        <h3 class="text-sm font-bold text-white">Pending Password Reset & Account Approval Requests</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-900/60 text-slate-400 uppercase border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3.5">Request Type</th>
+                                    <th class="p-3.5">User</th>
+                                    <th class="p-3.5">Target Role</th>
+                                    <th class="p-3.5">New Password Request</th>
+                                    <th class="p-3.5">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblResets" class="divide-y divide-slate-700/60 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: DOCTOR EDIT PROFILE -->
             <div id="viewDoctorEdit" class="hidden-section max-w-xl bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4">
-                <h3 class="text-base font-bold text-white">Edit Doctor Profile & Contact Information</h3>
+                <h3 class="text-base font-bold text-white">Edit Doctor Profile & Contact Info</h3>
                 <div>
                     <label class="block text-xs uppercase text-slate-400 mb-1">Doctor Name</label>
                     <input type="text" id="doc_edit_name" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
@@ -270,7 +344,7 @@
                     <input type="text" id="doc_edit_spec" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
                 </div>
                 <div>
-                    <label class="block text-xs uppercase text-slate-400 mb-1">WhatsApp / Mobile Number</label>
+                    <label class="block text-xs uppercase text-slate-400 mb-1">WhatsApp Mobile Number</label>
                     <input type="text" id="doc_edit_phone" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
                 </div>
                 <button onclick="saveDoctorSelfProfile()" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">
@@ -278,26 +352,26 @@
                 </button>
             </div>
 
-            <!-- TAB 4: PASSWORD CHANGE (DOCTOR & ASSISTANT) -->
+            <!-- TAB 5: PASSWORD CHANGE TAB (LOGGED IN) -->
             <div id="viewSecurity" class="hidden-section max-w-xl bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4">
-                <h3 class="text-base font-bold text-white">Change Account Password</h3>
+                <h3 class="text-base font-bold text-white">Change Password</h3>
                 <div>
                     <label class="block text-xs uppercase text-slate-400 mb-1">New Password</label>
                     <input type="password" id="sec_new_password" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white" placeholder="Enter new password">
                 </div>
-                <button onclick="changePassword()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">
-                    Update Password
+                <button onclick="changePasswordLoggedIn()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">
+                    Update Password Immediately
                 </button>
             </div>
 
-            <!-- TAB 5: DEVELOPER CONTROLS -->
+            <!-- TAB 6: DEVELOPER CONTROLS -->
             <div id="viewDev" class="hidden-section space-y-6">
                 <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex justify-between items-center">
                     <div>
                         <h4 class="text-sm font-bold text-amber-400 uppercase">Developer Override Panel</h4>
-                        <p class="text-xs text-amber-200/80">Full administrative access to override doctor profiles, adjust fees, and perform system data resets.</p>
+                        <p class="text-xs text-amber-200/80">Full administrative access to manage profiles and reset local system state.</p>
                     </div>
-                    <button onclick="resetSystemData()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 rounded text-xs">Reset All Data</button>
+                    <button onclick="resetSystemData()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 rounded text-xs">Reset System Data</button>
                 </div>
 
                 <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-4 shadow-xl">
@@ -355,6 +429,13 @@
             { id: "doc2", name: "Dr. Tabassum Samreen Alam", spec: "Consultant Dental Surgeon (Orthodontics)", phone: "+919876543211" }
         ];
 
+        let users = JSON.parse(localStorage.getItem('ns_users')) || [
+            { id: 1, name: "Dr. Mohammed Salahuddin Ayub", role: "doctor", phone: "+919876543210", email: "ayub@nsdental.com", password: "123", status: "Approved" },
+            { id: 2, name: "Clinic Assistant", role: "assistant", phone: "+919876543212", email: "assistant@nsdental.com", password: "123", status: "Approved" }
+        ];
+
+        let resetRequests = JSON.parse(localStorage.getItem('ns_reset_requests')) || [];
+
         let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
             { id: "NSD-1001", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Mohammed Salahuddin Ayub", date: "2026-07-22", slot: "11:00 AM - 01:00 PM", status: "PENDING", reason: "Root Canal Treatment" }
         ];
@@ -404,14 +485,72 @@
 
         function openSeparateLogin(role) {
             document.getElementById('lg_role_hidden').value = role;
-            document.getElementById('modalRoleTitle').innerText = role.toUpperCase() + " PORTAL LOGIN";
+            document.getElementById('modalRoleTitle').innerText = role.toUpperCase() + " PORTAL";
             document.getElementById('authModal').classList.remove('hidden');
             document.getElementById('authModal').classList.add('flex');
+            switchAuthMode('login');
         }
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.add('hidden');
             document.getElementById('authModal').classList.remove('flex');
+        }
+
+        function switchAuthMode(mode) {
+            document.getElementById('form-login').classList.add('hidden-section');
+            document.getElementById('form-register').classList.add('hidden-section');
+            document.getElementById('form-forgot').classList.add('hidden-section');
+
+            if(mode === 'login') document.getElementById('form-login').classList.remove('hidden-section');
+            if(mode === 'register') document.getElementById('form-register').classList.remove('hidden-section');
+            if(mode === 'forgot') document.getElementById('form-forgot').classList.remove('hidden-section');
+        }
+
+        function handleStaffRegistration(e) {
+            e.preventDefault();
+            const targetRole = document.getElementById('lg_role_hidden').value;
+            const name = document.getElementById('rg_name').value;
+            const phone = document.getElementById('rg_phone').value;
+            const email = document.getElementById('rg_email').value;
+            const password = document.getElementById('rg_password').value;
+
+            users.push({ id: Date.now(), name, role: targetRole, phone, email, password, status: "Pending" });
+            localStorage.setItem('ns_users', JSON.stringify(users));
+
+            alert(`Registration submitted for ${name}! Pending approval.`);
+            closeAuthModal();
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const targetRole = document.getElementById('lg_role_hidden').value;
+            const identifier = document.getElementById('fg_identifier').value;
+            const newPassword = document.getElementById('fg_new_password').value;
+
+            const targetUser = users.find(u => u.email === identifier || u.phone === identifier);
+            
+            const reqObj = {
+                id: Date.now(),
+                role: targetRole,
+                identifier,
+                newPassword,
+                userName: targetUser ? targetUser.name : identifier,
+                approverRole: targetRole === 'assistant' ? 'doctor' : 'developer'
+            };
+
+            resetRequests.push(reqObj);
+            localStorage.setItem('ns_reset_requests', JSON.stringify(resetRequests));
+
+            if (targetRole === 'assistant') {
+                const docPhone = doctors[0].phone.replace(/[^0-9]/g, '');
+                const text = `*ASSISTANT PASSWORD RESET REQUEST*%0A%0AUser: ${reqObj.userName}%0ANew Password Requested: ${newPassword}%0APlease log in to Doctor Portal to Approve.`;
+                alert("Password reset requested! Triggering notification to Doctor...");
+                window.open(`https://wa.me/${docPhone}?text=${text}`, '_blank');
+            } else {
+                alert("Password reset requested! The Developer Admin has been notified for approval.");
+            }
+
+            closeAuthModal();
         }
 
         function handleLogin(e) {
@@ -427,14 +566,15 @@
                 return;
             }
 
-            if (role === 'doctor' || role === 'assistant') {
-                currentSession = { role: role, name: role === 'doctor' ? doctors[0].name : 'Clinic Assistant' };
+            const u = users.find(x => (x.role === role) && (x.email === identifier || x.phone === identifier) && (x.password === pwd));
+            
+            if (u && u.status === 'Approved') {
+                currentSession = u;
                 openDashboard();
                 closeAuthModal();
-                return;
+            } else {
+                alert("Invalid Credentials or Account Pending Approval!");
             }
-
-            alert("Invalid Credentials!");
         }
 
         function openDashboard() {
@@ -460,11 +600,152 @@
 
             renderAppointments();
             renderLedgers();
+            renderResetRequests();
         }
 
         function logout() {
             currentSession = null;
             navigateTo('public-home');
+        }
+
+        function renderAppointments() {
+            document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5 font-mono text-sky-400">${a.id}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
+                    <td class="p-3.5">${a.phone}</td>
+                    <td class="p-3.5">${a.doctor}</td>
+                    <td class="p-3.5">${a.date} (${a.slot})</td>
+                    <td class="p-3.5"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-xs">${a.status}</span></td>
+                    <td class="p-3.5">
+                        <button onclick="openLetterhead('${a.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Write Rx</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderLedgers() {
+            document.getElementById('tblLedger').innerHTML = ledgers.map(l => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5 font-mono text-sky-400">${l.id}<br><span class="text-white font-sans">${l.patientName}</span></td>
+                    <td class="p-3.5">${l.purpose}</td>
+                    <td class="p-3.5 font-bold text-white">₹${l.totalCost}</td>
+                    <td class="p-3.5 text-emerald-400 font-bold">₹${l.paidAmount}</td>
+                    <td class="p-3.5 text-amber-400 font-bold">₹${l.dueAmount}</td>
+                    <td class="p-3.5">
+                        <button onclick="editFeeManual('${l.id}')" class="bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2.5 py-1 rounded text-xs">Manual Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderResetRequests() {
+            let filtered = [];
+            if (currentSession.role === 'doctor') {
+                filtered = resetRequests.filter(r => r.approverRole === 'doctor');
+            } else if (currentSession.role === 'developer') {
+                filtered = resetRequests;
+            }
+
+            document.getElementById('tblResets').innerHTML = filtered.map(r => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-3.5 uppercase text-amber-400 font-bold">Password Reset</td>
+                    <td class="p-3.5 font-bold text-white">${r.userName} (${r.identifier})</td>
+                    <td class="p-3.5 uppercase text-sky-400">${r.role}</td>
+                    <td class="p-3.5 font-mono">${r.newPassword}</td>
+                    <td class="p-3.5">
+                        <button onclick="approvePasswordReset(${r.id})" class="bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded text-xs">Approve & Update</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approvePasswordReset(reqId) {
+            const req = resetRequests.find(r => r.id === reqId);
+            if (req) {
+                const u = users.find(x => x.email === req.identifier || x.phone === req.identifier);
+                if (u) {
+                    u.password = req.newPassword;
+                    localStorage.setItem('ns_users', JSON.stringify(users));
+                }
+                resetRequests = resetRequests.filter(r => r.id !== reqId);
+                localStorage.setItem('ns_reset_requests', JSON.stringify(resetRequests));
+                alert("Password reset approved successfully!");
+                renderResetRequests();
+            }
+        }
+
+        function editFeeManual(id) {
+            const item = ledgers.find(l => l.id === id);
+            if (!item) return;
+
+            const newTotal = prompt("Enter Total Treatment Fee (₹):", item.totalCost);
+            const newPaid = prompt("Enter Paid Amount Received (₹):", item.paidAmount);
+
+            if(newTotal !== null && newPaid !== null) {
+                item.totalCost = parseFloat(newTotal) || 0;
+                item.paidAmount = parseFloat(newPaid) || 0;
+                item.dueAmount = item.totalCost - item.paidAmount;
+                localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+                renderLedgers();
+            }
+        }
+
+        function saveDoctorSelfProfile() {
+            doctors[0].name = document.getElementById('doc_edit_name').value || doctors[0].name;
+            doctors[0].spec = document.getElementById('doc_edit_spec').value || doctors[0].spec;
+            doctors[0].phone = document.getElementById('doc_edit_phone').value || doctors[0].phone;
+
+            localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+            alert("Doctor Profile Updated Successfully!");
+            renderDoctorsRoster();
+        }
+
+        function changePasswordLoggedIn() {
+            const p = document.getElementById('sec_new_password').value;
+            if(p.trim() === '') {
+                alert("Password cannot be blank!");
+                return;
+            }
+            if(currentSession && currentSession.id) {
+                const u = users.find(x => x.id === currentSession.id);
+                if(u) {
+                    u.password = p;
+                    localStorage.setItem('ns_users', JSON.stringify(users));
+                }
+            }
+            alert("Password updated successfully!");
+            document.getElementById('sec_new_password').value = '';
+        }
+
+        function renderDevDoctorEditors() {
+            document.getElementById('devDoctorEditors').innerHTML = doctors.map((d, index) => `
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-3">
+                    <h5 class="text-xs font-bold text-sky-400 uppercase">Doctor ${index + 1} Editor</h5>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Name</label>
+                        <input type="text" id="dev_doc_name_${index}" value="${d.name}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Specialization</label>
+                        <input type="text" id="dev_doc_spec_${index}" value="${d.spec}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
+                        <input type="text" id="dev_doc_phone_${index}" value="${d.phone}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
+                    </div>
+                    <button onclick="saveDevDoctor(${index})" class="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded text-xs">Save</button>
+                </div>
+            `).join('');
+        }
+
+        function saveDevDoctor(index) {
+            doctors[index].name = document.getElementById(`dev_doc_name_${index}`).value;
+            doctors[index].spec = document.getElementById(`dev_doc_spec_${index}`).value;
+            doctors[index].phone = document.getElementById(`dev_doc_phone_${index}`).value;
+
+            localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+            alert(`Doctor ${index + 1} updated!`);
+            initApp();
         }
 
         function handlePublicBooking(e) {
@@ -506,103 +787,6 @@
             }
         }
 
-        function renderAppointments() {
-            document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
-                <tr class="hover:bg-slate-700/30">
-                    <td class="p-3.5 font-mono text-sky-400">${a.id}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
-                    <td class="p-3.5">${a.phone}</td>
-                    <td class="p-3.5">${a.doctor}</td>
-                    <td class="p-3.5">${a.date} (${a.slot})</td>
-                    <td class="p-3.5"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-xs">${a.status}</span></td>
-                    <td class="p-3.5">
-                        <button onclick="openLetterhead('${a.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Write Rx</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderLedgers() {
-            document.getElementById('tblLedger').innerHTML = ledgers.map(l => `
-                <tr class="hover:bg-slate-700/30">
-                    <td class="p-3.5 font-mono text-sky-400">${l.id}<br><span class="text-white font-sans">${l.patientName}</span></td>
-                    <td class="p-3.5">${l.purpose}</td>
-                    <td class="p-3.5 font-bold text-white">₹${l.totalCost}</td>
-                    <td class="p-3.5 text-emerald-400 font-bold">₹${l.paidAmount}</td>
-                    <td class="p-3.5 text-amber-400 font-bold">₹${l.dueAmount}</td>
-                    <td class="p-3.5">
-                        <button onclick="editFeeManual('${l.id}')" class="bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2.5 py-1 rounded text-xs">Manual Edit</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editFeeManual(id) {
-            const item = ledgers.find(l => l.id === id);
-            if (!item) return;
-
-            const newTotal = prompt("Enter Total Treatment Fee (₹):", item.totalCost);
-            const newPaid = prompt("Enter Paid Amount Received (₹):", item.paidAmount);
-
-            if(newTotal !== null && newPaid !== null) {
-                item.totalCost = parseFloat(newTotal) || 0;
-                item.paidAmount = parseFloat(newPaid) || 0;
-                item.dueAmount = item.totalCost - item.paidAmount;
-                localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-                renderLedgers();
-            }
-        }
-
-        function saveDoctorSelfProfile() {
-            doctors[0].name = document.getElementById('doc_edit_name').value || doctors[0].name;
-            doctors[0].spec = document.getElementById('doc_edit_spec').value || doctors[0].spec;
-            doctors[0].phone = document.getElementById('doc_edit_phone').value || doctors[0].phone;
-
-            localStorage.setItem('ns_doctors', JSON.stringify(doctors));
-            alert("Doctor Profile & Specialization Updated Successfully!");
-            renderDoctorsRoster();
-        }
-
-        function changePassword() {
-            const p = document.getElementById('sec_new_password').value;
-            if(p.trim() === '') {
-                alert("Password cannot be blank!");
-                return;
-            }
-            alert("Password changed successfully!");
-            document.getElementById('sec_new_password').value = '';
-        }
-
-        function renderDevDoctorEditors() {
-            document.getElementById('devDoctorEditors').innerHTML = doctors.map((d, index) => `
-                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-3">
-                    <h5 class="text-xs font-bold text-sky-400 uppercase">Doctor ${index + 1} Profile Editor</h5>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Name</label>
-                        <input type="text" id="dev_doc_name_${index}" value="${d.name}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Specialization</label>
-                        <input type="text" id="dev_doc_spec_${index}" value="${d.spec}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
-                        <input type="text" id="dev_doc_phone_${index}" value="${d.phone}" class="w-full bg-slate-800 border border-slate-700 px-3 py-1.5 rounded text-xs text-white">
-                    </div>
-                    <button onclick="saveDevDoctor(${index})" class="bg-sky-500 text-slate-950 font-bold px-3 py-1.5 rounded text-xs">Save</button>
-                </div>
-            `).join('');
-        }
-
-        function saveDevDoctor(index) {
-            doctors[index].name = document.getElementById(`dev_doc_name_${index}`).value;
-            doctors[index].spec = document.getElementById(`dev_doc_spec_${index}`).value;
-            doctors[index].phone = document.getElementById(`dev_doc_phone_${index}`).value;
-
-            localStorage.setItem('ns_doctors', JSON.stringify(doctors));
-            alert(`Doctor ${index + 1} configuration updated!`);
-            initApp();
-        }
-
         function openLetterhead(id) {
             const a = appointments.find(x => x.id === id);
             if(a) {
@@ -621,12 +805,14 @@
         function switchDashTab(tab) {
             document.getElementById('viewAppts').classList.add('hidden-section');
             document.getElementById('viewLedger').classList.add('hidden-section');
+            document.getElementById('viewResets').classList.add('hidden-section');
             document.getElementById('viewDoctorEdit').classList.add('hidden-section');
             document.getElementById('viewSecurity').classList.add('hidden-section');
             document.getElementById('viewDev').classList.add('hidden-section');
 
             if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
             if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
+            if(tab === 'resets') document.getElementById('viewResets').classList.remove('hidden-section');
             if(tab === 'docEdit') document.getElementById('viewDoctorEdit').classList.remove('hidden-section');
             if(tab === 'security') document.getElementById('viewSecurity').classList.remove('hidden-section');
             if(tab === 'dev') document.getElementById('viewDev').classList.remove('hidden-section');

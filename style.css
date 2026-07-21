@@ -1,0 +1,33 @@
+/* Custom Responsive & Typography Tweaks */
+.hidden-section {
+    display: none !important;
+}
+
+/* Custom Webkit Scrollbars for Mobile & Desktop */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Table Responsive Handling */
+@media (max-width: 640px) {
+    table {
+        font-size: 11px;
+    }
+    th, td {
+        padding: 8px 10px !important;
+    }
+}

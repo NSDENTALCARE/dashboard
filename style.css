@@ -1,9 +1,8 @@
-/* Custom Responsive & Typography Tweaks */
+/* Custom Styling & Print Layouts */
 .hidden-section {
     display: none !important;
 }
 
-/* Custom Webkit Scrollbars for Mobile & Desktop */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -18,16 +17,22 @@
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #475569;
-}
-
-/* Table Responsive Handling */
-@media (max-width: 640px) {
-    table {
-        font-size: 11px;
+@media print {
+    body * {
+        visibility: hidden;
     }
-    th, td {
-        padding: 8px 10px !important;
+    #receiptModal, #receiptModal *, #letterheadModal, #letterheadModal * {
+        visibility: visible;
+    }
+    #receiptModal, #letterheadModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+    }
+    .no-print {
+        display: none !important;
     }
 }

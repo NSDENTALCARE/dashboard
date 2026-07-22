@@ -415,7 +415,7 @@ function renderAppointments() {
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
             <td class="p-3 font-bold text-amber-400 font-mono">
                 ${a.nextVisit || a.date}
-                <button onclick="updateNextVisitManually('${a.id}')" class="text-[9px] text-slate-400 hover:text-white underline block mt-0.5">Edit</button>
+                <button onclick="updateNextVisitManually('${a.id}')" class="text-[9px] text-slate-400 hover:text-white underline block mt-0.5">Edit Visit</button>
             </td>
             <td class="p-3">
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
@@ -426,10 +426,38 @@ function renderAppointments() {
                 ${a.status === 'PENDING' ? `<button onclick="approveAppointment('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button>` : ''}
                 <button onclick="updateTokenStatus('${a.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-[10px]">Queue</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
+                <button onclick="editPatientProfilePrompt('${a.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[10px]">Edit Profile</button>
                 <button onclick="deleteAppointmentRecord('${a.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>
             </td>
         </tr>
     `).join('');
+}
+
+function editPatientProfilePrompt(pid) {
+    const p = patients.find(x => x.patientId === pid);
+    if(p) {
+        const newName = prompt("Edit Patient Name:", p.name);
+        const newPhone = prompt("Edit Patient Phone (10 Digits):", p.phone);
+        const newAgeGender = prompt("Edit Age / Gender (e.g. 34 / Male):", p.ageGender || "34 / Male");
+
+        if(newName && newPhone) {
+            p.name = newName;
+            p.phone = newPhone.replace(/[^0-9]/g, '');
+            p.ageGender = newAgeGender;
+
+            appointments.filter(a => a.patientId === pid).forEach(a => { a.name = newName; a.phone = p.phone; a.ageGender = newAgeGender; });
+            ledgers.filter(l => l.patientId === pid).forEach(l => { l.patientName = newName; });
+
+            localStorage.setItem('ns_patients', JSON.stringify(patients));
+            localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+            localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+
+            renderAppointments();
+            renderLedgers();
+            logAction(`Staff updated patient profile for ${pid}`);
+            alert("Patient Profile Updated!");
+        }
+    }
 }
 
 function updateNextVisitManually(apptId) {
@@ -681,6 +709,10 @@ function handleManualPatientUpload(e) {
         patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone, ageGender };
         patients.push(patient);
         localStorage.setItem('ns_patients', JSON.stringify(patients));
+    } else {
+        patient.name = name;
+        patient.ageGender = ageGender;
+        localStorage.setItem('ns_patients', JSON.stringify(patients));
     }
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
@@ -696,8 +728,8 @@ function handleManualPatientUpload(e) {
     ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0, date });
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
-    logAction(`Record added for ${name} (${patient.patientId}) with vitals BP:${bp}`);
-    alert(`Patient Uploaded! ID: ${patient.patientId} | Token: ${token}`);
+    logAction(`Record saved for ${name} (${patient.patientId})`);
+    alert(`Patient Saved! ID: ${patient.patientId} | Token: ${token}`);
     e.target.reset();
     renderAppointments();
     renderCalendar();
@@ -766,6 +798,7 @@ function resetSystemData() {
     }
 }
 
+// STRICT READ-ONLY PUBLIC PORTAL LOOKUP
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
     const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
@@ -793,12 +826,12 @@ function handleVerifiedPatientSearch(e) {
             <div class="space-y-2">
                 <h4 class="text-xs font-bold text-red-400 uppercase">Appointment & Follow-Up Timeline:</h4>
                 <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${appts.map(a => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center"><div><strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor}<br>Issue: ${a.reason}</div><div class="text-right"><span class="text-amber-400 font-mono font-bold block text-xs">Next Visit: ${a.nextVisit || a.date}</span></div></li>`).join('')}
+                    ${appts.map(a => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center"><div><strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor}<br>Issue: ${a.reason}</div><div class="text-right"><span class="text-amber-400 font-mono font-bold block text-xs">Next Follow-Up: ${a.nextVisit || a.date}</span></div></li>`).join('')}
                 </ul>
             </div>
 
             <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription Downloads:</h4>
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription Downloads (PDF View):</h4>
                 <div class="space-y-2">
                     ${recs.length > 0 ? recs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
@@ -806,7 +839,7 @@ function handleVerifiedPatientSearch(e) {
                                 <p class="font-bold text-white">Date: ${r.date} | Dr. ${r.doctor}</p>
                                 <p class="text-slate-400 text-[11px]">Findings: ${r.diagnosis}</p>
                             </div>
-                            <button onclick="publicDownloadPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
+                            <button onclick="publicViewReadOnlyPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Rx
                             </button>
                         </div>
@@ -823,8 +856,8 @@ function handleVerifiedPatientSearch(e) {
                                 <p class="font-bold text-white">${l.id || 'REC-1001'} | Fee: ₹${l.totalCost}</p>
                                 <p class="text-slate-400 text-[11px]">${l.purpose} | Paid: ₹${l.paidAmount}</p>
                             </div>
-                            <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Print Receipt
+                            <button onclick="publicViewReadOnlyReceipt('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Download Receipt
                             </button>
                         </div>
                     `).join('') : '<p class="text-xs text-slate-500">No receipt ledgers found.</p>'}
@@ -837,7 +870,7 @@ function handleVerifiedPatientSearch(e) {
     }
 }
 
-function publicDownloadPrescription(patientId, rxId) {
+function publicViewReadOnlyPrescription(patientId, rxId) {
     const recs = medicalRecords[patientId] || [];
     const r = recs.find(x => x.id === rxId) || recs[0];
     const patient = patients.find(p => p.patientId === patientId) || { name: "Patient", ageGender: "34 / Male" };
@@ -852,9 +885,22 @@ function publicDownloadPrescription(patientId, rxId) {
         document.getElementById('lh_rx').value = r.rx;
         document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
 
+        // Hide edit/save buttons in public view mode
+        document.getElementById('lh_notes').readOnly = true;
+        document.getElementById('lh_rx').readOnly = true;
+        document.getElementById('lh_next_visit').readOnly = true;
+        document.getElementById('lh_save_btn').classList.add('hidden-section');
+        document.getElementById('lh_wa_btn').classList.add('hidden-section');
+
         document.getElementById('letterheadModal').classList.remove('hidden');
         document.getElementById('letterheadModal').classList.add('flex');
     }
+}
+
+function publicViewReadOnlyReceipt(recId) {
+    openReceiptModal(recId);
+    // Hide edit button for public
+    document.getElementById('rc_edit_btn').classList.add('hidden-section');
 }
 
 function handlePublicBooking(e) {
@@ -898,6 +944,13 @@ function openLetterhead(id) {
         document.getElementById('lh_date').innerText = new Date().toLocaleDateString();
         document.getElementById('lh_doctor').innerText = appt.doctor;
         document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+
+        // Restore edit permissions for staff
+        document.getElementById('lh_notes').readOnly = false;
+        document.getElementById('lh_rx').readOnly = false;
+        document.getElementById('lh_next_visit').readOnly = false;
+        document.getElementById('lh_save_btn').classList.remove('hidden-section');
+        document.getElementById('lh_wa_btn').classList.remove('hidden-section');
 
         document.getElementById('letterheadModal').classList.remove('hidden');
         document.getElementById('letterheadModal').classList.add('flex');
@@ -944,6 +997,12 @@ function openReceiptModal(recId) {
         document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount}`;
         document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount}`;
 
+        if(currentSession) {
+            document.getElementById('rc_edit_btn').classList.remove('hidden-section');
+        } else {
+            document.getElementById('rc_edit_btn').classList.add('hidden-section');
+        }
+
         document.getElementById('receiptModal').classList.remove('hidden');
         document.getElementById('receiptModal').classList.add('flex');
     }
@@ -964,7 +1023,7 @@ function editReceiptFromModal() {
 function renderLedgers() {
     document.getElementById('tblLedger').innerHTML = ledgers.map(l => `
         <tr class="hover:bg-slate-800/50">
-            <td class="p-3 font-mono text-red-500">${l.patientId}<br><span class="text-white font-sans">${l.patientName}</span></td>
+            <td class="p-3 font-mono text-red-500">${l.id}<br><span class="text-white font-sans font-bold">${l.patientName} (${l.patientId})</span></td>
             <td class="p-3">${l.purpose}</td>
             <td class="p-3 font-bold text-white">₹${l.totalCost}</td>
             <td class="p-3 text-emerald-400 font-bold">₹${l.paidAmount}</td>
@@ -982,7 +1041,7 @@ function editFeeManual(id) {
     const item = ledgers.find(l => l.id === id);
     if(!item) return;
 
-    const total = prompt("Enter Total Treatment Cost (₹):", item.totalCost);
+    const total = prompt("Enter Total Treatment Fee (₹):", item.totalCost);
     const paid = prompt("Enter Amount Paid by Patient (₹):", item.paidAmount);
 
     if(total !== null && paid !== null) {

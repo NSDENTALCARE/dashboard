@@ -54,6 +54,7 @@ let currentSession = null;
 
 function initApp() {
     startRealtimeClock();
+    checkPublicAnnouncement();
     renderHeroAndFees();
     renderDoctorsRoster();
     renderDoctorOptions();
@@ -90,6 +91,20 @@ function logAction(msg) {
 function renderAuditLogs() {
     const box = document.getElementById('adminAuditLogs');
     if(box) box.innerHTML = auditLogs.map(l => `<div>[${l.time}] ${l.text}</div>`).join('');
+}
+
+function checkPublicAnnouncement() {
+    const banner = document.getElementById('publicAnnouncementBanner');
+    const textEl = document.getElementById('disp_announcement_text');
+    const saved = localStorage.getItem('ns_announcement');
+    if(saved && banner && textEl) {
+        textEl.innerText = saved;
+        banner.classList.remove('hidden-section');
+    }
+}
+
+function dismissAnnouncement() {
+    document.getElementById('publicAnnouncementBanner').classList.add('hidden-section');
 }
 
 function renderPublicTokenQueue() {
@@ -153,12 +168,55 @@ function renderDoctorOptions() {
 
 function renderGallery() {
     const publicGrid = document.getElementById('publicGalleryGrid');
+    const adminGrid = document.getElementById('adminGalleryPreview');
+
     if(publicGrid) {
         publicGrid.innerHTML = galleryPhotos.map(url => `
             <div class="overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950">
                 <img src="${url}" class="w-full h-full object-cover">
             </div>
         `).join('');
+    }
+
+    if(adminGrid) {
+        adminGrid.innerHTML = galleryPhotos.map((url, idx) => `
+            <div class="relative rounded-lg overflow-hidden border border-slate-800 h-16 group">
+                <img src="${url}" class="w-full h-full object-cover">
+                <button onclick="deleteGalleryPhotoAdmin(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1 rounded">✕</button>
+            </div>
+        `).join('');
+    }
+}
+
+function addGalleryPhotoAdmin() {
+    const url = document.getElementById('adm_photo_url').value;
+    if(url) {
+        galleryPhotos.push(url);
+        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+        renderGallery();
+        logAction("Admin added gallery photo.");
+        document.getElementById('adm_photo_url').value = '';
+    }
+}
+
+function deleteGalleryPhotoAdmin(idx) {
+    galleryPhotos.splice(idx, 1);
+    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+    renderGallery();
+    logAction("Admin deleted gallery photo.");
+}
+
+function addReviewAdmin() {
+    const author = document.getElementById('adm_rev_author').value;
+    const text = document.getElementById('adm_rev_text').value;
+
+    if(author && text) {
+        allReviews.push({ author, rating: 5, text });
+        localStorage.setItem('ns_reviews', JSON.stringify(allReviews));
+        alert("Google review added!");
+        logAction(`Admin added Google review from ${author}`);
+        document.getElementById('adm_rev_author').value = '';
+        document.getElementById('adm_rev_text').value = '';
     }
 }
 
@@ -271,6 +329,7 @@ function openDashboard() {
         document.getElementById('tabBtnAdminMaster').classList.remove('hidden-section');
         renderAdminUserTable();
         renderAuditLogs();
+        calculateAdminStats();
     } else {
         document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
     }
@@ -285,6 +344,61 @@ function openDashboard() {
 function logout() {
     currentSession = null;
     navigateTo('public-home');
+}
+
+function calculateAdminStats() {
+    let totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    let totalDue = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
+
+    const elRev = document.getElementById('adm_stat_rev');
+    const elDue = document.getElementById('adm_stat_due');
+
+    if(elRev) elRev.innerText = `₹${totalRev.toLocaleString('en-IN')}`;
+    if(elDue) elDue.innerText = `₹${totalDue.toLocaleString('en-IN')}`;
+}
+
+function exportFinancialReport() {
+    let csv = "Patient ID,Patient Name,Purpose,Total Cost,Paid Amount,Due Amount\n";
+    ledgers.forEach(l => {
+        csv += `"${l.patientId}","${l.patientName}","${l.purpose}",${l.totalCost},${l.paidAmount},${l.dueAmount}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NS_Dental_Financial_Report_${todayStr}.csv`;
+    a.click();
+    logAction("Exported financial ledger CSV report.");
+}
+
+function publishAnnouncement() {
+    const text = document.getElementById('adm_announcement_text').value;
+    if(text) {
+        localStorage.setItem('ns_announcement', text);
+        checkPublicAnnouncement();
+        logAction(`Published announcement: "${text}"`);
+        alert("Public announcement published!");
+    }
+}
+
+function saveClinicTimings() {
+    const m = document.getElementById('adm_slot_morning').value;
+    const e = document.getElementById('adm_slot_evening').value;
+
+    document.getElementById('disp_slot_morning').innerText = m;
+    document.getElementById('disp_slot_evening').innerText = e;
+
+    localStorage.setItem('ns_timings', JSON.stringify({ morning: m, evening: e }));
+    logAction("Updated clinic operating hours.");
+    alert("Hospital hours updated!");
+}
+
+function togglePerm(key) {
+    let permObj = JSON.parse(localStorage.getItem('ns_perms')) || {};
+    permObj[key] = !permObj[key];
+    localStorage.setItem('ns_perms', JSON.stringify(permObj));
+    logAction(`Updated permission flag: ${key} = ${permObj[key]}`);
 }
 
 function renderAppointments() {
@@ -558,16 +672,22 @@ function handleManualPatientUpload(e) {
     renderCalendar();
     renderLedgers();
     renderPublicTokenQueue();
+    calculateAdminStats();
 }
 
 function applyAdminThemeSettings() {
     const font = document.getElementById('adm_font_size').value;
     const name = document.getElementById('adm_brand_name').value;
     const contact = document.getElementById('adm_brand_contact').value;
+    const heroTitle = document.getElementById('adm_hero_title').value;
+    const regLine = document.getElementById('adm_reg_line').value;
 
     document.getElementById('appBody').className = `bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden ${font}`;
     document.getElementById('hdr_clinic_name').innerText = name;
     document.getElementById('hdr_clinic_contact').innerText = contact;
+    document.getElementById('disp_hero_title').innerText = heroTitle;
+    document.getElementById('disp_reg_number').innerText = regLine;
+
     logAction("Admin customized UI theme & branding.");
 }
 
@@ -757,6 +877,7 @@ function editFeeManual(id) {
         item.dueAmount = item.totalCost - item.paidAmount;
         localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
         renderLedgers();
+        calculateAdminStats();
         logAction(`Ledger fee modified for patient ${item.patientId}.`);
     }
 }

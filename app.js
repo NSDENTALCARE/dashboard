@@ -1,14 +1,32 @@
 lucide.createIcons();
 
-// Permanent Collections
+// Signboard Data & System State
+let heroContent = JSON.parse(localStorage.getItem('ns_hero')) || {
+    title: "Welcome to N.S. Dental Care",
+    subtitle: "Providing gentle, hygienic, and affordable dental treatments in Santosh Nagar & Edi Bazar, Hyderabad."
+};
+
 let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
-    { id: "doc1", name: "Dr. Mohammed Salahuddin Ayub", spec: "Chief Dental Surgeon (Implants)", phone: "+919876543210" },
-    { id: "doc2", name: "Dr. Tabassum Samreen Alam", spec: "Consultant Dental Surgeon (Orthodontics)", phone: "+919876543211" }
+    { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "+918978883007", fee: 200 },
+    { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "+917729025118", fee: 150 }
+];
+
+let galleryPhotos = JSON.parse(localStorage.getItem('ns_gallery')) || [
+    "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=400&q=80"
+];
+
+let patientReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
+    { author: "Afroze Ali", rating: 5, text: "We had a great experience at NS Dental Care. The staff is very professional and the prices are very reasonable, Highly recommend!" },
+    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub and Dr. Samreen explain the treatment clearly. Painless root canal done at very reasonable cost." },
+    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar & Santosh Nagar." }
 ];
 
 let users = JSON.parse(localStorage.getItem('ns_users')) || [
-    { id: 1, name: "Dr. Mohammed Salahuddin Ayub", role: "doctor", phone: "+919876543210", email: "ayub@nsdental.com", password: "123", status: "Approved" },
-    { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "+919876543212", email: "assistant@nsdental.com", password: "123", status: "Approved" }
+    { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "+918978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
+    { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "+917729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
 ];
 
 let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
@@ -16,12 +34,12 @@ let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
 ];
 
 let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
-    { id: "NSD-1001", patientId: "PAT-1001", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Mohammed Salahuddin Ayub", date: "2026-07-23", slot: "11:00 AM - 01:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: "2026-07-23" }
+    { id: "NSD-1001", patientId: "PAT-1001", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Md Salahuddin Ayub", date: "2026-07-23", slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: "2026-07-23" }
 ];
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
     "PAT-1001": [
-        { date: "2026-07-22", diagnosis: "Severe pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Mohammed Salahuddin Ayub" }
+        { date: "2026-07-22", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub" }
     ]
 };
 
@@ -29,28 +47,27 @@ let ledgers = JSON.parse(localStorage.getItem('ns_ledgers')) || [
     { id: "NSD-1001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 5000, dueAmount: 0 }
 ];
 
-let publicInquiries = JSON.parse(localStorage.getItem('ns_inquiries')) || [];
 let activePrescriptionApptId = null;
 let currentSession = null;
 
 function initApp() {
+    renderHeroAndFees();
     renderDoctorsRoster();
     renderDoctorOptions();
+    renderGallery();
+    renderReviews();
 }
 
-function playLoginChime() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-    } catch(e) {}
+function renderHeroAndFees() {
+    document.getElementById('disp_hero_title').innerText = heroContent.title;
+    document.getElementById('disp_hero_subtitle').innerText = heroContent.subtitle;
+
+    document.getElementById('pub_consultation_fees').innerHTML = doctors.map(d => `
+        <div class="flex justify-between border-b border-slate-800 pb-1">
+            <span>${d.name}:</span>
+            <strong class="text-emerald-400">₹${d.fee}</strong>
+        </div>
+    `).join('');
 }
 
 function navigateTo(id) {
@@ -60,12 +77,12 @@ function navigateTo(id) {
 
 function renderDoctorsRoster() {
     document.getElementById('doctorsRoster').innerHTML = doctors.map(d => `
-        <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex items-center gap-4 shadow-lg">
-            <div class="w-12 h-12 bg-sky-500/20 border border-sky-500/40 rounded-xl flex items-center justify-center text-sky-400 font-bold shrink-0">Dr</div>
+        <div class="bg-slate-900 border border-red-900/40 p-4 rounded-2xl flex items-center gap-4 shadow-lg">
+            <div class="w-12 h-12 bg-red-600/20 border border-red-500/40 rounded-xl flex items-center justify-center text-red-500 font-bold shrink-0">Dr</div>
             <div class="min-w-0">
                 <h4 class="text-sm font-bold text-white truncate">${d.name}</h4>
-                <p class="text-xs text-sky-400 font-medium truncate">${d.spec}</p>
-                <p class="text-[11px] text-slate-400">📞 ${d.phone}</p>
+                <p class="text-xs text-red-400 font-medium truncate">${d.spec}</p>
+                <p class="text-[11px] text-slate-400">📞 ${d.phone} | Consultation: ₹${d.fee}</p>
             </div>
         </div>
     `).join('');
@@ -74,7 +91,26 @@ function renderDoctorsRoster() {
 function renderDoctorOptions() {
     const opts = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
     document.getElementById('bk_doctor').innerHTML = opts;
-    document.getElementById('asst_pdoctor').innerHTML = opts;
+}
+
+function renderGallery() {
+    document.getElementById('publicGalleryGrid').innerHTML = galleryPhotos.map(url => `
+        <div class="overflow-hidden rounded-xl border border-slate-800 h-32 bg-slate-950">
+            <img src="${url}" class="w-full h-full object-cover hover:scale-105 transition">
+        </div>
+    `).join('');
+}
+
+function renderReviews() {
+    document.getElementById('publicReviewsGrid').innerHTML = patientReviews.map(r => `
+        <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+            <div class="flex justify-between text-amber-400 font-bold">
+                <span>${r.author}</span>
+                <span>${'★'.repeat(r.rating)}</span>
+            </div>
+            <p class="text-slate-300 text-[11px] italic">"${r.text}"</p>
+        </div>
+    `).join('');
 }
 
 function openPortalModal() {
@@ -106,7 +142,6 @@ function handlePortalLogin(e) {
 
     if (role === 'admin' && identifier === 'admin' && pwd === '9290') {
         currentSession = { role: 'admin', name: 'Developer Admin' };
-        playLoginChime();
         openDashboard();
         closePortalModal();
         return;
@@ -115,7 +150,6 @@ function handlePortalLogin(e) {
     const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
     if (u && u.status === 'Approved') {
         currentSession = u;
-        playLoginChime();
         openDashboard();
         closePortalModal();
     } else {
@@ -128,14 +162,12 @@ function openDashboard() {
     document.getElementById('dashBadge').innerText = currentSession.role;
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
 
-    if(currentSession.role === 'admin') {
-        document.getElementById('tabBtnAdminMaster').classList.remove('hidden-section');
-    } else {
-        document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
-    }
+    document.getElementById('edit_hero_title').value = heroContent.title;
+    document.getElementById('edit_hero_subtitle').value = heroContent.subtitle;
+    document.getElementById('edit_fee_doc1').value = doctors[0].fee;
+    document.getElementById('edit_fee_doc2').value = doctors[1].fee;
 
     renderAppointments();
-    renderCalendar();
     renderApprovals();
     renderLedgers();
 }
@@ -145,9 +177,46 @@ function logout() {
     navigateTo('public-home');
 }
 
+function handleAddGalleryPhoto(e) {
+    e.preventDefault();
+    const url = document.getElementById('gal_img_url').value;
+    galleryPhotos.push(url);
+    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+    renderGallery();
+    alert("Image added to gallery!");
+    e.target.reset();
+}
+
+function handleAddReview(e) {
+    e.preventDefault();
+    const author = document.getElementById('rev_author').value;
+    const rating = parseInt(document.getElementById('rev_rating').value);
+    const text = document.getElementById('rev_text').value;
+
+    patientReviews.push({ author, rating, text });
+    localStorage.setItem('ns_reviews', JSON.stringify(patientReviews));
+    renderReviews();
+    alert("Review added!");
+    e.target.reset();
+}
+
+function saveHeroAndFees() {
+    heroContent.title = document.getElementById('edit_hero_title').value;
+    heroContent.subtitle = document.getElementById('edit_hero_subtitle').value;
+    doctors[0].fee = parseFloat(document.getElementById('edit_fee_doc1').value) || 200;
+    doctors[1].fee = parseFloat(document.getElementById('edit_fee_doc2').value) || 150;
+
+    localStorage.setItem('ns_hero', JSON.stringify(heroContent));
+    localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+
+    renderHeroAndFees();
+    renderDoctorsRoster();
+    alert("Hero text & fees saved successfully!");
+}
+
 function triggerWhatsAppConfirmation(phone, pId, apptId, name, doctor, date, slot) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = `*NS DENTAL CARE - APPOINTMENT CONFIRMATION*%0A%0AHello *${name}*, your dental appointment is confirmed!%0A%0A*Patient ID:* ${pId}%0A*Appointment ID:* ${apptId}%0A*Doctor:* ${doctor}%0A*Date:* ${date}%0A*Slot:* ${slot}%0A%0A*Address:* #17-1-305/P/1, Behind Water Tank, Santosh Nagar, Hyderabad.`;
+    const msg = `*N.S. DENTAL CARE - APPOINTMENT CONFIRMATION*%0A%0AHello *${name}*, your appointment is confirmed!%0A%0A*Patient ID:* ${pId}%0A*Appointment ID:* ${apptId}%0A*Doctor:* ${doctor}%0A*Date:* ${date}%0A*Slot:* ${slot}%0A%0A*Address:* #17-1-305/P/1, Behind Water Tank Road, Santosh Nagar, Edi Bazar, Hyderabad.`;
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
 }
 
@@ -179,51 +248,6 @@ function handlePublicBooking(e) {
     navigateTo('public-home');
 }
 
-function handleAssistantPatientRegistration(e) {
-    e.preventDefault();
-    const name = document.getElementById('asst_pname').value;
-    const phone = document.getElementById('asst_pphone').value;
-    const doctor = document.getElementById('asst_pdoctor').value;
-    const reason = document.getElementById('asst_preason').value;
-    const date = document.getElementById('asst_pdate').value;
-    const slot = document.getElementById('asst_pslot').value;
-
-    let patient = patients.find(p => p.phone === phone);
-    if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
-        patients.push(patient);
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
-    }
-
-    const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-    appointments.push({ id: apptId, patientId: patient.patientId, name, phone, doctor, date, slot, status: "CONFIRMED", reason, nextVisit: date });
-    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-
-    ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: 0, paidAmount: 0, dueAmount: 0 });
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-
-    alert(`Patient Registered! Patient ID: ${patient.patientId}`);
-    triggerWhatsAppConfirmation(phone, patient.patientId, apptId, name, doctor, date, slot);
-    openDashboard();
-}
-
-function sendDailyBriefingToDoctor() {
-    const today = new Date().toISOString().split('T')[0];
-    const todaysAppts = appointments.filter(a => a.date === today || a.nextVisit === today);
-
-    let text = `*NS DENTAL CARE - TODAY'S PATIENT SCHEDULE (${today})*%0A%0A`;
-    if(todaysAppts.length === 0) {
-        text += `No patient visits scheduled for today.`;
-    } else {
-        todaysAppts.forEach((a, i) => {
-            text += `${i+1}. *${a.name}* (ID: ${a.patientId})%0A    Slot: ${a.slot}%0A    Problem: ${a.reason}%0A%0A`;
-        });
-    }
-
-    const docPhone = doctors[0].phone.replace(/[^0-9]/g, '');
-    window.open(`https://wa.me/${docPhone}?text=${text}`, '_blank');
-}
-
 function searchPatientRecords() {
     const q = document.getElementById('trackQuery').value.trim();
     const matchedPatient = patients.find(p => p.patientId === q || p.name.toLowerCase().includes(q.toLowerCase()) || p.phone === q);
@@ -236,18 +260,18 @@ function searchPatientRecords() {
         const recs = medicalRecords[matchedPatient.patientId] || [];
 
         box.innerHTML = `
-            <div class="border-b border-slate-700 pb-2">
-                <span class="text-xs text-sky-400 font-mono font-bold">${matchedPatient.patientId}</span>
+            <div class="border-b border-slate-800 pb-2">
+                <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
                 <h3 class="text-lg font-bold text-white">${matchedPatient.name} (${matchedPatient.phone})</h3>
             </div>
             <div>
-                <h4 class="text-xs font-bold text-sky-300 uppercase mb-1">Appointment History:</h4>
+                <h4 class="text-xs font-bold text-red-400 uppercase mb-1">Appointment History:</h4>
                 <ul class="text-xs space-y-1 text-slate-300">
                     ${appts.map(a => `<li>• ${a.date} (${a.slot}) - Doctor: ${a.doctor} - <strong>${a.reason}</strong></li>`).join('')}
                 </ul>
             </div>
             <div>
-                <h4 class="text-xs font-bold text-emerald-300 uppercase mb-1">Past Treatments & Prescriptions:</h4>
+                <h4 class="text-xs font-bold text-emerald-400 uppercase mb-1">Prescriptions:</h4>
                 <ul class="text-xs space-y-1 text-slate-300">
                     ${recs.length > 0 ? recs.map(r => `<li>• ${r.date}: ${r.diagnosis} | Rx: <em>${r.rx}</em></li>`).join('') : '<li>No prescription records found.</li>'}
                 </ul>
@@ -255,42 +279,6 @@ function searchPatientRecords() {
         `;
     } else {
         box.innerHTML = `<p class="text-xs text-rose-400">No patient record found for "${q}".</p>`;
-    }
-}
-
-function renderCalendar() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-    const list = document.getElementById('calendarList');
-    list.innerHTML = appointments.map(a => {
-        const isTomorrow = (a.nextVisit === tomorrowStr || a.date === tomorrowStr);
-        return `
-            <div class="bg-slate-900 border ${isTomorrow ? 'due-tomorrow border-amber-500' : 'border-slate-700'} p-3 rounded-xl space-y-2">
-                <div class="flex justify-between items-start">
-                    <span class="text-[10px] font-mono text-sky-400">${a.patientId}</span>
-                    ${isTomorrow ? '<span class="bg-amber-500 text-slate-950 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Due Tomorrow</span>' : ''}
-                </div>
-                <h4 class="text-xs font-bold text-white">${a.name}</h4>
-                <p class="text-[11px] text-slate-300">Visit Date: <strong>${a.nextVisit || a.date}</strong></p>
-                <p class="text-[10px] text-slate-400">Reason: ${a.reason}</p>
-                <button onclick="rescheduleVisit('${a.id}')" class="bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-600 px-2 py-1 rounded text-[10px]">Reschedule Date</button>
-            </div>
-        `;
-    }).join('');
-}
-
-function rescheduleVisit(id) {
-    const appt = appointments.find(a => a.id === id);
-    if(appt) {
-        const newDate = prompt("Enter new visit date (YYYY-MM-DD):", appt.nextVisit || appt.date);
-        if(newDate) {
-            appt.nextVisit = newDate;
-            localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-            renderCalendar();
-            alert("Visit date updated!");
-        }
     }
 }
 
@@ -325,12 +313,10 @@ function savePrescriptionAndSync() {
         });
 
         localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
-
         appt.nextVisit = nextVisit;
         localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
-        renderCalendar();
-        alert("Prescription saved & Next visit date synced!");
+        alert("Prescription saved & Next visit synced!");
     }
 }
 
@@ -380,14 +366,14 @@ function closeReceiptModal() {
 
 function renderAppointments() {
     document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
-        <tr class="hover:bg-slate-700/30">
-            <td class="p-3 font-mono text-sky-400">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
             <td class="p-3">${a.phone}</td>
             <td class="p-3">${a.doctor}</td>
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
             <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">${a.status}</span></td>
             <td class="p-3 flex gap-1">
-                <button onclick="openLetterhead('${a.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Prescription</button>
+                <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-xs">Prescription</button>
             </td>
         </tr>
     `).join('');
@@ -395,15 +381,15 @@ function renderAppointments() {
 
 function renderLedgers() {
     document.getElementById('tblLedger').innerHTML = ledgers.map(l => `
-        <tr class="hover:bg-slate-700/30">
-            <td class="p-3 font-mono text-sky-400">${l.patientId}<br><span class="text-white font-sans">${l.patientName}</span></td>
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-3 font-mono text-red-500">${l.patientId}<br><span class="text-white font-sans">${l.patientName}</span></td>
             <td class="p-3">${l.purpose}</td>
             <td class="p-3 font-bold text-white">₹${l.totalCost}</td>
             <td class="p-3 text-emerald-400 font-bold">₹${l.paidAmount}</td>
             <td class="p-3 text-amber-400 font-bold">₹${l.dueAmount}</td>
             <td class="p-3 flex gap-1">
-                <button onclick="editFeeManual('${l.id}')" class="bg-sky-500/20 text-sky-300 px-2 py-1 rounded text-xs">Edit Fee</button>
-                <button onclick="openReceipt('${l.id}')" class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded text-xs">Receipt</button>
+                <button onclick="editFeeManual('${l.id}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs">Edit Fee</button>
+                <button onclick="openReceipt('${l.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-xs">Receipt</button>
             </td>
         </tr>
     `).join('');
@@ -412,13 +398,13 @@ function renderLedgers() {
 function renderApprovals() {
     const pendingUsers = users.filter(u => u.status === 'Pending');
     document.getElementById('tblApprovals').innerHTML = pendingUsers.map(u => `
-        <tr class="hover:bg-slate-700/30">
+        <tr class="hover:bg-slate-800/50">
             <td class="p-3 font-bold text-white">${u.name}</td>
-            <td class="p-3 uppercase text-sky-400 font-bold">${u.role}</td>
+            <td class="p-3 uppercase text-red-400 font-bold">${u.role}</td>
             <td class="p-3">${u.phone}</td>
             <td class="p-3"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-[10px] font-bold">${u.status}</span></td>
             <td class="p-3">
-                <button onclick="approveUserAccount(${u.id})" class="bg-emerald-500 text-slate-950 font-bold px-2 py-1 rounded text-xs">Approve</button>
+                <button onclick="approveUserAccount(${u.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded text-xs">Approve</button>
             </td>
         </tr>
     `).join('');
@@ -434,25 +420,20 @@ function approveUserAccount(id) {
     }
 }
 
-function resetSystemData() {
-    localStorage.clear();
-    location.reload();
-}
-
 function switchDashTab(tab) {
     document.getElementById('viewAppts').classList.add('hidden-section');
     document.getElementById('viewEHR').classList.add('hidden-section');
-    document.getElementById('viewCalendar').classList.add('hidden-section');
+    document.getElementById('viewReviews').classList.add('hidden-section');
+    document.getElementById('viewFees').classList.add('hidden-section');
     document.getElementById('viewLedger').classList.add('hidden-section');
     document.getElementById('viewApprovals').classList.add('hidden-section');
-    document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
     if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
     if(tab === 'ehr') document.getElementById('viewEHR').classList.remove('hidden-section');
-    if(tab === 'calendar') document.getElementById('viewCalendar').classList.remove('hidden-section');
+    if(tab === 'reviews') document.getElementById('viewReviews').classList.remove('hidden-section');
+    if(tab === 'fees') document.getElementById('viewFees').classList.remove('hidden-section');
     if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
     if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');
-    if(tab === 'adminMaster') document.getElementById('viewAdminMaster').classList.remove('hidden-section');
 }
 
 initApp();

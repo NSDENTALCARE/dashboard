@@ -31,6 +31,11 @@ html, body {
     scrollbar-width: none;
 }
 
+.modified-today {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    border-left: 4px solid #f59e0b !important;
+}
+
 @media print {
     body * {
         visibility: hidden;

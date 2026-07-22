@@ -32,13 +32,11 @@ html, body {
     scrollbar-width: none;
 }
 
-/* Day-Change Highlight Pulse for Assistant edits */
 .modified-today {
     background-color: rgba(245, 158, 11, 0.15) !important;
     border-left: 4px solid #f59e0b !important;
 }
 
-/* Tooth charting button styles */
 .tooth-btn-selected {
     background-color: #dc2626 !important;
     color: white !important;

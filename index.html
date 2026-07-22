@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>N.S. DENTAL CARE | Multi-Specialty Dental Hospital</title>
+    <title>N.S. DENTAL CARE | Multi-Specialty Dental Hospital Platform</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -28,7 +28,7 @@
             <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
                 <div class="hidden md:flex flex-col text-right mr-2 border-r border-red-400/40 pr-3 text-xs">
                     <span id="hdr_time" class="font-mono font-bold text-white">00:00:00 AM</span>
-                    <span id="hdr_date" class="text-[10px] text-red-100">Wed, 22 Jul 2026</span>
+                    <span id="hdr_date" class="text-[10px] text-red-100">Thu, 23 Jul 2026</span>
                 </div>
                 <button onclick="navigateTo('public-booking')" class="bg-white hover:bg-slate-100 text-red-700 font-bold px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs flex items-center gap-1 shadow-lg">
                     <i data-lucide="calendar-plus" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> <span class="hidden sm:inline">Book Appointment</span>
@@ -43,8 +43,9 @@
     <!-- MAIN APP CONTAINER -->
     <main class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
-        <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
+        <!-- ================= SECTION 1: PUBLIC HOMEPAGE WITH INTERACTIVE NAVIGATION ================= -->
         <section id="public-home" class="w-full space-y-6 sm:space-y-8">
+            <!-- Hero Signboard Banner -->
             <div class="bg-gradient-to-br from-red-600 via-red-700 to-slate-900 border-2 border-red-500 rounded-2xl p-5 sm:p-10 shadow-2xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-2">
                     <span class="bg-white text-red-700 text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Cosmetic Dental Surgery & Implants</span>
@@ -64,8 +65,28 @@
                 </div>
             </div>
 
-            <!-- PUBLIC LIVE TOKEN QUEUE TRACKER -->
-            <div class="bg-slate-900 border border-red-900/50 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
+            <!-- PUBLIC SECTION QUICK NAVIGATION CARDS -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <a href="#sec_queue" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
+                    <i data-lucide="users" class="text-red-500 w-5 h-5 shrink-0"></i>
+                    <div><h4 class="font-bold text-white">Live Queue</h4><p class="text-[10px] text-slate-400">View Tokens</p></div>
+                </a>
+                <a href="#sec_doctors" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
+                    <i data-lucide="stethoscope" class="text-red-500 w-5 h-5 shrink-0"></i>
+                    <div><h4 class="font-bold text-white">Surgeons</h4><p class="text-[10px] text-slate-400">Doctor Roster</p></div>
+                </a>
+                <a href="#sec_timings" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
+                    <i data-lucide="clock" class="text-red-500 w-5 h-5 shrink-0"></i>
+                    <div><h4 class="font-bold text-white">Fees & Schedule</h4><p class="text-[10px] text-slate-400">Clinic Timings</p></div>
+                </a>
+                <a href="#sec_gallery" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
+                    <i data-lucide="image" class="text-red-500 w-5 h-5 shrink-0"></i>
+                    <div><h4 class="font-bold text-white">Photo Gallery</h4><p class="text-[10px] text-slate-400">Clinic Photos</p></div>
+                </a>
+            </div>
+
+            <!-- 1. LIVE QUEUE TRACKER -->
+            <div id="sec_queue" class="bg-slate-900 border border-red-900/50 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
                 <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-3">
                     <div>
                         <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
@@ -91,16 +112,16 @@
                 </div>
             </div>
 
-            <!-- Surgeons Roster -->
-            <div>
+            <!-- 2. SURGEONS ROSTER -->
+            <div id="sec_doctors" class="scroll-mt-20">
                 <h3 class="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
                     <i data-lucide="stethoscope" class="text-red-500"></i> Attending Surgeons & Qualifications
                 </h3>
                 <div id="doctorsRoster" class="grid sm:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- Fees & Timings -->
-            <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+            <!-- 3. FEES & TIMINGS -->
+            <div id="sec_timings" class="grid md:grid-cols-2 gap-4 sm:gap-6 scroll-mt-20">
                 <div class="bg-slate-900 border border-red-900/50 p-4 sm:p-5 rounded-2xl space-y-3 shadow-xl">
                     <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                         <i data-lucide="indian-rupee" class="text-red-500"></i> Consultation Fees
@@ -120,15 +141,15 @@
                 </div>
             </div>
 
-            <!-- Photo Gallery -->
-            <div class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
+            <!-- 4. PHOTO GALLERY -->
+            <div id="sec_gallery" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
                 <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                     <i data-lucide="image" class="text-red-500"></i> Clinic Photo Gallery
                 </h3>
                 <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
             </div>
 
-            <!-- Reviews -->
+            <!-- 5. GOOGLE REVIEWS -->
             <div class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div>
@@ -526,7 +547,7 @@
                 </div>
             </div>
 
-            <!-- TAB 8: ADMIN MASTER PANEL (25+ ADVANCED CONTROLS) -->
+            <!-- TAB 8: ADMIN MASTER PANEL -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
                 <!-- User Account Management -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
@@ -640,7 +661,7 @@
                         <p><strong>Patient Name:</strong> <span id="lh_pname">Mohammed Ali</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Date:</strong> <span id="lh_date">2026-07-22</span></p>
+                        <p><strong>Date:</strong> <span id="lh_date">2026-07-23</span></p>
                     </div>
                 </div>
 
@@ -700,7 +721,7 @@
                         <p><strong>Patient Name:</strong> <span id="rc_pname">Mohammed Ali</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Date:</strong> <span id="rc_date">2026-07-22</span></p>
+                        <p><strong>Date:</strong> <span id="rc_date">2026-07-23</span></p>
                     </div>
                 </div>
                 <table class="w-full text-left text-xs border-collapse">

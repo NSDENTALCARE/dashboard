@@ -31,7 +31,11 @@ let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
 const todayStr = new Date().toISOString().split('T')[0];
 
 let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
-    { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room" }
+    { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
+];
+
+let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
+    { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: todayStr, status: "In Lab Production" }
 ];
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
@@ -45,6 +49,7 @@ let ledgers = JSON.parse(localStorage.getItem('ns_ledgers')) || [
 ];
 
 let activePrescriptionApptId = null;
+let selectedTeeth = [];
 let currentSession = null;
 
 function initApp() {
@@ -55,6 +60,7 @@ function initApp() {
     renderGallery();
     initShufflingReviews();
     renderPublicTokenQueue();
+    renderOdontogram();
 }
 
 function startRealtimeClock() {
@@ -222,7 +228,7 @@ function handlePortalLogin(e) {
         openDashboard();
         closePortalModal();
     } else {
-        alert("Invalid login details or account pending approval!");
+        alert("Invalid login credentials or account pending approval!");
     }
 }
 
@@ -270,6 +276,7 @@ function openDashboard() {
     }
 
     renderAppointments();
+    renderLabOrders();
     renderCalendar();
     renderLedgers();
     renderApprovals();
@@ -285,7 +292,10 @@ function renderAppointments() {
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
             <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
             <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
-            <td class="p-3">${a.phone}</td>
+            <td class="p-3 text-[11px]">
+                <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
+                <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
+            </td>
             <td class="p-3">${a.doctor}</td>
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
             <td class="p-3 font-medium text-slate-200">${a.reason}</td>
@@ -331,6 +341,99 @@ function updateTokenStatus(id) {
     }
 }
 
+function renderLabOrders() {
+    const tbl = document.getElementById('tblLabOrders');
+    if(tbl) {
+        tbl.innerHTML = labOrders.map(o => `
+            <tr class="hover:bg-slate-800/50">
+                <td class="p-2.5 font-bold text-white">${o.patientId}<br><span class="text-slate-400 font-normal">${o.patientName}</span></td>
+                <td class="p-2.5 font-mono text-amber-400 font-bold">${o.tooth}</td>
+                <td class="p-2.5">${o.material}</td>
+                <td class="p-2.5">${o.labName}</td>
+                <td class="p-2.5 font-mono text-[10px]">${o.date}</td>
+                <td class="p-2.5"><span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold border border-sky-500/30">${o.status}</span></td>
+                <td class="p-2.5"><button onclick="updateLabOrderStatus('${o.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[10px]">Update</button></td>
+            </tr>
+        `).join('');
+    }
+}
+
+function openNewLabOrderModal() {
+    const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
+    const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
+    const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
+    const labName = prompt("Lab Partner Name:", "Apex Dental Lab");
+
+    if(pid && tooth) {
+        const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
+        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: todayStr, status: "Impression Taken" });
+        localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
+        renderLabOrders();
+        logAction(`Lab order created for ${pid}`);
+    }
+}
+
+function updateLabOrderStatus(id) {
+    const order = labOrders.find(o => o.id === id);
+    if(order) {
+        const st = prompt("Lab Status (1: Impression Taken, 2: In Lab Production, 3: Delivered & Fitted):", "2");
+        if(st === "1") order.status = "Impression Taken";
+        if(st === "2") order.status = "In Lab Production";
+        if(st === "3") order.status = "Delivered & Fitted";
+
+        localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
+        renderLabOrders();
+        logAction(`Lab order ${id} status updated.`);
+    }
+}
+
+function triggerWhatsAppDoctorBriefing() {
+    const todays = appointments.filter(a => a.date === todayStr);
+    let msg = `*N.S. DENTAL CARE - DAILY MORNING BRIEFING (${todayStr})*%0A%0ATotal Scheduled Patients: ${todays.length}%0A%0A`;
+    todays.forEach((a, i) => {
+        msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Slot: ${a.slot}%0A   BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'}%0A%0A`;
+    });
+
+    window.open(`https://wa.me/918978883007?text=${msg}`, '_blank');
+}
+
+function renderOdontogram() {
+    const grid = document.getElementById('odontogramGrid');
+    if(!grid) return;
+    let html = '';
+    for(let i = 1; i <= 32; i++) {
+        html += `<button type="button" onclick="toggleToothSelection(${i})" id="toothBtn_${i}" class="border border-slate-300 bg-white text-slate-900 px-2 py-1 rounded font-bold hover:bg-red-100">#${i}</button>`;
+    }
+    grid.innerHTML = html;
+}
+
+function toggleToothSelection(toothNum) {
+    const btn = document.getElementById(`toothBtn_${toothNum}`);
+    if(selectedTeeth.includes(toothNum)) {
+        selectedTeeth = selectedTeeth.filter(t => t !== toothNum);
+        btn.classList.remove('tooth-btn-selected');
+    } else {
+        selectedTeeth.push(toothNum);
+        btn.classList.add('tooth-btn-selected');
+    }
+
+    const notesArea = document.getElementById('lh_notes');
+    notesArea.value = `Teeth Selected: #${selectedTeeth.join(', #')} | Procedure Planned: `;
+}
+
+function sendPrescriptionWhatsApp() {
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+    if(appt) {
+        const notes = document.getElementById('lh_notes').value;
+        const rx = document.getElementById('lh_rx').value;
+        const nextVisit = document.getElementById('lh_next_visit').value;
+
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings:* ${notes}%0A*Rx / Medications:*%0A${rx}%0A%0A*Next Follow-Up Date:* ${nextVisit}`;
+        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+    }
+}
+
 function renderAdminUserTable() {
     const tbl = document.getElementById('adminUserManagementTable');
     if(tbl) {
@@ -344,7 +447,7 @@ function renderAdminUserTable() {
                     <button onclick="adminOverridePassword(${u.id})" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Reset Pwd</button>
                 </td>
                 <td class="p-2.5">
-                    <button onclick="adminToggleUserStatus(${u.id})" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold">Toggle Status</button>
+                    <button onclick="adminToggleUserStatus(${u.id})" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold">Toggle Access</button>
                 </td>
             </tr>
         `).join('');
@@ -425,6 +528,10 @@ function handleManualPatientUpload(e) {
     const nextVisit = document.getElementById('man_pnext').value || date;
     const fee = parseFloat(document.getElementById('man_pfee').value) || 0;
 
+    const bp = document.getElementById('man_vitals_bp').value;
+    const sugar = document.getElementById('man_vitals_sugar').value;
+    const risk = document.getElementById('man_vitals_risk').value;
+
     let patient = patients.find(p => p.phone === phone);
     if(!patient) {
         patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
@@ -434,7 +541,7 @@ function handleManualPatientUpload(e) {
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room" });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
     if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
@@ -444,7 +551,7 @@ function handleManualPatientUpload(e) {
     ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0 });
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
-    logAction(`Record added for ${name} (${patient.patientId})`);
+    logAction(`Record added for ${name} (${patient.patientId}) with vitals BP:${bp}`);
     alert(`Patient Uploaded! ID: ${patient.patientId} | Token: ${token}`);
     e.target.reset();
     renderAppointments();
@@ -465,7 +572,7 @@ function applyAdminThemeSettings() {
 }
 
 function downloadJSONBackup() {
-    const backupData = { patients, appointments, medicalRecords, ledgers, users, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
+    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, users, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -487,11 +594,13 @@ function restoreJSONBackup(event) {
                 appointments = data.appointments;
                 medicalRecords = data.medicalRecords || {};
                 ledgers = data.ledgers || [];
+                labOrders = data.labOrders || [];
 
                 localStorage.setItem('ns_patients', JSON.stringify(patients));
                 localStorage.setItem('ns_appointments', JSON.stringify(appointments));
                 localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
                 localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+                localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
 
                 alert("Backup Restored Successfully!");
                 location.reload();
@@ -702,16 +811,18 @@ function approvePasswordReset(reqId) {
 
 function switchDashTab(tab) {
     document.getElementById('viewAppts').classList.add('hidden-section');
-    document.getElementById('viewCalendar').classList.add('hidden-section');
     document.getElementById('viewManualPatient').classList.add('hidden-section');
+    document.getElementById('viewLabTracker').classList.add('hidden-section');
+    document.getElementById('viewCalendar').classList.add('hidden-section');
     document.getElementById('viewEHR').classList.add('hidden-section');
     document.getElementById('viewLedger').classList.add('hidden-section');
     document.getElementById('viewApprovals').classList.add('hidden-section');
     document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
     if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
-    if(tab === 'calendar') document.getElementById('viewCalendar').classList.remove('hidden-section');
     if(tab === 'manualPatient') document.getElementById('viewManualPatient').classList.remove('hidden-section');
+    if(tab === 'labTracker') document.getElementById('viewLabTracker').classList.remove('hidden-section');
+    if(tab === 'calendar') document.getElementById('viewCalendar').classList.remove('hidden-section');
     if(tab === 'ehr') document.getElementById('viewEHR').classList.remove('hidden-section');
     if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
     if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');

@@ -1,4 +1,4 @@
-/* Custom Styles, Animations & Typography */
+/* N.S. Dental Care Crimson Theme Styles */
 .hidden-section {
     display: none !important;
 }
@@ -9,19 +9,12 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #0f172a;
+    background: #020617;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: #991b1b;
     border-radius: 4px;
-}
-
-/* Glowing Amber Border for Tomorrow Due Appointments */
-.due-tomorrow {
-    border-color: #f59e0b !important;
-    background-color: rgba(245, 158, 11, 0.1) !important;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2) !important;
 }
 
 @media print {

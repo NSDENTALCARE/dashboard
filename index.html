@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>N.S. DENTAL CARE | Hospital Management System</title>
+    <title>N.S. DENTAL CARE | Multi-Specialty Dental Hospital</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -12,7 +12,7 @@
 </head>
 <body id="appBody" class="bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden selection:bg-red-600 selection:text-white">
 
-    <!-- SIGNBOARD HEADER -->
+    <!-- CLINIC SIGNBOARD HEADER -->
     <header class="bg-red-600 text-white border-b-4 border-red-800 sticky top-0 z-40 shadow-xl">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex justify-between items-center gap-2">
             <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0" onclick="navigateTo('public-home')">
@@ -45,7 +45,6 @@
 
         <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
         <section id="public-home" class="w-full space-y-6 sm:space-y-8">
-            <!-- Hero Signboard Banner -->
             <div class="bg-gradient-to-br from-red-600 via-red-700 to-slate-900 border-2 border-red-500 rounded-2xl p-5 sm:p-10 shadow-2xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-2">
                     <span class="bg-white text-red-700 text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Cosmetic Dental Surgery & Implants</span>
@@ -72,7 +71,7 @@
                         <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="users" class="text-red-500"></i> Today's Live Patient Queue & Token Display
                         </h3>
-                        <p class="text-[11px] text-slate-400">Live token status managed by clinic assistant</p>
+                        <p class="text-[11px] text-slate-400">Live waiting room queue managed by clinic assistant</p>
                     </div>
                     <span class="bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-mono px-2.5 py-1 rounded-full uppercase font-bold" id="public_date_badge">Today</span>
                 </div>
@@ -121,7 +120,7 @@
                 </div>
             </div>
 
-            <!-- Gallery -->
+            <!-- Photo Gallery -->
             <div class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                 <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                     <i data-lucide="image" class="text-red-500"></i> Clinic Photo Gallery
@@ -153,7 +152,7 @@
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Home
                 </button>
                 <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                    <i data-lucide="user-check" class="text-red-500"></i> Identity Verification & Medical Records
+                    <i data-lucide="user-check" class="text-red-500"></i> Identity Verification & Medical Records Access
                 </h2>
                 <form onsubmit="handleVerifiedPatientSearch(event)" class="space-y-3">
                     <div>
@@ -220,7 +219,7 @@
                 </button>
 
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h3 class="text-xs sm:text-sm font-bold text-red-500 uppercase">Staff Portal Login</h3>
+                    <h3 class="text-xs sm:text-sm font-bold text-red-500 uppercase">Staff Portal Access</h3>
                     <div class="flex gap-2 text-xs">
                         <button onclick="switchPortalTab('login')" id="tabLoginBtn" class="text-red-500 font-bold">Login</button>
                         <span>•</span>
@@ -307,28 +306,32 @@
                     <h2 id="dashWelcome" class="text-base font-bold text-white mt-1">Welcome</h2>
                     <p id="dashClockBar" class="text-xs text-red-400 font-mono mt-0.5"></p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="triggerWhatsAppDoctorBriefing()" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Daily Briefing
+                    </button>
                     <button onclick="logout()" class="bg-slate-800 text-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-700">Exit Session</button>
                 </div>
             </div>
 
-            <!-- Navigation Tabs -->
+            <!-- Dashboard Tabs -->
             <div id="dashTabContainer" class="flex border-b border-slate-800 gap-4 sm:gap-6 text-xs sm:text-sm font-semibold overflow-x-auto pb-1 no-scrollbar">
-                <button onclick="switchDashTab('appts')" id="tabBtnAppts" class="text-red-500 border-b-2 border-red-500 pb-2 whitespace-nowrap">Appointments & Approvals</button>
+                <button onclick="switchDashTab('appts')" id="tabBtnAppts" class="text-red-500 border-b-2 border-red-500 pb-2 whitespace-nowrap">Appointments & Queue</button>
+                <button onclick="switchDashTab('manualPatient')" id="tabBtnManualPatient" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Upload Patient Record</button>
+                <button onclick="switchDashTab('labTracker')" id="tabBtnLabTracker" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Lab & Crown Orders</button>
                 <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Master Calendar</button>
-                <button onclick="switchDashTab('manualPatient')" id="tabBtnManualPatient" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Upload Patient Data</button>
-                <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Patient Records (EHR)</button>
+                <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Patient History (EHR)</button>
                 <button onclick="switchDashTab('ledger')" id="tabBtnLedger" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Billing Ledger</button>
                 <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Registrations & Resets</button>
-                <button onclick="switchDashTab('adminMaster')" id="tabBtnAdminMaster" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Admin Master Control</button>
+                <button onclick="switchDashTab('adminMaster')" id="tabBtnAdminMaster" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Admin Master Panel</button>
             </div>
 
-            <!-- TAB 1: APPOINTMENTS & APPROVALS -->
+            <!-- TAB 1: APPOINTMENTS & QUEUE MANAGEMENT -->
             <div id="viewAppts" class="space-y-4">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="p-3 border-b border-slate-800 flex justify-between items-center">
-                        <span class="text-xs font-bold text-white">Daily Appointments & Pending Web Requests</span>
-                        <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold border border-amber-500/30">Modified Today Active</span>
+                        <span class="text-xs font-bold text-white">Daily Roster & Live Queue</span>
+                        <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold border border-amber-500/30">Modified Today Highlighted</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -336,7 +339,7 @@
                                 <tr>
                                     <th class="p-3">Patient ID / Name</th>
                                     <th class="p-3">Token</th>
-                                    <th class="p-3">Contact</th>
+                                    <th class="p-3">Pre-Consult Vitals / Risks</th>
                                     <th class="p-3">Doctor</th>
                                     <th class="p-3">Date & Slot</th>
                                     <th class="p-3">Purpose</th>
@@ -350,20 +353,10 @@
                 </div>
             </div>
 
-            <!-- TAB 2: MASTER CALENDAR -->
-            <div id="viewCalendar" class="space-y-4 hidden-section">
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i data-lucide="calendar" class="text-red-500"></i> Clinic Appointment & Follow-Up Calendar
-                    </h3>
-                    <div id="calendarGrid" class="grid sm:grid-cols-3 gap-3"></div>
-                </div>
-            </div>
-
-            <!-- TAB 3: MANUAL PATIENT UPLOAD -->
+            <!-- TAB 2: MANUAL PATIENT DATA & VITALS ENTRY -->
             <div id="viewManualPatient" class="hidden-section max-w-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl space-y-4">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i data-lucide="user-plus" class="text-red-500"></i> Manual Patient Upload
+                    <i data-lucide="user-plus" class="text-red-500"></i> Upload Patient Record & Medical Vitals
                 </h3>
                 <form onsubmit="handleManualPatientUpload(event)" class="space-y-3 text-xs">
                     <div class="grid sm:grid-cols-2 gap-3">
@@ -372,10 +365,27 @@
                             <input type="text" id="man_pname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         </div>
                         <div>
-                            <label class="block uppercase text-slate-400 mb-1">Mobile Number *</label>
+                            <label class="block uppercase text-slate-400 mb-1">Mobile Number (WhatsApp) *</label>
                             <input type="tel" id="man_pphone" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         </div>
                     </div>
+
+                    <!-- Pre-Consultation Vitals & Medical Risk Alert -->
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                        <span class="text-xs font-bold text-amber-400 uppercase">Pre-Consultation Vitals & Risk Badges</span>
+                        <div class="grid sm:grid-cols-3 gap-2">
+                            <input type="text" id="man_vitals_bp" placeholder="Blood Pressure (e.g. 120/80)" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
+                            <input type="text" id="man_vitals_sugar" placeholder="Blood Sugar (e.g. 140 mg/dL)" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
+                            <select id="man_vitals_risk" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
+                                <option value="None">No Major Risks</option>
+                                <option value="Diabetic">Diabetic</option>
+                                <option value="Hypertension">Hypertension</option>
+                                <option value="Penicillin Allergy">Penicillin Allergy</option>
+                                <option value="Cardiac Patient">Cardiac Patient</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="grid sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block uppercase text-slate-400 mb-1">Attending Doctor *</label>
@@ -387,8 +397,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block uppercase text-slate-400 mb-1">Prescribed Tablets & Dosage</label>
-                        <textarea id="man_prx" rows="2" placeholder="e.g. Amoxicillin 500mg, Paracetamol 650mg" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
+                        <label class="block uppercase text-slate-400 mb-1">Prescribed Medication / Dosage</label>
+                        <textarea id="man_prx" rows="2" placeholder="e.g. Amoxicillin 500mg (1-0-1), Paracetamol 650mg" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
                     </div>
                     <div class="grid sm:grid-cols-3 gap-3">
                         <div>
@@ -404,23 +414,61 @@
                             <input type="number" id="man_pfee" placeholder="500" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs">Upload Record</button>
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs">Save & Upload Record</button>
                 </form>
             </div>
 
-            <!-- TAB 4: EHR LOOKUP -->
+            <!-- TAB 3: DENTAL LAB & CROWN IMPRESSION TRACKER -->
+            <div id="viewLabTracker" class="space-y-4 hidden-section">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="package" class="text-red-500"></i> Dental Crown & Lab Impression Orders
+                        </h3>
+                        <button onclick="openNewLabOrderModal()" class="bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">+ New Lab Order</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">Patient ID / Name</th>
+                                    <th class="p-2.5">Teeth #</th>
+                                    <th class="p-2.5">Crown / Material Type</th>
+                                    <th class="p-2.5">Lab Partner</th>
+                                    <th class="p-2.5">Impression Date</th>
+                                    <th class="p-2.5">Lab Status</th>
+                                    <th class="p-2.5">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblLabOrders" class="divide-y divide-slate-800 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MASTER CALENDAR -->
+            <div id="viewCalendar" class="space-y-4 hidden-section">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="calendar" class="text-red-500"></i> Clinic Appointment & Follow-Up Calendar
+                    </h3>
+                    <div id="calendarGrid" class="grid sm:grid-cols-3 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- TAB 5: EHR LOOKUP -->
             <div id="viewEHR" class="space-y-4 hidden-section">
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-white">Clinical EHR Lookup</h3>
                     <div class="flex gap-2 max-w-md">
                         <input type="text" id="ehrSearchInput" placeholder="Enter Patient ID (e.g. PAT-1001) or Name" class="flex-1 bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
-                        <button onclick="searchEHR()" class="bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-xs">View History</button>
+                        <button onclick="searchEHR()" class="bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-xs">View EHR</button>
                     </div>
                     <div id="ehrHistoryContainer" class="space-y-3"></div>
                 </div>
             </div>
 
-            <!-- TAB 5: BILLING LEDGER -->
+            <!-- TAB 6: BILLING LEDGER -->
             <div id="viewLedger" class="space-y-4 hidden-section">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="overflow-x-auto">
@@ -441,7 +489,7 @@
                 </div>
             </div>
 
-            <!-- TAB 6: APPROVALS & RESETS -->
+            <!-- TAB 7: APPROVALS & RESETS -->
             <div id="viewApprovals" class="space-y-6 hidden-section">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="p-3 border-b border-slate-800 font-bold text-xs text-white">Pending Account Registrations</div>
@@ -478,12 +526,12 @@
                 </div>
             </div>
 
-            <!-- TAB 7: ADVANCED ADMIN MASTER CONTROL PANEL (25+ FEATURES) -->
+            <!-- TAB 8: ADMIN MASTER PANEL (25+ ADVANCED CONTROLS) -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
-                <!-- User Account Password Reset & Access Controller -->
+                <!-- User Account Management -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                        <i data-lucide="key" class="w-4 h-4"></i> Staff Account Password Overrider & Access Manager
+                        <i data-lucide="key" class="w-4 h-4"></i> Staff Password Overrider & Access Control
                     </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
@@ -493,7 +541,7 @@
                                     <th class="p-2.5">Role</th>
                                     <th class="p-2.5">Contact</th>
                                     <th class="p-2.5">Status</th>
-                                    <th class="p-2.5">Quick Password Override</th>
+                                    <th class="p-2.5">Password Override</th>
                                     <th class="p-2.5">Access Control</th>
                                 </tr>
                             </thead>
@@ -502,10 +550,10 @@
                     </div>
                 </div>
 
-                <!-- Add Doctor/Assistant Form -->
+                <!-- Add Doctor / Assistant Directly -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                        <i data-lucide="user-plus" class="w-4 h-4 text-red-500"></i> Add Doctor or Assistant Profile Directly
+                        <i data-lucide="user-plus" class="w-4 h-4 text-red-500"></i> Add Doctor or Assistant Directly
                     </h3>
                     <form onsubmit="handleAdminAddStaff(event)" class="grid sm:grid-cols-4 gap-3 text-xs">
                         <input type="text" id="adm_stf_name" required placeholder="Full Name" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
@@ -515,16 +563,14 @@
                         </select>
                         <input type="tel" id="adm_stf_phone" required placeholder="Phone Number" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         <input type="password" id="adm_stf_password" required placeholder="Initial Password" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-2 rounded-xl sm:col-span-4">
-                            Register Staff Account
-                        </button>
+                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-2 rounded-xl sm:col-span-4">Register Staff Account</button>
                     </form>
                 </div>
 
-                <!-- Theme Customizer -->
+                <!-- Branding & Theme Customizer -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                        <i data-lucide="type" class="w-4 h-4"></i> UI Typography & Brand Customizer
+                        <i data-lucide="type" class="w-4 h-4"></i> UI Typography & Branding Customizer
                     </h3>
                     <div class="grid sm:grid-cols-3 gap-3 text-xs">
                         <div>
@@ -545,18 +591,18 @@
                     </div>
                 </div>
 
-                <!-- Audit Logs -->
+                <!-- Audit Log Viewer -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                     <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> Master Audit Logs
+                        <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> Master Audit Trail
                     </h3>
                     <div id="adminAuditLogs" class="bg-slate-950 p-3 rounded-xl h-40 overflow-y-auto space-y-1 font-mono text-[10px] text-slate-400"></div>
                 </div>
 
-                <!-- Backup & Restore -->
+                <!-- Database Backup & Restore -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                        <i data-lucide="database" class="w-4 h-4"></i> Database Backup & Restore Engine
+                        <i data-lucide="database" class="w-4 h-4"></i> System Data Backup & Restore
                     </h3>
                     <div class="flex flex-wrap gap-3">
                         <button onclick="downloadJSONBackup()" class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Download JSON Backup</button>
@@ -573,9 +619,9 @@
             </div>
         </section>
 
-        <!-- PRESCRIPTION MODAL -->
+        <!-- PRESCRIPTION MODAL WITH 32-TOOTH ODONTOGRAM CHARTING -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-white text-slate-900 w-full max-w-2xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+            <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
                     <i data-lucide="x"></i>
                 </button>
@@ -597,13 +643,21 @@
                         <p><strong>Date:</strong> <span id="lh_date">2026-07-22</span></p>
                     </div>
                 </div>
+
+                <!-- 32-Tooth Odontogram Tooth Charting System -->
+                <div class="no-print bg-slate-50 border border-slate-200 p-3 rounded-lg space-y-2">
+                    <span class="text-xs font-bold text-red-700 uppercase">32-Tooth Odontogram Dental Charting</span>
+                    <p class="text-[11px] text-slate-500">Click individual teeth to toggle selection for diagnosis:</p>
+                    <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
+                </div>
+
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings / Diagnosis:</label>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Selected Teeth Diagnosis:</label>
                         <textarea id="lh_notes" rows="2" class="w-full border rounded p-2 text-xs"></textarea>
                     </div>
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Prescribed Tablets & Dosage:</label>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Prescribed Medication & Dosage:</label>
                         <textarea id="lh_rx" rows="4" class="w-full border rounded p-2 text-xs"></textarea>
                     </div>
                     <div class="bg-red-50 border border-red-200 p-2.5 rounded flex items-center justify-between">
@@ -611,9 +665,15 @@
                         <input type="date" id="lh_next_visit" class="border border-red-300 rounded px-2 py-1 text-xs text-slate-900">
                     </div>
                 </div>
-                <div class="no-print flex justify-end gap-2 pt-2 border-t">
-                    <button onclick="savePrescriptionAndSync()" class="bg-emerald-600 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR</button>
-                    <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print Prescription</button>
+
+                <div class="no-print flex justify-between items-center border-t pt-3">
+                    <button onclick="sendPrescriptionWhatsApp()" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center gap-1">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Send WhatsApp Rx
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="savePrescriptionAndSync()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR</button>
+                        <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print Rx</button>
+                    </div>
                 </div>
             </div>
         </div>

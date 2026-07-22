@@ -1,11 +1,19 @@
-/* N.S. Dental Care Crimson Theme Styles */
+/* Responsive Viewport & Touch Enhancements */
+html, body {
+    min-height: 100%;
+    min-height: 100dvh;
+    touch-action: manipulation;
+    overflow-x: hidden !important;
+}
+
 .hidden-section {
     display: none !important;
 }
 
+/* Custom Scrollbars for Mobile & Desktop */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -17,6 +25,15 @@
     border-radius: 4px;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Print View Setup */
 @media print {
     body * {
         visibility: hidden;

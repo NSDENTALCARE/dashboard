@@ -40,7 +40,7 @@ let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
     "PAT-1001": [
-        { date: "2026-07-22", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr }
+        { date: "2026-07-23", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr }
     ]
 };
 

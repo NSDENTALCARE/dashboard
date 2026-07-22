@@ -1,6 +1,6 @@
 lucide.createIcons();
 
-// Signboard Data & System State
+// Storage State Collections
 let heroContent = JSON.parse(localStorage.getItem('ns_hero')) || {
     title: "Welcome to N.S. Dental Care",
     subtitle: "Providing gentle, hygienic, and affordable dental treatments in Santosh Nagar & Edi Bazar, Hyderabad."
@@ -13,15 +13,12 @@ let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
 
 let galleryPhotos = JSON.parse(localStorage.getItem('ns_gallery')) || [
     "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=400&q=80"
+    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
 ];
 
 let patientReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
-    { author: "Afroze Ali", rating: 5, text: "We had a great experience at NS Dental Care. The staff is very professional and the prices are very reasonable, Highly recommend!" },
-    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub and Dr. Samreen explain the treatment clearly. Painless root canal done at very reasonable cost." },
-    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar & Santosh Nagar." }
+    { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Staff is very professional and prices are reasonable." },
+    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub and Dr. Samreen explain treatment clearly. Painless root canal." }
 ];
 
 let users = JSON.parse(localStorage.getItem('ns_users')) || [
@@ -39,7 +36,7 @@ let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
     "PAT-1001": [
-        { date: "2026-07-22", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub" }
+        { date: "2026-07-22", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub", nextVisit: "2026-07-23" }
     ]
 };
 
@@ -73,6 +70,7 @@ function renderHeroAndFees() {
 function navigateTo(id) {
     document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden-section'));
     document.getElementById(id).classList.remove('hidden-section');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderDoctorsRoster() {
@@ -82,7 +80,7 @@ function renderDoctorsRoster() {
             <div class="min-w-0">
                 <h4 class="text-sm font-bold text-white truncate">${d.name}</h4>
                 <p class="text-xs text-red-400 font-medium truncate">${d.spec}</p>
-                <p class="text-[11px] text-slate-400">📞 ${d.phone} | Consultation: ₹${d.fee}</p>
+                <p class="text-[11px] text-slate-400">📞 ${d.phone} | Fee: ₹${d.fee}</p>
             </div>
         </div>
     `).join('');
@@ -91,12 +89,13 @@ function renderDoctorsRoster() {
 function renderDoctorOptions() {
     const opts = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
     document.getElementById('bk_doctor').innerHTML = opts;
+    document.getElementById('man_pdoctor').innerHTML = opts;
 }
 
 function renderGallery() {
     document.getElementById('publicGalleryGrid').innerHTML = galleryPhotos.map(url => `
-        <div class="overflow-hidden rounded-xl border border-slate-800 h-32 bg-slate-950">
-            <img src="${url}" class="w-full h-full object-cover hover:scale-105 transition">
+        <div class="overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950">
+            <img src="${url}" class="w-full h-full object-cover">
         </div>
     `).join('');
 }
@@ -153,7 +152,7 @@ function handlePortalLogin(e) {
         openDashboard();
         closePortalModal();
     } else {
-        alert("Invalid login details or account pending approval!");
+        alert("Invalid login or account pending approval!");
     }
 }
 
@@ -162,13 +161,13 @@ function openDashboard() {
     document.getElementById('dashBadge').innerText = currentSession.role;
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
 
-    document.getElementById('edit_hero_title').value = heroContent.title;
-    document.getElementById('edit_hero_subtitle').value = heroContent.subtitle;
-    document.getElementById('edit_fee_doc1').value = doctors[0].fee;
-    document.getElementById('edit_fee_doc2').value = doctors[1].fee;
+    if(currentSession.role === 'admin') {
+        document.getElementById('tabBtnAdminBackup').classList.remove('hidden-section');
+    } else {
+        document.getElementById('tabBtnAdminBackup').classList.add('hidden-section');
+    }
 
     renderAppointments();
-    renderApprovals();
     renderLedgers();
 }
 
@@ -177,46 +176,142 @@ function logout() {
     navigateTo('public-home');
 }
 
-function handleAddGalleryPhoto(e) {
+function handleVerifiedPatientSearch(e) {
     e.preventDefault();
-    const url = document.getElementById('gal_img_url').value;
-    galleryPhotos.push(url);
-    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
-    renderGallery();
-    alert("Image added to gallery!");
-    e.target.reset();
+    const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
+    const inputId = document.getElementById('ver_identifier').value.trim();
+
+    const matchedPatient = patients.find(p => p.name.toLowerCase().includes(inputName) && (p.patientId === inputId || p.phone === inputId));
+    const container = document.getElementById('verifiedResultContainer');
+    container.classList.remove('hidden-section');
+
+    if(matchedPatient) {
+        const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
+        const recs = medicalRecords[matchedPatient.patientId] || [];
+
+        container.innerHTML = `
+            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                <div>
+                    <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
+                    <h3 class="text-base sm:text-lg font-bold text-white">${matchedPatient.name}</h3>
+                </div>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-red-400 uppercase">Upcoming & Past Appointments:</h4>
+                <ul class="text-xs space-y-1.5 text-slate-300">
+                    ${appts.map(a => `<li class="bg-slate-950 p-2 rounded-lg border border-slate-800">• <strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor} <br>Problem: ${a.reason} | Next Follow-Up: <span class="text-amber-400 font-bold">${a.nextVisit || a.date}</span></li>`).join('')}
+                </ul>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescribed Medicines & Clinical Findings:</h4>
+                <ul class="text-xs space-y-1.5 text-slate-300">
+                    ${recs.length > 0 ? recs.map(r => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><p class="font-bold text-slate-200">Date: ${r.date}</p><p>Diagnosis: ${r.diagnosis}</p><p class="text-emerald-300 mt-0.5">Tablets/Rx: ${r.rx}</p></li>`).join('') : '<li>No past prescription history found.</li>'}
+                </ul>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Name and Patient ID / Mobile # do not match our database records.</p>`;
+    }
 }
 
-function handleAddReview(e) {
+function handleManualPatientUpload(e) {
     e.preventDefault();
-    const author = document.getElementById('rev_author').value;
-    const rating = parseInt(document.getElementById('rev_rating').value);
-    const text = document.getElementById('rev_text').value;
+    const name = document.getElementById('man_pname').value;
+    const phone = document.getElementById('man_pphone').value;
+    const doctor = document.getElementById('man_pdoctor').value;
+    const reason = document.getElementById('man_preason').value;
+    const rx = document.getElementById('man_prx').value;
+    const date = document.getElementById('man_pdate').value;
+    const nextVisit = document.getElementById('man_pnext').value || date;
+    const fee = parseFloat(document.getElementById('man_pfee').value) || 0;
 
-    patientReviews.push({ author, rating, text });
-    localStorage.setItem('ns_reviews', JSON.stringify(patientReviews));
-    renderReviews();
-    alert("Review added!");
+    let patient = patients.find(p => p.phone === phone);
+    if(!patient) {
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
+        patients.push(patient);
+        localStorage.setItem('ns_patients', JSON.stringify(patients));
+    }
+
+    const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
+    appointments.push({ id: apptId, patientId: patient.patientId, name, phone, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit });
+    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+
+    if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
+    medicalRecords[patient.patientId].push({ date, diagnosis: reason, rx, doctor, nextVisit });
+    localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+
+    ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0 });
+    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+
+    alert(`Patient ${name} (ID: ${patient.patientId}) uploaded successfully!`);
     e.target.reset();
+    renderAppointments();
+    renderLedgers();
 }
 
-function saveHeroAndFees() {
-    heroContent.title = document.getElementById('edit_hero_title').value;
-    heroContent.subtitle = document.getElementById('edit_hero_subtitle').value;
-    doctors[0].fee = parseFloat(document.getElementById('edit_fee_doc1').value) || 200;
-    doctors[1].fee = parseFloat(document.getElementById('edit_fee_doc2').value) || 150;
+function downloadJSONBackup() {
+    const backupData = {
+        patients,
+        appointments,
+        medicalRecords,
+        ledgers,
+        heroContent,
+        doctors,
+        exportDate: new Date().toISOString()
+    };
 
-    localStorage.setItem('ns_hero', JSON.stringify(heroContent));
-    localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NS_Dental_Care_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
 
-    renderHeroAndFees();
-    renderDoctorsRoster();
-    alert("Hero text & fees saved successfully!");
+function restoreJSONBackup(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if(data.patients && data.appointments) {
+                patients = data.patients;
+                appointments = data.appointments;
+                medicalRecords = data.medicalRecords || {};
+                ledgers = data.ledgers || [];
+
+                localStorage.setItem('ns_patients', JSON.stringify(patients));
+                localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+                localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+                localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+
+                alert("EHR System Records Restored Successfully!");
+                location.reload();
+            } else {
+                alert("Invalid Backup File Format!");
+            }
+        } catch(err) {
+            alert("Error parsing JSON file!");
+        }
+    };
+    reader.readAsText(file);
+}
+
+function resetSystemData() {
+    if(confirm("Are you sure you want to erase all patient records?")) {
+        localStorage.clear();
+        location.reload();
+    }
 }
 
 function triggerWhatsAppConfirmation(phone, pId, apptId, name, doctor, date, slot) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = `*N.S. DENTAL CARE - APPOINTMENT CONFIRMATION*%0A%0AHello *${name}*, your appointment is confirmed!%0A%0A*Patient ID:* ${pId}%0A*Appointment ID:* ${apptId}%0A*Doctor:* ${doctor}%0A*Date:* ${date}%0A*Slot:* ${slot}%0A%0A*Address:* #17-1-305/P/1, Behind Water Tank Road, Santosh Nagar, Edi Bazar, Hyderabad.`;
+    const msg = `*N.S. DENTAL CARE - CONFIRMATION*%0A%0AHello *${name}*, your appointment is confirmed!%0A%0A*Patient ID:* ${pId}%0A*Appointment ID:* ${apptId}%0A*Doctor:* ${doctor}%0A*Date:* ${date}%0A*Slot:* ${slot}%0A%0A*Address:* Santosh Nagar, Edi Bazar, Hyderabad.`;
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
 }
 
@@ -248,40 +343,6 @@ function handlePublicBooking(e) {
     navigateTo('public-home');
 }
 
-function searchPatientRecords() {
-    const q = document.getElementById('trackQuery').value.trim();
-    const matchedPatient = patients.find(p => p.patientId === q || p.name.toLowerCase().includes(q.toLowerCase()) || p.phone === q);
-
-    const box = document.getElementById('trackResult');
-    box.classList.remove('hidden-section');
-
-    if(matchedPatient) {
-        const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
-        const recs = medicalRecords[matchedPatient.patientId] || [];
-
-        box.innerHTML = `
-            <div class="border-b border-slate-800 pb-2">
-                <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
-                <h3 class="text-lg font-bold text-white">${matchedPatient.name} (${matchedPatient.phone})</h3>
-            </div>
-            <div>
-                <h4 class="text-xs font-bold text-red-400 uppercase mb-1">Appointment History:</h4>
-                <ul class="text-xs space-y-1 text-slate-300">
-                    ${appts.map(a => `<li>• ${a.date} (${a.slot}) - Doctor: ${a.doctor} - <strong>${a.reason}</strong></li>`).join('')}
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-xs font-bold text-emerald-400 uppercase mb-1">Prescriptions:</h4>
-                <ul class="text-xs space-y-1 text-slate-300">
-                    ${recs.length > 0 ? recs.map(r => `<li>• ${r.date}: ${r.diagnosis} | Rx: <em>${r.rx}</em></li>`).join('') : '<li>No prescription records found.</li>'}
-                </ul>
-            </div>
-        `;
-    } else {
-        box.innerHTML = `<p class="text-xs text-rose-400">No patient record found for "${q}".</p>`;
-    }
-}
-
 function openLetterhead(id) {
     activePrescriptionApptId = id;
     const appt = appointments.find(a => a.id === id);
@@ -309,7 +370,8 @@ function savePrescriptionAndSync() {
             date: new Date().toLocaleDateString(),
             diagnosis: notes,
             rx: rx,
-            doctor: appt.doctor
+            doctor: appt.doctor,
+            nextVisit: nextVisit
         });
 
         localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
@@ -395,45 +457,18 @@ function renderLedgers() {
     `).join('');
 }
 
-function renderApprovals() {
-    const pendingUsers = users.filter(u => u.status === 'Pending');
-    document.getElementById('tblApprovals').innerHTML = pendingUsers.map(u => `
-        <tr class="hover:bg-slate-800/50">
-            <td class="p-3 font-bold text-white">${u.name}</td>
-            <td class="p-3 uppercase text-red-400 font-bold">${u.role}</td>
-            <td class="p-3">${u.phone}</td>
-            <td class="p-3"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-[10px] font-bold">${u.status}</span></td>
-            <td class="p-3">
-                <button onclick="approveUserAccount(${u.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded text-xs">Approve</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function approveUserAccount(id) {
-    const u = users.find(x => x.id === id);
-    if(u) {
-        u.status = 'Approved';
-        localStorage.setItem('ns_users', JSON.stringify(users));
-        renderApprovals();
-        alert("Account Approved!");
-    }
-}
-
 function switchDashTab(tab) {
     document.getElementById('viewAppts').classList.add('hidden-section');
+    document.getElementById('viewManualPatient').classList.add('hidden-section');
     document.getElementById('viewEHR').classList.add('hidden-section');
-    document.getElementById('viewReviews').classList.add('hidden-section');
-    document.getElementById('viewFees').classList.add('hidden-section');
     document.getElementById('viewLedger').classList.add('hidden-section');
-    document.getElementById('viewApprovals').classList.add('hidden-section');
+    document.getElementById('viewAdminBackup').classList.add('hidden-section');
 
     if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
+    if(tab === 'manualPatient') document.getElementById('viewManualPatient').classList.remove('hidden-section');
     if(tab === 'ehr') document.getElementById('viewEHR').classList.remove('hidden-section');
-    if(tab === 'reviews') document.getElementById('viewReviews').classList.remove('hidden-section');
-    if(tab === 'fees') document.getElementById('viewFees').classList.remove('hidden-section');
     if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
-    if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');
+    if(tab === 'adminBackup') document.getElementById('viewAdminBackup').classList.remove('hidden-section');
 }
 
 initApp();

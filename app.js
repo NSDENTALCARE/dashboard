@@ -25,13 +25,13 @@ let allReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
 ];
 
 let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
-    { patientId: "PAT-1001", name: "Mohammed Ali", phone: "+919876543210" }
+    { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" }
 ];
 
 const todayStr = new Date().toISOString().split('T')[0];
 
 let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
-    { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "+919876543210", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
+    { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
 ];
 
 let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
@@ -40,15 +40,16 @@ let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
     "PAT-1001": [
-        { date: "2026-07-23", diagnosis: "Pulpitis lower molar", rx: "Amoxicillin 500mg, Paracetamol 650mg", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr }
+        { id: "RX-1001", date: todayStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr }
     ]
 };
 
 let ledgers = JSON.parse(localStorage.getItem('ns_ledgers')) || [
-    { id: "NSD-1001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 5000, dueAmount: 0 }
+    { id: "REC-1001", apptId: "NSD-1001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 5000, dueAmount: 0, date: todayStr }
 ];
 
 let activePrescriptionApptId = null;
+let activeReceiptId = null;
 let selectedTeeth = [];
 let currentSession = null;
 
@@ -412,7 +413,10 @@ function renderAppointments() {
             </td>
             <td class="p-3">${a.doctor}</td>
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
-            <td class="p-3 font-medium text-slate-200">${a.reason}</td>
+            <td class="p-3 font-bold text-amber-400 font-mono">
+                ${a.nextVisit || a.date}
+                <button onclick="updateNextVisitManually('${a.id}')" class="text-[9px] text-slate-400 hover:text-white underline block mt-0.5">Edit</button>
+            </td>
             <td class="p-3">
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
                     ${a.status}
@@ -422,9 +426,34 @@ function renderAppointments() {
                 ${a.status === 'PENDING' ? `<button onclick="approveAppointment('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button>` : ''}
                 <button onclick="updateTokenStatus('${a.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-[10px]">Queue</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
+                <button onclick="deleteAppointmentRecord('${a.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>
             </td>
         </tr>
     `).join('');
+}
+
+function updateNextVisitManually(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const newDate = prompt("Enter Next Follow-Up Visit Date (YYYY-MM-DD):", appt.nextVisit || appt.date);
+        if(newDate) {
+            appt.nextVisit = newDate;
+            appt.modifiedToday = true;
+            localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+            renderAppointments();
+            logAction(`Updated next visit for ${appt.patientId} to ${newDate}`);
+            alert("Next Visit Date Updated!");
+        }
+    }
+}
+
+function deleteAppointmentRecord(apptId) {
+    if(confirm("Are you sure you want to delete this appointment record?")) {
+        appointments = appointments.filter(a => a.id !== apptId);
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        renderAppointments();
+        logAction(`Deleted appointment ${apptId}`);
+    }
 }
 
 function approveAppointment(id) {
@@ -443,7 +472,7 @@ function approveAppointment(id) {
 function updateTokenStatus(id) {
     const appt = appointments.find(a => a.id === id);
     if(appt) {
-        const nextState = prompt("Update Queue Status (1: In Waiting Room, 2: In Consultation, 3: Completed):", "2");
+        const nextState = prompt("Update Queue Status (1: In Waiting Room, 2: In Consultation, 3: Treatment Completed):", "2");
         if(nextState === "1") appt.queueStatus = "In Waiting Room";
         if(nextState === "2") appt.queueStatus = "In Consultation";
         if(nextState === "3") appt.queueStatus = "Treatment Completed";
@@ -544,7 +573,7 @@ function sendPrescriptionWhatsApp() {
 
         const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
         const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings:* ${notes}%0A*Rx / Medications:*%0A${rx}%0A%0A*Next Follow-Up Date:* ${nextVisit}`;
-        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
     }
 }
 
@@ -625,7 +654,7 @@ function renderCalendar() {
                 </div>
                 <h4 class="text-xs font-bold text-white">${a.name}</h4>
                 <p class="text-[11px] text-slate-300">Purpose: ${a.reason}</p>
-                <p class="text-[10px] text-slate-400">Dr: ${a.doctor}</p>
+                <p class="text-[10px] text-amber-400 font-bold">Next Follow-Up: ${a.nextVisit || a.date}</p>
             </div>
         `).join('');
     }
@@ -634,7 +663,8 @@ function renderCalendar() {
 function handleManualPatientUpload(e) {
     e.preventDefault();
     const name = document.getElementById('man_pname').value;
-    const phone = document.getElementById('man_pphone').value;
+    const phone = document.getElementById('man_pphone').value.replace(/[^0-9]/g, '');
+    const ageGender = document.getElementById('man_page_gender').value;
     const doctor = document.getElementById('man_pdoctor').value;
     const reason = document.getElementById('man_preason').value;
     const rx = document.getElementById('man_prx').value;
@@ -648,21 +678,22 @@ function handleManualPatientUpload(e) {
 
     let patient = patients.find(p => p.phone === phone);
     if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone, ageGender };
         patients.push(patient);
         localStorage.setItem('ns_patients', JSON.stringify(patients));
     }
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
     if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
-    medicalRecords[patient.patientId].push({ date, diagnosis: reason, rx, doctor, nextVisit });
+    medicalRecords[patient.patientId].push({ id: "RX-" + Date.now(), date, diagnosis: reason, rx, doctor, nextVisit });
     localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
 
-    ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0 });
+    const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
+    ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0, date });
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
     logAction(`Record added for ${name} (${patient.patientId}) with vitals BP:${bp}`);
@@ -679,14 +710,10 @@ function applyAdminThemeSettings() {
     const font = document.getElementById('adm_font_size').value;
     const name = document.getElementById('adm_brand_name').value;
     const contact = document.getElementById('adm_brand_contact').value;
-    const heroTitle = document.getElementById('adm_hero_title').value;
-    const regLine = document.getElementById('adm_reg_line').value;
 
     document.getElementById('appBody').className = `bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden ${font}`;
     document.getElementById('hdr_clinic_name').innerText = name;
     document.getElementById('hdr_clinic_contact').innerText = contact;
-    document.getElementById('disp_hero_title').innerText = heroTitle;
-    document.getElementById('disp_reg_number').innerText = regLine;
 
     logAction("Admin customized UI theme & branding.");
 }
@@ -751,39 +778,89 @@ function handleVerifiedPatientSearch(e) {
     if(matchedPatient) {
         const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
         const recs = medicalRecords[matchedPatient.patientId] || [];
+        const pLedgers = ledgers.filter(l => l.patientId === matchedPatient.patientId);
 
         container.innerHTML = `
             <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                 <div>
                     <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
                     <h3 class="text-base font-bold text-white">${matchedPatient.name}</h3>
+                    <p class="text-[11px] text-slate-400">Age/Gender: ${matchedPatient.ageGender || '34 / Male'}</p>
                 </div>
-                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Record</span>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient Profile</span>
             </div>
             
             <div class="space-y-2">
-                <h4 class="text-xs font-bold text-red-400 uppercase">Upcoming & Past Visits:</h4>
+                <h4 class="text-xs font-bold text-red-400 uppercase">Appointment & Follow-Up Timeline:</h4>
                 <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${appts.map(a => `<li class="bg-slate-950 p-2 rounded-lg border border-slate-800">• <strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor}<br>Problem: ${a.reason} | Next Visit: <span class="text-amber-400 font-bold">${a.nextVisit || a.date}</span></li>`).join('')}
+                    ${appts.map(a => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center"><div><strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor}<br>Issue: ${a.reason}</div><div class="text-right"><span class="text-amber-400 font-mono font-bold block text-xs">Next Visit: ${a.nextVisit || a.date}</span></div></li>`).join('')}
                 </ul>
             </div>
 
             <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescribed Tablets & Diagnosis:</h4>
-                <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${recs.length > 0 ? recs.map(r => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><p class="font-bold text-slate-200">Date: ${r.date}</p><p>Diagnosis: ${r.diagnosis}</p><p class="text-emerald-300 mt-0.5">Rx: ${r.rx}</p></li>`).join('') : '<li>No prescription history found.</li>'}
-                </ul>
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription Downloads:</h4>
+                <div class="space-y-2">
+                    ${recs.length > 0 ? recs.map(r => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-white">Date: ${r.date} | Dr. ${r.doctor}</p>
+                                <p class="text-slate-400 text-[11px]">Findings: ${r.diagnosis}</p>
+                            </div>
+                            <button onclick="publicDownloadPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Rx
+                            </button>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-500">No prescriptions found.</p>'}
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <h4 class="text-xs font-bold text-amber-400 uppercase">Hospital Receipt Downloads:</h4>
+                <div class="space-y-2">
+                    ${pLedgers.length > 0 ? pLedgers.map(l => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-white">${l.id || 'REC-1001'} | Fee: ₹${l.totalCost}</p>
+                                <p class="text-slate-400 text-[11px]">${l.purpose} | Paid: ₹${l.paidAmount}</p>
+                            </div>
+                            <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Print Receipt
+                            </button>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-500">No receipt ledgers found.</p>'}
+                </div>
             </div>
         `;
+        lucide.createIcons();
     } else {
-        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Full Name and Patient ID / Mobile # do not match.</p>`;
+        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Patient Full Name and ID or Mobile Number do not match our database records.</p>`;
+    }
+}
+
+function publicDownloadPrescription(patientId, rxId) {
+    const recs = medicalRecords[patientId] || [];
+    const r = recs.find(x => x.id === rxId) || recs[0];
+    const patient = patients.find(p => p.patientId === patientId) || { name: "Patient", ageGender: "34 / Male" };
+
+    if(r) {
+        document.getElementById('lh_pid').innerText = patientId;
+        document.getElementById('lh_pname').innerText = patient.name;
+        document.getElementById('lh_age_gender').innerText = patient.ageGender || "34 / Male";
+        document.getElementById('lh_date').innerText = r.date;
+        document.getElementById('lh_doctor').innerText = r.doctor;
+        document.getElementById('lh_notes').value = r.diagnosis;
+        document.getElementById('lh_rx').value = r.rx;
+        document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
+
+        document.getElementById('letterheadModal').classList.remove('hidden');
+        document.getElementById('letterheadModal').classList.add('flex');
     }
 }
 
 function handlePublicBooking(e) {
     e.preventDefault();
     const name = document.getElementById('bk_name').value;
-    const phone = document.getElementById('bk_phone').value;
+    const phone = document.getElementById('bk_phone').value.replace(/[^0-9]/g, '');
     const doctor = document.getElementById('bk_doctor').value;
     const date = document.getElementById('bk_date').value;
     const slot = document.getElementById('bk_slot').value;
@@ -791,17 +868,18 @@ function handlePublicBooking(e) {
 
     let patient = patients.find(p => p.phone === phone);
     if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone, ageGender: "34 / Male" };
         patients.push(patient);
         localStorage.setItem('ns_patients', JSON.stringify(patients));
     }
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, ageGender: "34 / Male", doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
-    ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0 });
+    const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
+    ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, date });
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
     alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
@@ -815,6 +893,8 @@ function openLetterhead(id) {
     if(appt) {
         document.getElementById('lh_pid').innerText = appt.patientId;
         document.getElementById('lh_pname').innerText = appt.name;
+        document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
+        document.getElementById('lh_issue').innerText = appt.reason;
         document.getElementById('lh_date').innerText = new Date().toLocaleDateString();
         document.getElementById('lh_doctor').innerText = appt.doctor;
         document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
@@ -832,7 +912,7 @@ function savePrescriptionAndSync() {
         const nextVisit = document.getElementById('lh_next_visit').value;
 
         if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
-        medicalRecords[appt.patientId].push({ date: new Date().toLocaleDateString(), diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
+        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: new Date().toLocaleDateString(), diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
 
         localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
         appt.nextVisit = nextVisit;
@@ -841,12 +921,44 @@ function savePrescriptionAndSync() {
 
         logAction(`Prescription saved for ${appt.patientId}.`);
         alert("Prescription saved & Next visit synced!");
+        renderAppointments();
     }
 }
 
 function closeLetterheadModal() {
     document.getElementById('letterheadModal').classList.add('hidden');
     document.getElementById('letterheadModal').classList.remove('flex');
+}
+
+function openReceiptModal(recId) {
+    activeReceiptId = recId;
+    const item = ledgers.find(l => l.id === recId) || ledgers[0];
+    if(item) {
+        document.getElementById('rc_num').innerText = item.id;
+        document.getElementById('rc_pid').innerText = item.patientId;
+        document.getElementById('rc_pname').innerText = item.patientName;
+        document.getElementById('rc_date').innerText = item.date || todayStr;
+        document.getElementById('rc_purpose').innerText = item.purpose;
+        document.getElementById('rc_total').innerText = `₹${item.totalCost}`;
+        document.getElementById('rc_sum_total').innerText = `₹${item.totalCost}`;
+        document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount}`;
+        document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount}`;
+
+        document.getElementById('receiptModal').classList.remove('hidden');
+        document.getElementById('receiptModal').classList.add('flex');
+    }
+}
+
+function closeReceiptModal() {
+    document.getElementById('receiptModal').classList.add('hidden');
+    document.getElementById('receiptModal').classList.remove('flex');
+}
+
+function editReceiptFromModal() {
+    if(activeReceiptId) {
+        editFeeManual(activeReceiptId);
+        openReceiptModal(activeReceiptId);
+    }
 }
 
 function renderLedgers() {
@@ -858,7 +970,9 @@ function renderLedgers() {
             <td class="p-3 text-emerald-400 font-bold">₹${l.paidAmount}</td>
             <td class="p-3 text-amber-400 font-bold">₹${l.dueAmount}</td>
             <td class="p-3 flex gap-1">
-                <button onclick="editFeeManual('${l.id}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs">Edit Fee</button>
+                <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs font-bold">Receipt</button>
+                <button onclick="editFeeManual('${l.id}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs">Edit Charges</button>
+                <button onclick="deleteLedgerRecord('${l.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-xs">Delete</button>
             </td>
         </tr>
     `).join('');
@@ -868,8 +982,8 @@ function editFeeManual(id) {
     const item = ledgers.find(l => l.id === id);
     if(!item) return;
 
-    const total = prompt("Enter Total Fee (₹):", item.totalCost);
-    const paid = prompt("Enter Paid Amount (₹):", item.paidAmount);
+    const total = prompt("Enter Total Treatment Cost (₹):", item.totalCost);
+    const paid = prompt("Enter Amount Paid by Patient (₹):", item.paidAmount);
 
     if(total !== null && paid !== null) {
         item.totalCost = parseFloat(total) || 0;
@@ -879,6 +993,16 @@ function editFeeManual(id) {
         renderLedgers();
         calculateAdminStats();
         logAction(`Ledger fee modified for patient ${item.patientId}.`);
+    }
+}
+
+function deleteLedgerRecord(id) {
+    if(confirm("Are you sure you want to delete this receipt ledger?")) {
+        ledgers = ledgers.filter(l => l.id !== id);
+        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+        renderLedgers();
+        calculateAdminStats();
+        logAction(`Deleted ledger receipt ${id}`);
     }
 }
 

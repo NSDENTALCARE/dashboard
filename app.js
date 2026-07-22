@@ -1,10 +1,18 @@
 lucide.createIcons();
 
-// Storage State Collections
 let heroContent = JSON.parse(localStorage.getItem('ns_hero')) || {
     title: "Welcome to N.S. Dental Care",
     subtitle: "Providing gentle, hygienic, and affordable dental treatments in Santosh Nagar & Edi Bazar, Hyderabad."
 };
+
+let permissions = JSON.parse(localStorage.getItem('ns_permissions')) || {
+    asst_fee: true,
+    doc_hero: true
+};
+
+let auditLogs = JSON.parse(localStorage.getItem('ns_logs')) || [
+    { time: new Date().toLocaleTimeString(), text: "System initialized smoothly." }
+];
 
 let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
     { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "+918978883007", fee: 200 },
@@ -16,15 +24,22 @@ let galleryPhotos = JSON.parse(localStorage.getItem('ns_gallery')) || [
     "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
 ];
 
-let patientReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
-    { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Staff is very professional and prices are reasonable." },
-    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub and Dr. Samreen explain treatment clearly. Painless root canal." }
+let allReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
+    { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
+    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal." },
+    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
+    { author: "Mirza Baig", rating: 5, text: "Dr. Salahuddin Ayub is very gentle and skilled in implants." },
+    { author: "Khaja Moinuddin", rating: 5, text: "Clean atmosphere, low waiting time, and excellent treatment." },
+    { author: "Fatima Zohra", rating: 5, text: "Very polite doctors. My teeth cleaning was done perfectly." },
+    { author: "Sheikh Omer", rating: 5, text: "Top dental clinic near Santosh Nagar water tank." }
 ];
 
 let users = JSON.parse(localStorage.getItem('ns_users')) || [
     { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "+918978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
     { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "+917729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
 ];
+
+let passwordResetRequests = JSON.parse(localStorage.getItem('ns_pwd_resets')) || [];
 
 let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
     { patientId: "PAT-1001", name: "Mohammed Ali", phone: "+919876543210" }
@@ -52,7 +67,20 @@ function initApp() {
     renderDoctorsRoster();
     renderDoctorOptions();
     renderGallery();
-    renderReviews();
+    initShufflingReviews();
+}
+
+function logAction(msg) {
+    auditLogs.unshift({ time: new Date().toLocaleTimeString(), text: msg });
+    localStorage.setItem('ns_logs', JSON.stringify(auditLogs));
+    renderAuditLogs();
+}
+
+function renderAuditLogs() {
+    const box = document.getElementById('adminAuditLogs');
+    if(box) {
+        box.innerHTML = auditLogs.map(l => `<div>[${l.time}] ${l.text}</div>`).join('');
+    }
 }
 
 function renderHeroAndFees() {
@@ -93,23 +121,79 @@ function renderDoctorOptions() {
 }
 
 function renderGallery() {
-    document.getElementById('publicGalleryGrid').innerHTML = galleryPhotos.map(url => `
+    const publicGrid = document.getElementById('publicGalleryGrid');
+    const dashGrid = document.getElementById('dashGalleryGrid');
+
+    const htmlPublic = galleryPhotos.map(url => `
         <div class="overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950">
             <img src="${url}" class="w-full h-full object-cover">
         </div>
     `).join('');
-}
 
-function renderReviews() {
-    document.getElementById('publicReviewsGrid').innerHTML = patientReviews.map(r => `
-        <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
-            <div class="flex justify-between text-amber-400 font-bold">
-                <span>${r.author}</span>
-                <span>${'★'.repeat(r.rating)}</span>
-            </div>
-            <p class="text-slate-300 text-[11px] italic">"${r.text}"</p>
+    const htmlDash = galleryPhotos.map((url, idx) => `
+        <div class="relative overflow-hidden rounded-xl border border-slate-800 h-28 bg-slate-950 group">
+            <img src="${url}" class="w-full h-full object-cover">
+            <button onclick="deleteGalleryPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white p-1 rounded-lg text-[10px] font-bold">Delete</button>
         </div>
     `).join('');
+
+    if(publicGrid) publicGrid.innerHTML = htmlPublic;
+    if(dashGrid) dashGrid.innerHTML = htmlDash;
+}
+
+function deleteGalleryPhoto(idx) {
+    galleryPhotos.splice(idx, 1);
+    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+    renderGallery();
+    logAction("Gallery photo deleted.");
+}
+
+function handleAddGalleryPhoto(e) {
+    e.preventDefault();
+    const url = document.getElementById('gal_img_url').value;
+    galleryPhotos.push(url);
+    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+    renderGallery();
+    logAction("New gallery photo uploaded.");
+    e.target.reset();
+}
+
+function initShufflingReviews() {
+    const container = document.getElementById('shufflingReviewsContainer');
+    
+    function shuffle() {
+        const shuffled = [...allReviews].sort(() => 0.5 - Math.random()).slice(0, 3);
+        if(container) {
+            container.style.opacity = '0';
+            setTimeout(() => {
+                container.innerHTML = shuffled.map(r => `
+                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                        <div class="flex justify-between text-amber-400 font-bold">
+                            <span>${r.author}</span>
+                            <span>${'★'.repeat(r.rating)}</span>
+                        </div>
+                        <p class="text-slate-300 text-[11px] italic">"${r.text}"</p>
+                    </div>
+                `).join('');
+                container.style.opacity = '1';
+            }, 300);
+        }
+    }
+
+    shuffle();
+    setInterval(shuffle, 6000);
+}
+
+function handleAddReview(e) {
+    e.preventDefault();
+    const author = document.getElementById('rev_author').value;
+    const rating = parseInt(document.getElementById('rev_rating').value);
+    const text = document.getElementById('rev_text').value;
+
+    allReviews.push({ author, rating, text });
+    localStorage.setItem('ns_reviews', JSON.stringify(allReviews));
+    alert("Review added successfully!");
+    e.target.reset();
 }
 
 function openPortalModal() {
@@ -124,13 +208,13 @@ function closePortalModal() {
 }
 
 function switchPortalTab(tab) {
-    if(tab === 'login') {
-        document.getElementById('portalLoginForm').classList.remove('hidden-section');
-        document.getElementById('portalRegForm').classList.add('hidden-section');
-    } else {
-        document.getElementById('portalLoginForm').classList.add('hidden-section');
-        document.getElementById('portalRegForm').classList.remove('hidden-section');
-    }
+    document.getElementById('portalLoginForm').classList.add('hidden-section');
+    document.getElementById('portalForgotForm').classList.add('hidden-section');
+    document.getElementById('portalRegForm').classList.add('hidden-section');
+
+    if(tab === 'login') document.getElementById('portalLoginForm').classList.remove('hidden-section');
+    if(tab === 'forgot') document.getElementById('portalForgotForm').classList.remove('hidden-section');
+    if(tab === 'register') document.getElementById('portalRegForm').classList.remove('hidden-section');
 }
 
 function handlePortalLogin(e) {
@@ -141,6 +225,7 @@ function handlePortalLogin(e) {
 
     if (role === 'admin' && identifier === 'admin' && pwd === '9290') {
         currentSession = { role: 'admin', name: 'Developer Admin' };
+        logAction("Admin logged in.");
         openDashboard();
         closePortalModal();
         return;
@@ -149,11 +234,48 @@ function handlePortalLogin(e) {
     const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
     if (u && u.status === 'Approved') {
         currentSession = u;
+        logAction(`${u.role.toUpperCase()} logged in: ${u.name}`);
         openDashboard();
         closePortalModal();
     } else {
-        alert("Invalid login or account pending approval!");
+        alert("Invalid login credentials or account pending approval!");
     }
+}
+
+function handleStaffRegistration(e) {
+    e.preventDefault();
+    const role = document.getElementById('regRole').value;
+    const name = document.getElementById('regName').value;
+    const phone = document.getElementById('regPhone').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending" });
+    localStorage.setItem('ns_users', JSON.stringify(users));
+
+    logAction(`New ${role} registration request for ${name}.`);
+    alert(`Registration request submitted! ${role === 'doctor' ? 'Admin approval required.' : 'Doctor or Admin approval required.'}`);
+    closePortalModal();
+}
+
+function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    const role = document.getElementById('fg_role').value;
+    const identifier = document.getElementById('fg_identifier').value;
+    const newPassword = document.getElementById('fg_newpwd').value;
+
+    passwordResetRequests.push({
+        id: Date.now(),
+        role,
+        identifier,
+        newPassword,
+        approver: role === 'doctor' ? 'admin' : 'doctor_or_admin'
+    });
+
+    localStorage.setItem('ns_pwd_resets', JSON.stringify(passwordResetRequests));
+    logAction(`Password reset requested for ${role}: ${identifier}`);
+    alert(`Password reset request sent! ${role === 'doctor' ? 'Admin must approve.' : 'Doctor or Admin can approve.'}`);
+    closePortalModal();
 }
 
 function openDashboard() {
@@ -162,13 +284,18 @@ function openDashboard() {
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
 
     if(currentSession.role === 'admin') {
-        document.getElementById('tabBtnAdminBackup').classList.remove('hidden-section');
+        document.getElementById('tabBtnAdminMaster').classList.remove('hidden-section');
+        document.getElementById('perm_asst_fee').checked = permissions.asst_fee;
+        document.getElementById('perm_doc_hero').checked = permissions.doc_hero;
+        renderAuditLogs();
     } else {
-        document.getElementById('tabBtnAdminBackup').classList.add('hidden-section');
+        document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
     }
 
     renderAppointments();
     renderLedgers();
+    renderApprovals();
+    renderGallery();
 }
 
 function logout() {
@@ -193,27 +320,27 @@ function handleVerifiedPatientSearch(e) {
             <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                 <div>
                     <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
-                    <h3 class="text-base sm:text-lg font-bold text-white">${matchedPatient.name}</h3>
+                    <h3 class="text-base font-bold text-white">${matchedPatient.name}</h3>
                 </div>
-                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient</span>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Record</span>
             </div>
             
             <div class="space-y-2">
                 <h4 class="text-xs font-bold text-red-400 uppercase">Upcoming & Past Appointments:</h4>
                 <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${appts.map(a => `<li class="bg-slate-950 p-2 rounded-lg border border-slate-800">• <strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor} <br>Problem: ${a.reason} | Next Follow-Up: <span class="text-amber-400 font-bold">${a.nextVisit || a.date}</span></li>`).join('')}
+                    ${appts.map(a => `<li class="bg-slate-950 p-2 rounded-lg border border-slate-800">• <strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor} <br>Problem: ${a.reason} | Next Visit: <span class="text-amber-400 font-bold">${a.nextVisit || a.date}</span></li>`).join('')}
                 </ul>
             </div>
 
             <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescribed Medicines & Clinical Findings:</h4>
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescribed Medicines & Tablets:</h4>
                 <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${recs.length > 0 ? recs.map(r => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><p class="font-bold text-slate-200">Date: ${r.date}</p><p>Diagnosis: ${r.diagnosis}</p><p class="text-emerald-300 mt-0.5">Tablets/Rx: ${r.rx}</p></li>`).join('') : '<li>No past prescription history found.</li>'}
+                    ${recs.length > 0 ? recs.map(r => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><p class="font-bold text-slate-200">Date: ${r.date}</p><p>Diagnosis: ${r.diagnosis}</p><p class="text-emerald-300 mt-0.5">Tablets: ${r.rx}</p></li>`).join('') : '<li>No past prescription records found.</li>'}
                 </ul>
             </div>
         `;
     } else {
-        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Name and Patient ID / Mobile # do not match our database records.</p>`;
+        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Full Name and Patient ID / Mobile # do not match.</p>`;
     }
 }
 
@@ -246,7 +373,8 @@ function handleManualPatientUpload(e) {
     ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0 });
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
-    alert(`Patient ${name} (ID: ${patient.patientId}) uploaded successfully!`);
+    logAction(`Manual patient record uploaded for ${name} (${patient.patientId}).`);
+    alert(`Patient ${name} (ID: ${patient.patientId}) uploaded!`);
     e.target.reset();
     renderAppointments();
     renderLedgers();
@@ -258,8 +386,9 @@ function downloadJSONBackup() {
         appointments,
         medicalRecords,
         ledgers,
-        heroContent,
-        doctors,
+        users,
+        galleryPhotos,
+        allReviews,
         exportDate: new Date().toISOString()
     };
 
@@ -269,6 +398,7 @@ function downloadJSONBackup() {
     a.href = url;
     a.download = `NS_Dental_Care_Backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+    logAction("Backup JSON downloaded.");
 }
 
 function restoreJSONBackup(event) {
@@ -290,57 +420,89 @@ function restoreJSONBackup(event) {
                 localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
                 localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
-                alert("EHR System Records Restored Successfully!");
+                alert("System Backup Restored Successfully!");
                 location.reload();
-            } else {
-                alert("Invalid Backup File Format!");
             }
         } catch(err) {
-            alert("Error parsing JSON file!");
+            alert("Error parsing backup JSON file!");
         }
     };
     reader.readAsText(file);
 }
 
 function resetSystemData() {
-    if(confirm("Are you sure you want to erase all patient records?")) {
+    if(confirm("Are you sure you want to erase all local data?")) {
         localStorage.clear();
         location.reload();
     }
 }
 
-function triggerWhatsAppConfirmation(phone, pId, apptId, name, doctor, date, slot) {
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const msg = `*N.S. DENTAL CARE - CONFIRMATION*%0A%0AHello *${name}*, your appointment is confirmed!%0A%0A*Patient ID:* ${pId}%0A*Appointment ID:* ${apptId}%0A*Doctor:* ${doctor}%0A*Date:* ${date}%0A*Slot:* ${slot}%0A%0A*Address:* Santosh Nagar, Edi Bazar, Hyderabad.`;
-    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-}
+function renderApprovals() {
+    let pendingUsers = [];
+    let pendingResets = [];
 
-function handlePublicBooking(e) {
-    e.preventDefault();
-    const name = document.getElementById('bk_name').value;
-    const phone = document.getElementById('bk_phone').value;
-    const doctor = document.getElementById('bk_doctor').value;
-    const date = document.getElementById('bk_date').value;
-    const slot = document.getElementById('bk_slot').value;
-    const reason = document.getElementById('bk_reason').value;
-
-    let patient = patients.find(p => p.phone === phone);
-    if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone };
-        patients.push(patient);
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
+    if(currentSession.role === 'admin') {
+        pendingUsers = users.filter(u => u.status === 'Pending');
+        pendingResets = passwordResetRequests;
+    } else if(currentSession.role === 'doctor') {
+        pendingUsers = users.filter(u => u.status === 'Pending' && u.role === 'assistant');
+        pendingResets = passwordResetRequests.filter(r => r.role === 'assistant');
     }
 
-    const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-    appointments.push({ id: apptId, patientId: patient.patientId, name, phone, doctor, date, slot, status: "CONFIRMED", reason, nextVisit: date });
-    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+    document.getElementById('tblApprovals').innerHTML = pendingUsers.map(u => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-3 font-bold text-white">${u.name}</td>
+            <td class="p-3 uppercase text-red-400 font-bold">${u.role}</td>
+            <td class="p-3">${u.phone}</td>
+            <td class="p-3">
+                <button onclick="approveUserAccount(${u.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded text-xs">Approve Account</button>
+            </td>
+        </tr>
+    `).join('');
 
-    ledgers.push({ id: apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0 });
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+    document.getElementById('tblPasswordResets').innerHTML = pendingResets.map(r => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-3 uppercase text-amber-400 font-bold">${r.role}</td>
+            <td class="p-3 font-bold text-white">${r.identifier}</td>
+            <td class="p-3 font-mono">${r.newPassword}</td>
+            <td class="p-3">
+                <button onclick="approvePasswordReset(${r.id})" class="bg-emerald-600 text-white font-bold px-2 py-1 rounded text-xs">Approve New Password</button>
+            </td>
+        </tr>
+    `).join('');
+}
 
-    alert(`Booking Completed! Patient ID: ${patient.patientId}`);
-    triggerWhatsAppConfirmation(phone, patient.patientId, apptId, name, doctor, date, slot);
-    navigateTo('public-home');
+function approveUserAccount(id) {
+    const u = users.find(x => x.id === id);
+    if(u) {
+        u.status = 'Approved';
+        localStorage.setItem('ns_users', JSON.stringify(users));
+        renderApprovals();
+        logAction(`Approved registration for ${u.name}.`);
+        alert("Account Approved!");
+    }
+}
+
+function approvePasswordReset(reqId) {
+    const req = passwordResetRequests.find(r => r.id === reqId);
+    if(req) {
+        const u = users.find(x => x.email === req.identifier || x.phone === req.identifier);
+        if(u) {
+            u.password = req.newPassword;
+            localStorage.setItem('ns_users', JSON.stringify(users));
+        }
+        passwordResetRequests = passwordResetRequests.filter(r => r.id !== reqId);
+        localStorage.setItem('ns_pwd_resets', JSON.stringify(passwordResetRequests));
+        renderApprovals();
+        logAction(`Approved password reset for ${req.identifier}.`);
+        alert("Password reset approved successfully!");
+    }
+}
+
+function togglePermission(permKey) {
+    permissions[permKey] = document.getElementById(`perm_${permKey}`).checked;
+    localStorage.setItem('ns_permissions', JSON.stringify(permissions));
+    logAction(`Permission ${permKey} updated to ${permissions[permKey]}.`);
 }
 
 function openLetterhead(id) {
@@ -378,6 +540,7 @@ function savePrescriptionAndSync() {
         appt.nextVisit = nextVisit;
         localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
+        logAction(`Prescription added for patient ${appt.patientId}.`);
         alert("Prescription saved & Next visit synced!");
     }
 }
@@ -400,6 +563,7 @@ function editFeeManual(id) {
         item.dueAmount = item.totalCost - item.paidAmount;
         localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
         renderLedgers();
+        logAction(`Fee updated for ${item.patientId}.`);
     }
 }
 
@@ -462,13 +626,17 @@ function switchDashTab(tab) {
     document.getElementById('viewManualPatient').classList.add('hidden-section');
     document.getElementById('viewEHR').classList.add('hidden-section');
     document.getElementById('viewLedger').classList.add('hidden-section');
-    document.getElementById('viewAdminBackup').classList.add('hidden-section');
+    document.getElementById('viewReviewsManager').classList.add('hidden-section');
+    document.getElementById('viewApprovals').classList.add('hidden-section');
+    document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
     if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
     if(tab === 'manualPatient') document.getElementById('viewManualPatient').classList.remove('hidden-section');
     if(tab === 'ehr') document.getElementById('viewEHR').classList.remove('hidden-section');
     if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
-    if(tab === 'adminBackup') document.getElementById('viewAdminBackup').classList.remove('hidden-section');
+    if(tab === 'reviewsManager') document.getElementById('viewReviewsManager').classList.remove('hidden-section');
+    if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');
+    if(tab === 'adminMaster') document.getElementById('viewAdminMaster').classList.remove('hidden-section');
 }
 
 initApp();

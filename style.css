@@ -10,6 +10,29 @@ html, body {
     display: none !important;
 }
 
+/* MARQUEE ANIMATION FOR DYNAMIC TICKER */
+.marquee-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.marquee-content {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
+    animation: marquee 25s linear infinite;
+}
+
+.marquee-wrapper:hover .marquee-content {
+    animation-play-state: paused;
+}
+
+@keyframes marquee {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-100%, 0); }
+}
+
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;

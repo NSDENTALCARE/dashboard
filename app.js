@@ -1,94 +1,104 @@
 lucide.createIcons();
 
-let hospitalEmail = localStorage.getItem('ns_hospital_email') || "info@nsdentalcare.com";
-let doctorEmail = localStorage.getItem('ns_doctor_email') || "ayub@nsdentalcare.com";
+// ==========================================================================
+// LARGE DATA STORAGE ENGINE (IndexedDB Wrapper for Unlimited Capacity)
+// ==========================================================================
+class ClinicStorageEngine {
+    constructor() {
+        this.dbName = "NSDentalCareDB";
+        this.dbVersion = 1;
+        this.db = null;
+    }
 
-let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
-    { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
-    { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
-];
+    async init() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.dbVersion);
 
-let users = JSON.parse(localStorage.getItem('ns_users')) || [
-    { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
-    { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
-];
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains("clinic_store")) {
+                    db.createObjectStore("clinic_store");
+                }
+            };
 
-let passwordResetRequests = JSON.parse(localStorage.getItem('ns_pwd_resets')) || [];
-let auditLogs = JSON.parse(localStorage.getItem('ns_logs')) || [{ time: new Date().toLocaleTimeString(), text: "System Initialized." }];
+            request.onsuccess = (event) => {
+                this.db = event.target.result;
+                resolve(this.db);
+            };
 
-let galleryPhotos = JSON.parse(localStorage.getItem('ns_gallery')) || [
-    "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
-];
+            request.onerror = (event) => {
+                console.error("IndexedDB initialization error:", event.target.error);
+                reject(event.target.error);
+            };
+        });
+    }
 
-let allReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
-    { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
-    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
-    { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain. Highly recommended!" },
-    { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar area." },
-    { author: "Adnan Khan", rating: 5, text: "The crown fitting was perfect. Dr. Ayub is extremely skilled and patient with questions." },
-    { author: "Fatima Begum", rating: 5, text: "Brought my mother for dentures. Very polite staff and comfortable clinic setup." },
-    { author: "Syed Rizwan", rating: 5, text: "Painless dental scaling and teeth cleaning. Very neat and sanitized clinic." },
-    { author: "Abdul Qadir", rating: 5, text: "Awesome dental clinic in Hyderabad. Fast token system and quick response on WhatsApp." },
-    { author: "Zareena Sultana", rating: 5, text: "Best cosmetic dental care! My tooth whitening results are amazing. Thank you Dr. Samreen." },
-    { author: "Mohammed Imran", rating: 5, text: "Root canal was completely smooth. They follow great hygiene and sterilization standards." },
-    { author: "Tariq Mahmood", rating: 5, text: "Prompt appointment approval and minimal waiting time. Excellent treatment care." },
-    { author: "Saba Anjum", rating: 5, text: "Dr. Tabassum Samreen is very soft spoken and attentive. Best clinic for ladies and children." },
-    { author: "Bilal Ahmed", rating: 5, text: "Highly professional diagnostic advice. They don't suggest unnecessary expensive treatments." },
-    { author: "Mohammed Rahil", rating: 5, text: "Got Zirconia crowns installed here. Super quality and very natural look. 5 stars!" },
-    { author: "Ayesha Siddiqua", rating: 5, text: "Very clean hospital. The staff is polite, and the WhatsApp digital prescription system is great." },
-    { author: "Omer Farooq", rating: 5, text: "Exceptional dental care. Painless filling and root canal under expert guidance." },
-    { author: "Nusrath Jahan", rating: 5, text: "Very gentle hands. I had high dental anxiety, but Dr. Ayub made me feel totally calm." },
-    { author: "Salman Khan", rating: 5, text: "Great service at Santosh Nagar center. Fees are nominal and treatments are top class." },
-    { author: "Feroz Khan", rating: 5, text: "Fast service and clean equipment. Recommended for all family dental problems." },
-    { author: "Hina Kausar", rating: 5, text: "Braces consultation was detailed and affordable installments were offered." },
-    { author: "Wasim Akram", rating: 5, text: "Token system in waiting room is smooth. Very organized queue management." },
-    { author: "Sameer Uddin", rating: 5, text: "Got immediate relief from severe toothache. Thank you N.S. Dental Care team!" },
-    { author: "Nazia Parveen", rating: 5, text: "Warm atmosphere and clean surroundings. Doctors explain everything on dental charts." },
-    { author: "Mohammed Yaseen", rating: 5, text: "Best clinic near Edi Bazar main road. Easy booking and quick patient portal lookups." },
-    { author: "Arshad Hussain", rating: 5, text: "Top class implant clinic. Professional surgeons and complete transparency in billing." },
-    { author: "Rehana Sultana", rating: 5, text: "Painless wisdom tooth removal! Instructions for post-op care were given clearly." },
-    { author: "Shoaib Malik", rating: 5, text: "Digital receipt and prescription feature on WhatsApp is extremely convenient." },
-    { author: "Farha Naaz", rating: 5, text: "Dr. Samreen is wonderful with kids. My daughter's teeth cleaning went effortlessly." },
-    { author: "Javed Iqbal", rating: 5, text: "5 star dental facility in Hyderabad! Clean, modern, trustworthy and affordable." }
-];
+    async setItem(key, val) {
+        if (!this.db) await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction("clinic_store", "readwrite");
+            const store = tx.objectStore("clinic_store");
+            const req = store.put(val, key);
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => reject(req.error);
+        });
+    }
 
-let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
-    { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" }
-];
+    async getItem(key) {
+        if (!this.db) await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction("clinic_store", "readonly");
+            const store = tx.objectStore("clinic_store");
+            const req = store.get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async clear() {
+        if (!this.db) await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction("clinic_store", "readwrite");
+            const store = tx.objectStore("clinic_store");
+            const req = store.clear();
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => reject(req.error);
+        });
+    }
+}
+
+const storageEngine = new ClinicStorageEngine();
+
+// APP STATE VARIABLES
+let hospitalEmail = "info@nsdentalcare.com";
+let doctorEmail = "ayub@nsdentalcare.com";
+let doctors = [];
+let users = [];
+let passwordResetRequests = [];
+let auditLogs = [];
+let galleryPhotos = [];
+let allReviews = [];
+let patients = [];
+let appointments = [];
+let labOrders = [];
+let medicalRecords = {};
+let ledgers = [];
 
 const todayStr = new Date().toISOString().split('T')[0];
-
-let appointments = JSON.parse(localStorage.getItem('ns_appointments')) || [
-    { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
-];
-
-let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
-    { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: todayStr, status: "In Lab Production" }
-];
-
-let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
-    "PAT-1001": [
-        { id: "RX-1001", date: todayStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr, xrayBase64: null }
-    ]
-};
-
-let ledgers = JSON.parse(localStorage.getItem('ns_ledgers')) || [
-    { id: "REC-1001", apptId: "NSD-1001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 5000, dueAmount: 0, date: todayStr }
-];
 
 let activePrescriptionApptId = null;
 let activeReceiptId = null;
 let selectedTeeth = [];
 let currentSession = null;
 
-// MONTH-WISE CALENDAR STATE (JULY 2026 DEFAULT)
 let currentCalYear = 2026;
 let currentCalMonth = 6;
 let selectedCalendarDateStr = todayStr;
 
-function initApp() {
+async function initApp() {
+    await storageEngine.init();
+    await loadStateFromIndexedDB();
+
     startRealtimeClock();
     checkPublicTicker();
     renderHeroAndFees();
@@ -101,6 +111,77 @@ function initApp() {
     syncAdminEmailInputs();
     renderCalendar();
     updateStorageMeter();
+}
+
+async function loadStateFromIndexedDB() {
+    hospitalEmail = await storageEngine.getItem('ns_hospital_email') || "info@nsdentalcare.com";
+    doctorEmail = await storageEngine.getItem('ns_doctor_email') || "ayub@nsdentalcare.com";
+
+    doctors = await storageEngine.getItem('ns_doctors') || [
+        { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
+        { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
+    ];
+
+    users = await storageEngine.getItem('ns_users') || [
+        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
+        { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
+    ];
+
+    passwordResetRequests = await storageEngine.getItem('ns_pwd_resets') || [];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with High-Capacity Storage." }];
+
+    galleryPhotos = await storageEngine.getItem('ns_gallery') || [
+        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
+        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
+    ];
+
+    allReviews = await storageEngine.getItem('ns_reviews') || [
+        { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
+        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
+        { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." }
+    ];
+
+    patients = await storageEngine.getItem('ns_patients') || [
+        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" }
+    ];
+
+    appointments = await storageEngine.getItem('ns_appointments') || [
+        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: todayStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: todayStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
+    ];
+
+    labOrders = await storageEngine.getItem('ns_lab_orders') || [
+        { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: todayStr, status: "In Lab Production" }
+    ];
+
+    medicalRecords = await storageEngine.getItem('ns_records') || {
+        "PAT-1001": [
+            { id: "RX-1001", date: todayStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr, xrayBase64: null }
+        ]
+    };
+
+    ledgers = await storageEngine.getItem('ns_ledgers') || [
+        { id: "REC-1001", apptId: "NSD-1001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 5000, paidAmount: 5000, dueAmount: 0, date: todayStr }
+    ];
+}
+
+async function updateStorageMeter() {
+    const txt = document.getElementById('storage_usage_text');
+    const bar = document.getElementById('storage_usage_bar');
+
+    if (navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+        const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
+        const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
+
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Active)`;
+        if (bar) {
+            bar.style.width = `${Math.max(pct, 2)}%`;
+            bar.className = "h-full rounded-full transition-all bg-emerald-500";
+        }
+    } else {
+        if (txt) txt.innerText = "IndexedDB Active (High-Capacity Storage Enabled)";
+    }
 }
 
 function startRealtimeClock() {
@@ -119,28 +200,6 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-// STORAGE QUOTA GAUGE
-function updateStorageMeter() {
-    let totalBytes = 0;
-    for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-            totalBytes += (localStorage[key].length + key.length) * 2;
-        }
-    }
-    const kbUsed = Math.round(totalBytes / 1024);
-    const pct = Math.min(Math.round((kbUsed / 5000) * 100), 100);
-
-    const txt = document.getElementById('storage_usage_text');
-    const bar = document.getElementById('storage_usage_bar');
-
-    if(txt) txt.innerText = `${kbUsed} KB / 5000 KB Used (${pct}%)`;
-    if(bar) {
-        bar.style.width = `${pct}%`;
-        bar.className = `h-full rounded-full transition-all ${pct > 80 ? 'bg-rose-600' : pct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`;
-    }
-}
-
-// DYNAMIC UPI QR GENERATOR
 function generatePatientUPIQRCode() {
     const todayAppt = appointments.find(a => a.date === todayStr) || appointments[0];
     if(!todayAppt) {
@@ -167,7 +226,6 @@ function closeUPIQRModal() {
     document.getElementById('upiQRModal').classList.remove('flex');
 }
 
-// DOCTOR RX PRESET SPEED-DIAL
 function applyRxPreset(type) {
     const rxArea = document.getElementById('lh_rx');
     if(!rxArea) return;
@@ -276,7 +334,7 @@ function getNextTokenForDate(targetDate) {
     return "TK-" + (count < 10 ? "0" + count : count);
 }
 
-function handleManualTokenAssignSubmit() {
+async function handleManualTokenAssignSubmit() {
     const pid = document.getElementById('manual_token_pid').value.trim();
     const tokenVal = document.getElementById('manual_token_val').value.trim();
 
@@ -291,7 +349,7 @@ function handleManualTokenAssignSubmit() {
     if(appt) {
         appt.token = tokenVal;
         appt.modifiedToday = true;
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        await storageEngine.setItem('ns_appointments', appointments);
         renderAppointments();
         renderPublicTokenQueue();
         updateMetricCards();
@@ -320,14 +378,14 @@ function updateMetricCards() {
     updateStorageMeter();
 }
 
-function uploadClinicPhotoFile(e) {
+async function uploadClinicPhotoFile(e) {
     const file = e.target.files[0];
     if(!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(evt) {
+    reader.onload = async function(evt) {
         galleryPhotos.unshift(evt.target.result);
-        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+        await storageEngine.setItem('ns_gallery', galleryPhotos);
         renderGallery();
         logAction("Staff uploaded image/PDF photo asset into gallery.");
         alert("Photo File Uploaded to Gallery!");
@@ -362,15 +420,15 @@ function calculateRevenueSplit() {
     document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
 }
 
-function clearAuditLogs() {
+async function clearAuditLogs() {
     if(confirm("Clear audit logs trail?")) {
         auditLogs = [];
-        localStorage.setItem('ns_logs', JSON.stringify(auditLogs));
+        await storageEngine.setItem('ns_logs', auditLogs);
         renderAuditLogs();
     }
 }
 
-function adminFixMissingReceipts() {
+async function adminFixMissingReceipts() {
     let created = 0;
     appointments.forEach(a => {
         let l = ledgers.find(x => x.apptId === a.id);
@@ -379,14 +437,14 @@ function adminFixMissingReceipts() {
             created++;
         }
     });
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+    await storageEngine.setItem('ns_ledgers', ledgers);
     renderLedgers();
     calculateAdminStats();
     logAction(`Admin Repair Utility auto-generated ${created} missing billing receipts.`);
     alert(`Auto-Repair Complete! ${created} missing billing receipts repaired.`);
 }
 
-function adminMergeDuplicatePatients() {
+async function adminMergeDuplicatePatients() {
     let initialCount = patients.length;
     let uniquePatients = [];
     let phoneMap = new Set();
@@ -399,18 +457,18 @@ function adminMergeDuplicatePatients() {
     });
 
     patients = uniquePatients;
-    localStorage.setItem('ns_patients', JSON.stringify(patients));
+    await storageEngine.setItem('ns_patients', patients);
     logAction(`Merged duplicate profiles. Count reduced from ${initialCount} to ${patients.length}.`);
     alert(`Duplicates Merged! Active profiles: ${patients.length}`);
 }
 
-function adminPurgeBase64Xrays() {
+async function adminPurgeBase64Xrays() {
     if(confirm("Purge stored X-Ray files to optimize local browser storage? Clinical text notes will be preserved.")) {
         Object.keys(medicalRecords).forEach(pid => {
             medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
         });
-        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
-        logAction("Admin purged base64 X-Ray assets to clear local storage.");
+        await storageEngine.setItem('ns_records', medicalRecords);
+        logAction("Admin purged base64 X-Ray assets to clear storage.");
         alert("Storage Cleaned! All X-Ray image binaries cleared.");
     }
 }
@@ -421,10 +479,10 @@ function adminForceLogoutAllSessions() {
     alert("All staff session keys locked!");
 }
 
-function checkPublicTicker() {
+async function checkPublicTicker() {
     const textEl = document.getElementById('disp_marquee_text');
     const inputEl = document.getElementById('adm_ticker_input');
-    const saved = localStorage.getItem('ns_ticker_text');
+    const saved = await storageEngine.getItem('ns_ticker_text');
 
     const defaultText = "Dental consultation fees and appointment slots updated with effect from 1 July 2026. Prior booking mandatory for evening Sunday procedures.";
     const activeText = saved || defaultText;
@@ -433,10 +491,10 @@ function checkPublicTicker() {
     if(inputEl) inputEl.value = activeText;
 }
 
-function updateLiveTickerAdmin() {
+async function updateLiveTickerAdmin() {
     const inputEl = document.getElementById('adm_ticker_input');
     if(inputEl && inputEl.value) {
-        localStorage.setItem('ns_ticker_text', inputEl.value);
+        await storageEngine.setItem('ns_ticker_text', inputEl.value);
         checkPublicTicker();
         logAction(`Admin updated live marquee ticker: "${inputEl.value}"`);
         alert("Top Marquee Ticker Updated!");
@@ -453,21 +511,21 @@ function syncAdminEmailInputs() {
     if(elHdr) elHdr.innerText = hospitalEmail;
 }
 
-function saveAdminEmailSettings() {
+async function saveAdminEmailSettings() {
     hospitalEmail = document.getElementById('adm_hosp_email').value;
     doctorEmail = document.getElementById('adm_doc_email').value;
 
-    localStorage.setItem('ns_hospital_email', hospitalEmail);
-    localStorage.setItem('ns_doctor_email', doctorEmail);
+    await storageEngine.setItem('ns_hospital_email', hospitalEmail);
+    await storageEngine.setItem('ns_doctor_email', doctorEmail);
 
     syncAdminEmailInputs();
     logAction("Admin updated hospital and doctor email configuration.");
     alert("Email addresses updated successfully!");
 }
 
-function logAction(msg) {
+async function logAction(msg) {
     auditLogs.unshift({ time: new Date().toLocaleTimeString(), text: msg });
-    localStorage.setItem('ns_logs', JSON.stringify(auditLogs));
+    await storageEngine.setItem('ns_logs', auditLogs);
     renderAuditLogs();
 }
 
@@ -528,7 +586,7 @@ function renderPublicTokenQueue() {
     }
 }
 
-function resetDailyTokens() {
+async function resetDailyTokens() {
     if(confirm("Reset token numbers for today's queue starting from TK-01?")) {
         let todays = appointments.filter(a => a.date === todayStr);
         todays.forEach((a, index) => {
@@ -536,7 +594,7 @@ function resetDailyTokens() {
             a.queueStatus = "In Waiting Room";
             a.modifiedToday = true;
         });
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        await storageEngine.setItem('ns_appointments', appointments);
         renderAppointments();
         renderPublicTokenQueue();
         updateMetricCards();
@@ -603,22 +661,22 @@ function renderGallery() {
     }
 }
 
-function deleteGalleryPhoto(idx) {
+async function deleteGalleryPhoto(idx) {
     if(confirm("Remove this photo asset from clinic gallery?")) {
         galleryPhotos.splice(idx, 1);
-        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+        await storageEngine.setItem('ns_gallery', galleryPhotos);
         renderGallery();
         logAction(`Deleted gallery photo index ${idx}`);
     }
 }
 
-function addReviewAdmin() {
+async function addReviewAdmin() {
     const author = document.getElementById('adm_rev_author').value;
     const text = document.getElementById('adm_rev_text').value;
 
     if(author && text) {
         allReviews.unshift({ author, rating: 5, text });
-        localStorage.setItem('ns_reviews', JSON.stringify(allReviews));
+        await storageEngine.setItem('ns_reviews', allReviews);
         alert("Google review added!");
         logAction(`Admin added Google review from ${author}`);
         document.getElementById('adm_rev_author').value = '';
@@ -631,7 +689,7 @@ function initShufflingReviews10Sec() {
     let currentIndex = 0;
 
     function shuffle10() {
-        if(!container) return;
+        if(!container || allReviews.length === 0) return;
         const slice = [];
         for(let i = 0; i < 3; i++) {
             slice.push(allReviews[(currentIndex + i) % allReviews.length]);
@@ -703,7 +761,7 @@ function handlePortalLogin(e) {
     }
 }
 
-function handleStaffRegistration(e) {
+async function handleStaffRegistration(e) {
     e.preventDefault();
     const role = document.getElementById('regRole').value;
     const name = document.getElementById('regName').value;
@@ -712,21 +770,21 @@ function handleStaffRegistration(e) {
     const password = document.getElementById('regPassword').value;
 
     users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending" });
-    localStorage.setItem('ns_users', JSON.stringify(users));
+    await storageEngine.setItem('ns_users', users);
 
     logAction(`New ${role} registration request for ${name}.`);
     alert("Registration request submitted!");
     closePortalModal();
 }
 
-function handleForgotPasswordSubmit(e) {
+async function handleForgotPasswordSubmit(e) {
     e.preventDefault();
     const role = document.getElementById('fg_role').value;
     const identifier = document.getElementById('fg_identifier').value;
     const newPassword = document.getElementById('fg_newpwd').value;
 
     passwordResetRequests.push({ id: Date.now(), role, identifier, newPassword });
-    localStorage.setItem('ns_pwd_resets', JSON.stringify(passwordResetRequests));
+    await storageEngine.setItem('ns_pwd_resets', passwordResetRequests);
 
     logAction(`Password reset request for ${identifier}`);
     alert("Password reset request submitted successfully!");
@@ -812,22 +870,22 @@ function exportFinancialReport() {
     logAction("Exported financial ledger CSV report.");
 }
 
-function saveClinicTimings() {
+async function saveClinicTimings() {
     const m = document.getElementById('adm_slot_morning').value;
     const e = document.getElementById('adm_slot_evening').value;
 
     document.getElementById('disp_slot_morning').innerText = m;
     document.getElementById('disp_slot_evening').innerText = e;
 
-    localStorage.setItem('ns_timings', JSON.stringify({ morning: m, evening: e }));
+    await storageEngine.setItem('ns_timings', { morning: m, evening: e });
     logAction("Updated clinic operating hours.");
     alert("Hospital hours updated!");
 }
 
-function togglePerm(key) {
-    let permObj = JSON.parse(localStorage.getItem('ns_perms')) || {};
+async function togglePerm(key) {
+    let permObj = await storageEngine.getItem('ns_perms') || {};
     permObj[key] = !permObj[key];
-    localStorage.setItem('ns_perms', JSON.stringify(permObj));
+    await storageEngine.setItem('ns_perms', permObj);
     logAction(`Updated permission flag: ${key} = ${permObj[key]}`);
 }
 
@@ -890,7 +948,7 @@ function closeMasterEditModal() {
     document.getElementById('masterEditModal').classList.remove('flex');
 }
 
-function handleMasterEditSubmit(e) {
+async function handleMasterEditSubmit(e) {
     e.preventDefault();
     const pid = document.getElementById('med_target_pid').value;
     const p = patients.find(x => x.patientId === pid);
@@ -924,9 +982,9 @@ function handleMasterEditSubmit(e) {
         ledger.dueAmount = ledger.totalCost - ledger.paidAmount;
     }
 
-    localStorage.setItem('ns_patients', JSON.stringify(patients));
-    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+    await storageEngine.setItem('ns_patients', patients);
+    await storageEngine.setItem('ns_appointments', appointments);
+    await storageEngine.setItem('ns_ledgers', ledgers);
 
     renderAppointments();
     renderLedgers();
@@ -1010,17 +1068,17 @@ function sendAppointmentWhatsAppLinks(apptId) {
     }
 }
 
-function deletePatientRecordATOZ(pid) {
+async function deletePatientRecordATOZ(pid) {
     if(confirm(`PERMANENTLY DELETE all patient data, medical records, and receipts for ${pid}?`)) {
         patients = patients.filter(p => p.patientId !== pid);
         appointments = appointments.filter(a => a.patientId !== pid);
         ledgers = ledgers.filter(l => l.patientId !== pid);
         delete medicalRecords[pid];
 
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+        await storageEngine.setItem('ns_patients', patients);
+        await storageEngine.setItem('ns_appointments', appointments);
+        await storageEngine.setItem('ns_ledgers', ledgers);
+        await storageEngine.setItem('ns_records', medicalRecords);
 
         renderAppointments();
         renderLedgers();
@@ -1032,12 +1090,12 @@ function deletePatientRecordATOZ(pid) {
     }
 }
 
-function approveAppointment(id) {
+async function approveAppointment(id) {
     const appt = appointments.find(a => a.id === id);
     if(appt) {
         appt.status = 'CONFIRMED';
         appt.modifiedToday = true;
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        await storageEngine.setItem('ns_appointments', appointments);
         renderAppointments();
         renderPublicTokenQueue();
         updateMetricCards();
@@ -1064,7 +1122,7 @@ function renderLabOrders() {
     }
 }
 
-function openNewLabOrderModal() {
+async function openNewLabOrderModal() {
     const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
     const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
     const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
@@ -1073,14 +1131,14 @@ function openNewLabOrderModal() {
     if(pid && tooth) {
         const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
         labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: todayStr, status: "Impression Taken" });
-        localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
+        await storageEngine.setItem('ns_lab_orders', labOrders);
         renderLabOrders();
         updateMetricCards();
         logAction(`Lab order created for ${pid}`);
     }
 }
 
-function updateLabOrderStatus(id) {
+async function updateLabOrderStatus(id) {
     const order = labOrders.find(o => o.id === id);
     if(order) {
         const st = prompt("Lab Status (1: Impression Taken, 2: In Lab Production, 3: Delivered & Fitted):", "2");
@@ -1088,7 +1146,7 @@ function updateLabOrderStatus(id) {
         if(st === "2") order.status = "In Lab Production";
         if(st === "3") order.status = "Delivered & Fitted";
 
-        localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
+        await storageEngine.setItem('ns_lab_orders', labOrders);
         renderLabOrders();
         updateMetricCards();
         logAction(`Lab order ${id} status updated.`);
@@ -1162,7 +1220,7 @@ function renderAdminUserTable() {
     }
 }
 
-function adminEditFullUserProfile(userId) {
+async function adminEditFullUserProfile(userId) {
     const u = users.find(x => x.id === userId);
     if(u) {
         const name = prompt("Edit Full Name:", u.name);
@@ -1176,7 +1234,7 @@ function adminEditFullUserProfile(userId) {
             u.email = email;
             u.password = pwd;
 
-            localStorage.setItem('ns_users', JSON.stringify(users));
+            await storageEngine.setItem('ns_users', users);
             renderAdminUserTable();
             logAction(`Admin modified complete profile & password for ${u.name}`);
             alert("Staff profile & credentials updated!");
@@ -1184,17 +1242,17 @@ function adminEditFullUserProfile(userId) {
     }
 }
 
-function adminToggleUserStatus(userId) {
+async function adminToggleUserStatus(userId) {
     const u = users.find(x => x.id === userId);
     if(u) {
         u.status = u.status === 'Approved' ? 'Disabled' : 'Approved';
-        localStorage.setItem('ns_users', JSON.stringify(users));
+        await storageEngine.setItem('ns_users', users);
         renderAdminUserTable();
         logAction(`Admin toggled status for ${u.name} to ${u.status}`);
     }
 }
 
-function handleAdminAddStaff(e) {
+async function handleAdminAddStaff(e) {
     e.preventDefault();
     const name = document.getElementById('adm_stf_name').value;
     const role = document.getElementById('adm_stf_role').value;
@@ -1202,11 +1260,11 @@ function handleAdminAddStaff(e) {
     const password = document.getElementById('adm_stf_password').value;
 
     users.push({ id: Date.now(), name, role, phone, email: `${role}@nsdental.com`, password, status: "Approved" });
-    localStorage.setItem('ns_users', JSON.stringify(users));
+    await storageEngine.setItem('ns_users', users);
 
     if(role === 'doctor') {
         doctors.push({ id: `doc${doctors.length+1}`, name, spec: "Dental Surgeon", phone, fee: 200 });
-        localStorage.setItem('ns_doctors', JSON.stringify(doctors));
+        await storageEngine.setItem('ns_doctors', doctors);
         renderDoctorsRoster();
         renderDoctorOptions();
     }
@@ -1217,7 +1275,7 @@ function handleAdminAddStaff(e) {
     e.target.reset();
 }
 
-function handleManualPatientUpload(e) {
+async function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('man_pname').value;
@@ -1235,7 +1293,7 @@ function handleManualPatientUpload(e) {
 
     const xrayFileInput = document.getElementById('man_xray_file');
 
-    function saveRecordWithXray(xrayBase64) {
+    async function saveRecordWithXray(xrayBase64) {
         let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
         if(!patient) {
             patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender };
@@ -1244,21 +1302,21 @@ function handleManualPatientUpload(e) {
             patient.name = name;
             patient.ageGender = ageGender;
         }
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
+        await storageEngine.setItem('ns_patients', patients);
 
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
         const token = getNextTokenForDate(date);
 
         appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        await storageEngine.setItem('ns_appointments', appointments);
 
         if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
         medicalRecords[patient.patientId].push({ id: "RX-" + Date.now(), date, diagnosis: reason, rx, doctor, nextVisit, xrayBase64: xrayBase64 || null });
-        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+        await storageEngine.setItem('ns_records', medicalRecords);
 
         const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
         ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0, date });
-        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+        await storageEngine.setItem('ns_ledgers', ledgers);
 
         logAction(`Record saved for ${name} (${patient.patientId})`);
         alert(`Patient Visit Saved! Patient ID: ${patient.patientId} | Token: ${token}`);
@@ -1274,12 +1332,12 @@ function handleManualPatientUpload(e) {
 
     if(xrayFileInput && xrayFileInput.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(evt) {
-            saveRecordWithXray(evt.target.result);
+        reader.onload = async function(evt) {
+            await saveRecordWithXray(evt.target.result);
         };
         reader.readAsDataURL(xrayFileInput.files[0]);
     } else {
-        saveRecordWithXray(null);
+        await saveRecordWithXray(null);
     }
 }
 
@@ -1310,7 +1368,7 @@ function restoreJSONBackup(event) {
     const file = event.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const data = JSON.parse(e.target.result);
             if(data.patients && data.appointments) {
@@ -1320,13 +1378,13 @@ function restoreJSONBackup(event) {
                 ledgers = data.ledgers || [];
                 labOrders = data.labOrders || [];
 
-                localStorage.setItem('ns_patients', JSON.stringify(patients));
-                localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-                localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
-                localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-                localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
+                await storageEngine.setItem('ns_patients', patients);
+                await storageEngine.setItem('ns_appointments', appointments);
+                await storageEngine.setItem('ns_records', medicalRecords);
+                await storageEngine.setItem('ns_ledgers', ledgers);
+                await storageEngine.setItem('ns_lab_orders', labOrders);
 
-                alert("Backup Restored Successfully!");
+                alert("Backup Restored Successfully into IndexedDB!");
                 location.reload();
             }
         } catch(err) {
@@ -1336,9 +1394,9 @@ function restoreJSONBackup(event) {
     reader.readAsText(file);
 }
 
-function resetSystemData() {
+async function resetSystemData() {
     if(confirm("Permanently erase all stored database records?")) {
-        localStorage.clear();
+        await storageEngine.clear();
         location.reload();
     }
 }
@@ -1523,7 +1581,7 @@ function publicViewReadOnlyReceipt(recId) {
     document.getElementById('rc_edit_btn').classList.add('hidden-section');
 }
 
-function handlePublicBooking(e) {
+async function handlePublicBooking(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('bk_name').value;
@@ -1539,17 +1597,17 @@ function handlePublicBooking(e) {
     } else {
         patient.name = name;
     }
-    localStorage.setItem('ns_patients', JSON.stringify(patients));
+    await storageEngine.setItem('ns_patients', patients);
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = getNextTokenForDate(date);
 
     appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
-    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+    await storageEngine.setItem('ns_appointments', appointments);
 
     const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
     ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, date });
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+    await storageEngine.setItem('ns_ledgers', ledgers);
 
     alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
@@ -1583,7 +1641,7 @@ function openLetterhead(id) {
     }
 }
 
-function savePrescriptionAndSync() {
+async function savePrescriptionAndSync() {
     const appt = appointments.find(a => a.id === activePrescriptionApptId);
     if(appt) {
         const notes = document.getElementById('lh_notes').value;
@@ -1593,10 +1651,10 @@ function savePrescriptionAndSync() {
         if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
         medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: new Date().toLocaleDateString(), diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
 
-        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+        await storageEngine.setItem('ns_records', medicalRecords);
         appt.nextVisit = nextVisit;
         appt.modifiedToday = true;
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        await storageEngine.setItem('ns_appointments', appointments);
 
         logAction(`Prescription saved for ${appt.patientId}.`);
         alert("Prescription saved & Next visit synced!");
@@ -1656,10 +1714,10 @@ function renderLedgers() {
     `).join('');
 }
 
-function deleteLedgerRecord(id) {
+async function deleteLedgerRecord(id) {
     if(confirm("Are you sure you want to delete this receipt ledger?")) {
         ledgers = ledgers.filter(l => l.id !== id);
-        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+        await storageEngine.setItem('ns_ledgers', ledgers);
         renderLedgers();
         calculateAdminStats();
         updateMetricCards();
@@ -1688,27 +1746,27 @@ function renderApprovals() {
     `).join('');
 }
 
-function approveUserAccount(id) {
+async function approveUserAccount(id) {
     const u = users.find(x => x.id === id);
     if(u) {
         u.status = 'Approved';
-        localStorage.setItem('ns_users', JSON.stringify(users));
+        await storageEngine.setItem('ns_users', users);
         renderApprovals();
         logAction(`User ${u.name} account approved.`);
         alert("Account Approved!");
     }
 }
 
-function approvePasswordReset(reqId) {
+async function approvePasswordReset(reqId) {
     const req = passwordResetRequests.find(r => r.id === reqId);
     if(req) {
         const u = users.find(x => x.email === req.identifier || x.phone === req.identifier);
         if(u) {
             u.password = req.newPassword;
-            localStorage.setItem('ns_users', JSON.stringify(users));
+            await storageEngine.setItem('ns_users', users);
         }
         passwordResetRequests = passwordResetRequests.filter(r => r.id !== reqId);
-        localStorage.setItem('ns_pwd_resets', JSON.stringify(passwordResetRequests));
+        await storageEngine.setItem('ns_pwd_resets', passwordResetRequests);
         renderApprovals();
         logAction(`Approved password reset for ${req.identifier}.`);
         alert("Password reset approved!");

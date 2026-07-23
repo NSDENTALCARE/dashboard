@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>N.S. DENTAL CARE | Operations Command Platform</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 12:24:53 AM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 12:42:02 AM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -69,7 +69,7 @@
     <!-- MAIN APP CONTAINER -->
     <main class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
-        <!-- SECTION 1: PUBLIC HOMEPAGE -->
+        <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
         <section id="public-home" class="w-full space-y-6 sm:space-y-8">
             <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-red-950 to-red-900 border border-red-800 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-2">
@@ -211,7 +211,7 @@
                 </div>
             </div>
 
-            <!-- PHOTO GALLERY -->
+            <!-- PHOTO GALLERY WITH LOCAL BASE64 FILE UPLOADER -->
             <div id="sec_gallery" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
@@ -460,6 +460,37 @@
                         <span class="text-[10px] text-slate-400 uppercase font-bold block">Risk Patient Alerts</span>
                         <span id="card_stat_risk" class="text-lg font-black text-rose-400">0</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- DYNAMIC LOCAL STORAGE METER & UPI PAYMENT DISPATCHER TOOLBAR -->
+            <div class="grid sm:grid-cols-2 gap-3 text-xs">
+                <!-- STORAGE METER -->
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="text-amber-400 w-4 h-4"></i>
+                        <div>
+                            <span class="font-bold text-white block">LocalStorage Storage Quota</span>
+                            <span id="storage_usage_text" class="text-[10px] text-slate-400">0 KB / 5000 KB Used</span>
+                        </div>
+                    </div>
+                    <div class="w-32 bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden p-0.5">
+                        <div id="storage_usage_bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 10%;"></div>
+                    </div>
+                </div>
+
+                <!-- UPI QR PAYMENT DISPATCHER -->
+                <div class="bg-slate-900 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="qr-code" class="text-emerald-400 w-4 h-4"></i>
+                        <div>
+                            <span class="font-bold text-white block">Instant Patient UPI QR Code Generator</span>
+                            <span class="text-[10px] text-slate-400">Generate Dynamic UPI Payment Link for Active Patient</span>
+                        </div>
+                    </div>
+                    <button onclick="generatePatientUPIQRCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shrink-0 shadow">
+                        Show Payment QR
+                    </button>
                 </div>
             </div>
 
@@ -1092,6 +1123,23 @@
             </div>
         </section>
 
+        <!-- DYNAMIC UPI QR PAYMENT MODAL -->
+        <div id="upiQRModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-sm rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 text-center my-auto">
+                <button onclick="closeUPIQRModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30 uppercase">UPI Dynamic Payment QR</span>
+                <h3 id="upi_pname_title" class="text-base font-bold text-white">Mohammed Ali (PAT-1001)</h3>
+                <p id="upi_amount_title" class="text-2xl font-black text-amber-400">₹5,000</p>
+                <div class="bg-white p-4 rounded-xl inline-block shadow-inner">
+                    <img id="upi_qr_img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=8978883007@upi&pn=NSDentalCare" class="w-44 h-44 mx-auto">
+                </div>
+                <p class="text-[10px] text-slate-400">Scan using PhonePe, Google Pay, or Paytm</p>
+                <button onclick="closeUPIQRModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs">Close Payment Screen</button>
+            </div>
+        </div>
+
         <!-- MASTER EDITING MODAL -->
         <div id="masterEditModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
@@ -1256,6 +1304,14 @@
                     <span class="text-xs font-bold text-red-700 uppercase">Interactive 32-Tooth Charting</span>
                     <p class="text-[11px] text-slate-500">Click individual teeth to toggle selection for diagnosis:</p>
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
+                </div>
+
+                <!-- CLINICAL DOSAGE PRESET SPEED-DIAL FOR DOCTORS -->
+                <div class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
+                    <span class="font-bold text-slate-700">Preset Rx Kits:</span>
+                    <button onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded">RCT Kit</button>
+                    <button onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded">Extraction Kit</button>
+                    <button onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">Scaling/Cleaning</button>
                 </div>
 
                 <div class="space-y-3 text-xs">

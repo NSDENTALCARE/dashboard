@@ -1,16 +1,26 @@
+/* ==========================================================================
+   N.S. DENTAL CARE - OPERATIONS PLATFORM CORE STYLESHEET
+   ========================================================================== */
+
+/* 1. GLOBAL LAYOUT & VIEWPORT FIXES */
 html, body {
-    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
     min-height: 100dvh;
     touch-action: manipulation;
     overflow-x: hidden !important;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+/* 2. UTILITY DISPLAY CLASSES */
 .hidden-section {
     display: none !important;
 }
 
-/* MARQUEE ANIMATION */
+/* 3. DYNAMIC MARQUEE ANNOUNCEMENT ANIMATION */
 .marquee-wrapper {
     position: relative;
     width: 100%;
@@ -29,13 +39,27 @@ html, body {
 }
 
 @keyframes marquee {
-    0%   { transform: translate(0, 0); }
-    100% { transform: translate(-100%, 0); }
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(-100%, 0, 0);
+    }
 }
 
+@-webkit-keyframes marquee {
+    0% {
+        -webkit-transform: translate3d(0, 0, 0);
+    }
+    100% {
+        -webkit-transform: translate3d(-100%, 0, 0);
+    }
+}
+
+/* 4. CUSTOM SCROLLBAR STYLING */
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -47,14 +71,20 @@ html, body {
     border-radius: 4px;
 }
 
+::-webkit-scrollbar-thumb:hover {
+    background: #dc2626;
+}
+
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
+/* 5. DYNAMIC UI STATE INDICATORS */
 .modified-today {
     background-color: rgba(245, 158, 11, 0.15) !important;
     border-left: 4px solid #f59e0b !important;
@@ -62,25 +92,38 @@ html, body {
 
 .tooth-btn-selected {
     background-color: #dc2626 !important;
-    color: white !important;
+    color: #ffffff !important;
     border-color: #991b1b !important;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
 }
 
+/* 6. PRINT & PDF GENERATION STYLES */
 @media print {
     body * {
-        visibility: hidden;
+        visibility: hidden !important;
     }
-    #receiptModal, #receiptModal *, #letterheadModal, #letterheadModal * {
-        visibility: visible;
+    
+    #receiptModal, 
+    #receiptModal *, 
+    #letterheadModal, 
+    #letterheadModal * {
+        visibility: visible !important;
     }
-    #receiptModal, #letterheadModal {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: white !important;
-        color: black !important;
+    
+    #receiptModal, 
+    #letterheadModal {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+        border: none !important;
     }
+    
     .no-print {
         display: none !important;
     }

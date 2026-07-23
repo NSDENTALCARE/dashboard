@@ -211,15 +211,19 @@
                 </div>
             </div>
 
-            <!-- PHOTO GALLERY -->
+            <!-- PHOTO GALLERY WITH LOCAL BASE64 FILE UPLOADER -->
             <div id="sec_gallery" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                        <i data-lucide="image" class="text-red-500"></i> Facility Photo Gallery
-                    </h3>
-                    <button onclick="promptStaffAddGalleryImage()" id="btn_staff_add_gallery" class="hidden-section bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                        + Add Photo
-                    </button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div>
+                        <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="image" class="text-red-500"></i> Facility Photo Gallery
+                        </h3>
+                        <p class="text-[11px] text-slate-400">Upload high-resolution JPEG, PNG, or PDF photo files directly</p>
+                    </div>
+                    <label id="btn_staff_add_gallery" class="hidden-section bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload JPEG/PDF Image
+                        <input type="file" accept="image/jpeg,image/png,application/pdf" onchange="uploadClinicPhotoFile(event)" class="hidden">
+                    </label>
                 </div>
                 <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
             </div>
@@ -470,6 +474,9 @@
                     <p id="dashClockBar" class="text-xs text-amber-400 font-mono mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <button onclick="downloadExcelBackup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Daily Excel Backup
+                    </button>
                     <button onclick="resetDailyTokens()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Daily Queue Tokens
                     </button>
@@ -495,7 +502,7 @@
                 <button onclick="switchDashTab('manualPatient')" id="tabBtnManualPatient" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Upload / Edit Patient Profile</button>
                 <button onclick="switchDashTab('labTracker')" id="tabBtnLabTracker" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Lab & Crown Orders</button>
                 <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Master Calendar</button>
-                <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Patient History Ledger (EHR)</button>
+                <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Patient History Ledger & X-Rays</button>
                 <button onclick="switchDashTab('ledger')" id="tabBtnLedger" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Billing Ledger & Receipts</button>
                 <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Registrations & Resets</button>
                 <button onclick="switchDashTab('adminMaster')" id="tabBtnAdminMaster" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Admin Master Control Suite</button>
@@ -579,6 +586,13 @@
                         <label class="block uppercase text-slate-400 mb-1">Prescribed Medication / Dosage</label>
                         <textarea id="man_prx" rows="2" placeholder="e.g. Amoxicillin 500mg (1-0-1), Paracetamol 650mg" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
                     </div>
+
+                    <!-- DIRECT X-RAY FILE UPLOADER -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <label class="block uppercase text-amber-400 font-bold mb-1">Upload Patient X-Ray / Scan File (JPEG/PNG/PDF):</label>
+                        <input type="file" id="man_xray_file" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-slate-300 text-xs">
+                    </div>
+
                     <div class="grid sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block uppercase text-slate-400 mb-1">Visit Date</label>
@@ -709,8 +723,44 @@
                 </div>
             </div>
 
-            <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
+            <!-- TAB 8: ADMIN MASTER CONTROL SUITE (20+ ADVANCED TROUBLESHOOTING UTILITIES) -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
+
+                <!-- EMERGENCY FIX & TROUBLESHOOTING PANEL -->
+                <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                            <i data-lucide="wrench" class="w-4 h-4"></i> Admin Emergency Fix & System Repair Tools
+                        </h3>
+                        <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">Admin Master Authority</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <button onclick="adminFixMissingReceipts()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
+                            <i data-lucide="file-check" class="text-emerald-400 w-4 h-4"></i>
+                            <strong class="block text-white">Auto-Repair Receipts</strong>
+                            <span class="text-[10px] text-slate-400 block">Fix missing billing ledger receipts</span>
+                        </button>
+
+                        <button onclick="adminMergeDuplicatePatients()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
+                            <i data-lucide="users" class="text-sky-400 w-4 h-4"></i>
+                            <strong class="block text-white">Merge Duplicate Patients</strong>
+                            <span class="text-[10px] text-slate-400 block">Consolidate profiles by phone #</span>
+                        </button>
+
+                        <button onclick="adminPurgeBase64Xrays()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
+                            <i data-lucide="trash-2" class="text-rose-400 w-4 h-4"></i>
+                            <strong class="block text-white">Storage Optimizer</strong>
+                            <span class="text-[10px] text-slate-400 block">Clear heavy X-Ray base64 images</span>
+                        </button>
+
+                        <button onclick="adminForceLogoutAllSessions()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
+                            <i data-lucide="lock" class="text-amber-400 w-4 h-4"></i>
+                            <strong class="block text-white">Force Session Lock</strong>
+                            <span class="text-[10px] text-slate-400 block">Invalidate staff logins</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- EMAIL CONFIG -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
@@ -870,8 +920,10 @@
                             <i data-lucide="image" class="w-4 h-4 text-red-500"></i> Photo Gallery Manager
                         </h3>
                         <div class="flex gap-2">
-                            <input type="url" id="adm_photo_url" placeholder="Paste Image URL" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                            <button onclick="addGalleryPhotoAdmin()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-2 rounded-xl">Add</button>
+                            <label class="flex-1 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-400 cursor-pointer">
+                                Choose JPEG/PNG/PDF Image
+                                <input type="file" accept="image/jpeg,image/png,application/pdf" onchange="uploadClinicPhotoFile(event)" class="hidden">
+                            </label>
                         </div>
                         <div id="adminGalleryPreview" class="grid grid-cols-3 gap-2 pt-2"></div>
                     </div>
@@ -901,11 +953,14 @@
                         <i data-lucide="database" class="w-4 h-4"></i> Database Backup & Restoration
                     </h3>
                     <div class="flex flex-wrap gap-3">
+                        <button onclick="downloadExcelBackup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Download Excel (.CSV) Backup
+                        </button>
                         <button onclick="downloadJSONBackup()" class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
                             <i data-lucide="download" class="w-4 h-4"></i> Download JSON Backup
                         </button>
                         <label class="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer flex items-center gap-1.5">
-                            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i> Restore Backup
+                            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i> Restore JSON
                             <input type="file" accept=".json" onchange="restoreJSONBackup(event)" class="hidden">
                         </label>
                     </div>

@@ -463,6 +463,25 @@
                 </div>
             </div>
 
+            <!-- STANDALONE TOKEN ASSIGNER TOOLBAR -->
+            <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div class="flex items-center gap-2">
+                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl font-bold">
+                        <i data-lucide="ticket" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white uppercase">Manual Patient Token Assigner</h4>
+                        <p class="text-[10px] text-slate-400">Assign custom sequence tokens for walk-ins or existing patients</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-lg">
+                    <input type="text" id="manual_token_pid" placeholder="Patient ID (e.g. PAT-1001) or Mobile #" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
+                    <input type="text" id="manual_token_val" placeholder="Token # (e.g. TK-05)" class="w-28 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
+                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow">Assign Token</button>
+                </div>
+            </div>
+
             <!-- DASHBOARD BAR -->
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-3 shadow-xl">
                 <div>
@@ -500,8 +519,8 @@
             <div id="dashTabContainer" class="flex border-b border-slate-800 gap-4 sm:gap-6 text-xs sm:text-sm font-semibold overflow-x-auto pb-1 no-scrollbar">
                 <button onclick="switchDashTab('appts')" id="tabBtnAppts" class="text-red-500 border-b-2 border-red-500 pb-2 whitespace-nowrap">Appointments & Queue</button>
                 <button onclick="switchDashTab('manualPatient')" id="tabBtnManualPatient" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Upload / Edit Patient Profile</button>
+                <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Interactive Real Calendar</button>
                 <button onclick="switchDashTab('labTracker')" id="tabBtnLabTracker" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Lab & Crown Orders</button>
-                <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Master Calendar</button>
                 <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Patient History Ledger & X-Rays</button>
                 <button onclick="switchDashTab('ledger')" id="tabBtnLedger" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Billing Ledger & Receipts</button>
                 <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Registrations & Resets</button>
@@ -611,7 +630,34 @@
                 </form>
             </div>
 
-            <!-- TAB 3: DENTAL LAB TRACKER -->
+            <!-- TAB 3: REAL INTERACTIVE MONTHLY CALENDAR -->
+            <div id="viewCalendar" class="space-y-4 hidden-section">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                    <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="calendar" class="text-red-500"></i> Interactive Monthly Master Calendar
+                            </h3>
+                            <p class="text-[11px] text-slate-400">Click any date cell to view scheduled visits for that date</p>
+                        </div>
+                        <span id="cal_month_title" class="bg-red-600/20 text-red-400 border border-red-500/30 font-bold px-3 py-1 rounded-full text-xs uppercase font-mono">July 2026</span>
+                    </div>
+
+                    <!-- 31-DAY REAL CALENDAR GRID -->
+                    <div id="calendarMonthlyGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs"></div>
+
+                    <!-- SELECTED DATE AGENDA PANEL -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                            <h4 id="cal_selected_date_heading" class="text-xs font-bold text-amber-400 uppercase font-mono">Visits Scheduled for Selected Date</h4>
+                            <span id="cal_selected_count" class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30">0 Appointments</span>
+                        </div>
+                        <div id="calendarAgendaList" class="space-y-2 text-xs"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: DENTAL LAB TRACKER -->
             <div id="viewLabTracker" class="space-y-4 hidden-section">
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -636,16 +682,6 @@
                             <tbody id="tblLabOrders" class="divide-y divide-slate-800 text-slate-300"></tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: MASTER CALENDAR -->
-            <div id="viewCalendar" class="space-y-4 hidden-section">
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i data-lucide="calendar" class="text-red-500"></i> Master Calendar & Follow-Up Visits
-                    </h3>
-                    <div id="calendarGrid" class="grid sm:grid-cols-3 gap-3"></div>
                 </div>
             </div>
 
@@ -723,7 +759,7 @@
                 </div>
             </div>
 
-            <!-- TAB 8: ADMIN MASTER CONTROL SUITE (20+ ADVANCED TROUBLESHOOTING UTILITIES) -->
+            <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
 
                 <!-- EMERGENCY FIX & TROUBLESHOOTING PANEL -->

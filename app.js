@@ -85,7 +85,7 @@ let currentSession = null;
 
 // MONTH-WISE CALENDAR STATE (JULY 2026 DEFAULT)
 let currentCalYear = 2026;
-let currentCalMonth = 6; // 0-indexed: 6 = July
+let currentCalMonth = 6;
 let selectedCalendarDateStr = todayStr;
 
 function initApp() {
@@ -100,6 +100,7 @@ function initApp() {
     renderOdontogram();
     syncAdminEmailInputs();
     renderCalendar();
+    updateStorageMeter();
 }
 
 function startRealtimeClock() {
@@ -118,7 +119,69 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-// FULL MONTH-WISE DYNAMIC CALENDAR ENGINE
+// STORAGE QUOTA GAUGE
+function updateStorageMeter() {
+    let totalBytes = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            totalBytes += (localStorage[key].length + key.length) * 2;
+        }
+    }
+    const kbUsed = Math.round(totalBytes / 1024);
+    const pct = Math.min(Math.round((kbUsed / 5000) * 100), 100);
+
+    const txt = document.getElementById('storage_usage_text');
+    const bar = document.getElementById('storage_usage_bar');
+
+    if(txt) txt.innerText = `${kbUsed} KB / 5000 KB Used (${pct}%)`;
+    if(bar) {
+        bar.style.width = `${pct}%`;
+        bar.className = `h-full rounded-full transition-all ${pct > 80 ? 'bg-rose-600' : pct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`;
+    }
+}
+
+// DYNAMIC UPI QR GENERATOR
+function generatePatientUPIQRCode() {
+    const todayAppt = appointments.find(a => a.date === todayStr) || appointments[0];
+    if(!todayAppt) {
+        alert("No active patient appointment found for payment!");
+        return;
+    }
+
+    const ledger = ledgers.find(l => l.patientId === todayAppt.patientId) || { totalCost: 500 };
+    const name = todayAppt.name;
+    const amount = ledger.totalCost || 500;
+
+    document.getElementById('upi_pname_title').innerText = `${name} (${todayAppt.patientId})`;
+    document.getElementById('upi_amount_title').innerText = `₹${amount.toLocaleString('en-IN')}`;
+
+    const upiUri = `upi://pay?pa=8978883007@upi&pn=NSDentalCare&am=${amount}&cu=INR`;
+    document.getElementById('upi_qr_img').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}`;
+
+    document.getElementById('upiQRModal').classList.remove('hidden');
+    document.getElementById('upiQRModal').classList.add('flex');
+}
+
+function closeUPIQRModal() {
+    document.getElementById('upiQRModal').classList.add('hidden');
+    document.getElementById('upiQRModal').classList.remove('flex');
+}
+
+// DOCTOR RX PRESET SPEED-DIAL
+function applyRxPreset(type) {
+    const rxArea = document.getElementById('lh_rx');
+    if(!rxArea) return;
+
+    if(type === 'rct') {
+        rxArea.value = "1. Tab Amoxicillin 500mg | 1-0-1 | After Food (5 Days)\n2. Tab Zero-P (Aceclofenac + Paracetamol) | 1-0-1 | After Food (3 Days)\n3. Cap Pantoprazole 40mg | 1-0-0 | Before Breakfast (5 Days)";
+    } else if(type === 'extraction') {
+        rxArea.value = "1. Tab Augmentin 625mg | 1-0-1 | After Food (5 Days)\n2. Tab Ketorol DT | 1-0-1 | Dissolve in water (3 Days)\n3. Chlorhexidine Mouthwash | Rinse 2 times daily";
+    } else if(type === 'scaling') {
+        rxArea.value = "1. Gum Paint (Tannic Acid) | Apply on gums twice daily\n2. Chlorhexidine 0.2% Mouthwash | Rinse 10ml twice daily for 7 days";
+    }
+    logAction(`Doctor applied Rx Speed-Dial preset: ${type.toUpperCase()}`);
+}
+
 function changeCalendarMonth(delta) {
     currentCalMonth += delta;
     if(currentCalMonth < 0) {
@@ -144,12 +207,10 @@ function renderCalendar() {
 
     let html = '';
 
-    // EMPTY BLOCKS FOR DAYS BEFORE FIRST DAY OF MONTH
     for(let e = 0; e < firstDay; e++) {
         html += `<div class="p-2 border border-slate-900/40 bg-slate-950/20 rounded-xl"></div>`;
     }
 
-    // MONTH DAYS
     for(let d = 1; d <= daysInMonth; d++) {
         const mStr = (currentCalMonth + 1) < 10 ? '0' + (currentCalMonth + 1) : '' + (currentCalMonth + 1);
         const dStr = d < 10 ? '0' + d : '' + d;
@@ -255,6 +316,8 @@ function updateMetricCards() {
     if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
     if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
     if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
+
+    updateStorageMeter();
 }
 
 function uploadClinicPhotoFile(e) {
@@ -688,7 +751,6 @@ function openDashboard() {
     document.getElementById('dashBadge').innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name} (${currentSession.phone || ''})`;
 
-    // POPULATE WELCOME TAB DETAILS
     document.getElementById('welc_role_badge').innerText = `AUTHENTICATED ROLE: ${currentSession.role.toUpperCase()}`;
     document.getElementById('welc_staff_name').innerText = `Welcome, ${currentSession.name}`;
     document.getElementById('welc_staff_contact').innerText = `Phone: ${currentSession.phone || 'Registered Staff'} | Authorized Access Active`;

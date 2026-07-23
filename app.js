@@ -82,6 +82,10 @@ let activePrescriptionApptId = null;
 let activeReceiptId = null;
 let selectedTeeth = [];
 let currentSession = null;
+
+// MONTH-WISE CALENDAR STATE (JULY 2026 DEFAULT)
+let currentCalYear = 2026;
+let currentCalMonth = 6; // 0-indexed: 6 = July
 let selectedCalendarDateStr = todayStr;
 
 function initApp() {
@@ -114,59 +118,49 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-// DATE-WISE DYNAMIC AUTO-TOKEN CALCULATOR
-function getNextTokenForDate(targetDate) {
-    const existing = appointments.filter(a => a.date === targetDate);
-    const count = existing.length + 1;
-    return "TK-" + (count < 10 ? "0" + count : count);
+// FULL MONTH-WISE DYNAMIC CALENDAR ENGINE
+function changeCalendarMonth(delta) {
+    currentCalMonth += delta;
+    if(currentCalMonth < 0) {
+        currentCalMonth = 11;
+        currentCalYear--;
+    } else if(currentCalMonth > 11) {
+        currentCalMonth = 0;
+        currentCalYear++;
+    }
+    renderCalendar();
 }
 
-// STANDALONE MANUAL TOKEN ASSIGNER HANDLER
-function handleManualTokenAssignSubmit() {
-    const pid = document.getElementById('manual_token_pid').value.trim();
-    const tokenVal = document.getElementById('manual_token_val').value.trim();
-
-    if(!pid || !tokenVal) {
-        alert("Please enter Patient ID/Phone and Token Number!");
-        return;
-    }
-
-    const appt = appointments.find(a => (a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid) && a.date === todayStr) 
-              || appointments.find(a => a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid);
-
-    if(appt) {
-        appt.token = tokenVal;
-        appt.modifiedToday = true;
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-        renderAppointments();
-        renderPublicTokenQueue();
-        updateMetricCards();
-        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
-        alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
-        document.getElementById('manual_token_pid').value = '';
-        document.getElementById('manual_token_val').value = '';
-    } else {
-        alert("Patient appointment record not found for today!");
-    }
-}
-
-// REAL INTERACTIVE MONTHLY CALENDAR GRID ENGINE
 function renderCalendar() {
     const grid = document.getElementById('calendarMonthlyGrid');
+    const title = document.getElementById('cal_month_title');
     if(!grid) return;
 
-    const daysInMonth = 31; 
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    if(title) title.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
+
+    const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
+    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+
     let html = '';
 
+    // EMPTY BLOCKS FOR DAYS BEFORE FIRST DAY OF MONTH
+    for(let e = 0; e < firstDay; e++) {
+        html += `<div class="p-2 border border-slate-900/40 bg-slate-950/20 rounded-xl"></div>`;
+    }
+
+    // MONTH DAYS
     for(let d = 1; d <= daysInMonth; d++) {
-        const dayStr = d < 10 ? '0' + d : '' + d;
-        const fullDateStr = `2026-07-${dayStr}`;
+        const mStr = (currentCalMonth + 1) < 10 ? '0' + (currentCalMonth + 1) : '' + (currentCalMonth + 1);
+        const dStr = d < 10 ? '0' + d : '' + d;
+        const fullDateStr = `${currentCalYear}-${mStr}-${dStr}`;
+
         const dayAppts = appointments.filter(a => a.date === fullDateStr);
         const isToday = fullDateStr === todayStr;
         const isSelected = fullDateStr === selectedCalendarDateStr;
 
         html += `
-            <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 sm:p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 sm:h-24 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
+            <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 sm:p-2.5 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 sm:h-24 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
                 <div class="flex justify-between items-center text-[10px] font-mono">
                     <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>
                     ${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
@@ -202,7 +196,7 @@ function renderCalendarAgenda(dateStr) {
     if(dayAppts.length === 0) {
         container.innerHTML = `<p class="text-slate-500 italic p-2">No visits scheduled for ${dateStr}.</p>`;
     } else {
-        container.innerHTML = dayAppts.map((a, i) => `
+        container.innerHTML = dayAppts.map((a) => `
             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-2">
                 <div>
                     <span class="text-amber-400 font-mono font-bold">${a.token || 'TK-01'}</span>
@@ -212,6 +206,40 @@ function renderCalendarAgenda(dateStr) {
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2.5 py-1 rounded text-[10px]">Edit Record</button>
             </div>
         `).join('');
+    }
+}
+
+function getNextTokenForDate(targetDate) {
+    const existing = appointments.filter(a => a.date === targetDate);
+    const count = existing.length + 1;
+    return "TK-" + (count < 10 ? "0" + count : count);
+}
+
+function handleManualTokenAssignSubmit() {
+    const pid = document.getElementById('manual_token_pid').value.trim();
+    const tokenVal = document.getElementById('manual_token_val').value.trim();
+
+    if(!pid || !tokenVal) {
+        alert("Please enter Patient ID/Phone and Token Number!");
+        return;
+    }
+
+    const appt = appointments.find(a => (a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid) && a.date === todayStr) 
+              || appointments.find(a => a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid);
+
+    if(appt) {
+        appt.token = tokenVal;
+        appt.modifiedToday = true;
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        renderAppointments();
+        renderPublicTokenQueue();
+        updateMetricCards();
+        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
+        document.getElementById('manual_token_pid').value = '';
+        document.getElementById('manual_token_val').value = '';
+    } else {
+        alert("Patient appointment record not found for today!");
     }
 }
 
@@ -260,6 +288,23 @@ function downloadExcelBackup() {
     a.download = `NS_Dental_Care_Daily_Ledger_Backup_${todayStr}.csv`;
     a.click();
     logAction("Generated and downloaded itemized Excel CSV daily backup.");
+}
+
+function calculateRevenueSplit() {
+    const clinicPct = parseFloat(document.getElementById('adm_split_clinic').value) || 60;
+    const docPct = parseFloat(document.getElementById('adm_split_doc').value) || 40;
+    const totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+
+    const docShare = (totalRev * docPct) / 100;
+    document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
+}
+
+function clearAuditLogs() {
+    if(confirm("Clear audit logs trail?")) {
+        auditLogs = [];
+        localStorage.setItem('ns_logs', JSON.stringify(auditLogs));
+        renderAuditLogs();
+    }
 }
 
 function adminFixMissingReceipts() {
@@ -643,6 +688,12 @@ function openDashboard() {
     document.getElementById('dashBadge').innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name} (${currentSession.phone || ''})`;
 
+    // POPULATE WELCOME TAB DETAILS
+    document.getElementById('welc_role_badge').innerText = `AUTHENTICATED ROLE: ${currentSession.role.toUpperCase()}`;
+    document.getElementById('welc_staff_name').innerText = `Welcome, ${currentSession.name}`;
+    document.getElementById('welc_staff_contact').innerText = `Phone: ${currentSession.phone || 'Registered Staff'} | Authorized Access Active`;
+    document.getElementById('welc_session_token').innerText = `Session Token: SEC-${Date.now().toString().slice(-6)}`;
+
     document.getElementById('btn_staff_add_gallery').classList.remove('hidden-section');
 
     if(currentSession.role === 'admin') {
@@ -650,9 +701,12 @@ function openDashboard() {
         renderAdminUserTable();
         renderAuditLogs();
         calculateAdminStats();
+        calculateRevenueSplit();
     } else {
         document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
     }
+
+    switchDashTab('welcome');
 
     renderAppointments();
     renderLabOrders();
@@ -1131,8 +1185,6 @@ function handleManualPatientUpload(e) {
         localStorage.setItem('ns_patients', JSON.stringify(patients));
 
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-        
-        // AUTO-ASSIGN TOKEN FOR TARGET DATE
         const token = getNextTokenForDate(date);
 
         appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
@@ -1428,8 +1480,6 @@ function handlePublicBooking(e) {
     localStorage.setItem('ns_patients', JSON.stringify(patients));
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-    
-    // AUTO TOKEN RESET BY DATE
     const token = getNextTokenForDate(date);
 
     appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
@@ -1604,6 +1654,7 @@ function approvePasswordReset(reqId) {
 }
 
 function switchDashTab(tab) {
+    document.getElementById('viewWelcome').classList.add('hidden-section');
     document.getElementById('viewAppts').classList.add('hidden-section');
     document.getElementById('viewManualPatient').classList.add('hidden-section');
     document.getElementById('viewLabTracker').classList.add('hidden-section');
@@ -1613,6 +1664,7 @@ function switchDashTab(tab) {
     document.getElementById('viewApprovals').classList.add('hidden-section');
     document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
+    if(tab === 'welcome') document.getElementById('viewWelcome').classList.remove('hidden-section');
     if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
     if(tab === 'manualPatient') document.getElementById('viewManualPatient').classList.remove('hidden-section');
     if(tab === 'labTracker') document.getElementById('viewLabTracker').classList.remove('hidden-section');

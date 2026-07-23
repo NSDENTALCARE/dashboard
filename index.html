@@ -12,85 +12,138 @@
 </head>
 <body id="appBody" class="bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden selection:bg-red-600 selection:text-white">
 
-    <!-- PUBLIC ANNOUNCEMENT TICKER BANNER -->
-    <div id="publicAnnouncementBanner" class="hidden-section bg-amber-500 text-slate-950 px-4 py-1.5 text-xs font-bold text-center border-b border-amber-600 flex justify-between items-center">
-        <span id="disp_announcement_text" class="truncate max-w-4xl mx-auto"></span>
-        <button onclick="dismissAnnouncement()" class="text-slate-950 hover:opacity-75 font-black text-sm">✕</button>
+    <!-- TOP PORTAL UTILITY BAR -->
+    <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
+        <div class="flex items-center gap-2">
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Thursday, July 23, 2026 | 01:52:05 AM</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-slate-800">
+            <i data-lucide="phone" class="w-3.5 h-3.5 text-red-700"></i>
+            <span>National Call Center: 1800 -258-1800</span>
+        </div>
     </div>
 
-    <!-- SIGNBOARD HEADER -->
-    <header class="bg-red-600 text-white border-b-4 border-red-800 sticky top-0 z-40 shadow-xl">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex justify-between items-center gap-2">
-            <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0" onclick="navigateTo('public-home')">
-                <div class="bg-white text-red-600 p-1.5 sm:p-2 rounded-xl font-bold shadow-md shrink-0">
+    <!-- MAIN BRANDING HEADER -->
+    <header class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex justify-between items-center gap-2">
+            <div class="flex items-center space-x-3 cursor-pointer min-w-0" onclick="navigateTo('public-home')">
+                <div class="bg-red-700 text-white p-2 rounded-xl font-bold shadow-md shrink-0">
                     <i data-lucide="tooth" class="w-6 h-6 sm:w-7 sm:h-7"></i>
                 </div>
                 <div class="truncate">
-                    <h1 class="text-base sm:text-2xl font-black tracking-wider uppercase truncate" id="hdr_clinic_name">N.S. DENTAL CARE</h1>
-                    <p class="text-[10px] sm:text-xs text-red-100 font-medium truncate" id="hdr_clinic_contact">Santosh Nagar, Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
+                    <h1 class="text-base sm:text-2xl font-black text-red-700 tracking-wider uppercase truncate" id="hdr_clinic_name">N.S. DENTAL CARE</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-600 font-semibold truncate" id="hdr_clinic_contact">Santosh Nagar, Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-                <div class="hidden md:flex flex-col text-right mr-2 border-r border-red-400/40 pr-3 text-xs">
-                    <span id="hdr_time" class="font-mono font-bold text-white">00:00:00 AM</span>
-                    <span id="hdr_date" class="text-[10px] text-red-100">Thu, 23 Jul 2026</span>
-                </div>
-                <button onclick="navigateTo('track-appointment')" class="bg-slate-900/90 hover:bg-black text-amber-400 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-500/40 flex items-center gap-1 shadow-lg">
-                    <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> <span class="hidden sm:inline">Patient Downloads</span>
+            <div class="flex items-center space-x-2 shrink-0">
+                <button onclick="navigateTo('track-appointment')" class="bg-amber-100 hover:bg-amber-200 text-slate-900 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-red-700"></i> <span class="hidden sm:inline">Patient Downloads</span>
                 </button>
-                <button onclick="navigateTo('public-booking')" class="bg-white hover:bg-slate-100 text-red-700 font-bold px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs flex items-center gap-1 shadow-lg">
-                    <i data-lucide="calendar-plus" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i> <span class="hidden sm:inline">Book Visit</span>
-                </button>
-                <button onclick="openPortalModal()" class="bg-red-900/80 hover:bg-red-950 text-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-semibold border border-red-400/40 flex items-center gap-1">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-200"></i> Staff Login
+                <button onclick="openPortalModal()" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Staff Login
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- LIVE MARQUEE TICKER BANNER -->
+    <div id="portalTickerContainer" class="bg-slate-900 border-b border-slate-800 py-2 px-3 flex items-center text-xs overflow-hidden z-30">
+        <span class="bg-red-700 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded shrink-0 mr-3 shadow">Latest Notice</span>
+        <div class="marquee-wrapper flex-1 overflow-hidden whitespace-nowrap">
+            <span id="disp_marquee_text" class="marquee-content inline-block text-amber-400 font-semibold tracking-wide">
+                Dental consultation fees and appointment slots updated with effect from 1 July 2026. Prior booking mandatory for evening Sunday procedures.
+            </span>
+        </div>
+    </div>
 
     <!-- MAIN APP CONTAINER -->
     <main class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
         <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
         <section id="public-home" class="w-full space-y-6 sm:space-y-8">
-            <div class="bg-gradient-to-br from-red-600 via-red-700 to-slate-900 border-2 border-red-500 rounded-2xl p-5 sm:p-10 shadow-2xl space-y-4">
+            <div class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-red-950 to-red-900 border border-red-800 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-2">
-                    <span class="bg-white text-red-700 text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Cosmetic Dental Surgery & Implants</span>
-                    <span id="disp_reg_number" class="bg-black/40 text-red-200 border border-red-400/30 text-[10px] sm:text-xs px-2.5 py-1 rounded-full">Regd No: A-6705 | A-7133</span>
+                    <span class="bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow">WELCOME TO N.S. DENTAL CARE</span>
+                    <span id="disp_reg_number" class="bg-black/60 text-amber-300 border border-amber-500/30 text-[10px] sm:text-xs px-3 py-1 rounded-full font-mono">Regd No: A-6705 | A-7133</span>
                 </div>
                 
-                <h2 class="text-xl sm:text-4xl font-black text-white leading-tight uppercase tracking-wide" id="disp_hero_title">Welcome to N.S. Dental Care</h2>
-                <p class="text-red-100 text-xs sm:text-sm leading-relaxed max-w-2xl" id="disp_hero_subtitle">Providing gentle, hygienic, and affordable dental treatments in Santosh Nagar & Edi Bazar, Hyderabad.</p>
-                
-                <div class="flex flex-wrap gap-2.5 sm:gap-3 pt-2">
-                    <button onclick="navigateTo('public-booking')" class="bg-white hover:bg-slate-100 text-red-700 px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xl">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Book Appointment
-                    </button>
-                    <button onclick="navigateTo('track-appointment')" class="bg-slate-900/80 hover:bg-slate-900 text-amber-400 border border-amber-500/40 px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
-                        <i data-lucide="file-text" class="w-4 h-4"></i> Download Rx & Receipt
-                    </button>
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div class="space-y-3">
+                        <h2 class="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-wide" id="disp_hero_title">Delivering Dental services to patients in a timely, accessible and reliable manner</h2>
+                        <p class="text-slate-300 text-xs sm:text-sm leading-relaxed" id="disp_hero_subtitle">Gentle, hygienic, and affordable dental treatments in Santosh Nagar & Edi Bazar, Hyderabad.</p>
+                        
+                        <div class="flex flex-wrap gap-2.5 sm:gap-3 pt-2">
+                            <button onclick="navigateTo('public-booking')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Apply / Book Visit
+                            </button>
+                            <button onclick="navigateTo('track-appointment')" class="bg-slate-900 hover:bg-black text-amber-300 border border-amber-500/40 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-4 h-4"></i> Download Rx & Receipt
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:flex justify-center relative">
+                        <div class="w-64 h-40 bg-gradient-to-tr from-slate-900 to-red-800 border-2 border-amber-400/40 rounded-2xl p-4 shadow-2xl space-y-2">
+                            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                                <span class="text-[10px] font-bold text-amber-400 uppercase">Hospital Health ID</span>
+                                <i data-lucide="shield-check" class="text-amber-400 w-4 h-4"></i>
+                            </div>
+                            <h4 class="text-sm font-black text-white">N.S. DENTAL CARE</h4>
+                            <p class="text-[10px] text-slate-300 font-mono">Verified Patient Record Portal</p>
+                            <div class="pt-2 flex justify-between items-end">
+                                <span class="text-[9px] text-emerald-400 font-bold">● Live Queue Active</span>
+                                <span class="text-[10px] text-slate-400">Hyderabad</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- PUBLIC SECTION NAVIGATION CARDS -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <a href="#sec_queue" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
-                    <i data-lucide="users" class="text-red-500 w-5 h-5 shrink-0"></i>
-                    <div><h4 class="font-bold text-white">Live Queue</h4><p class="text-[10px] text-slate-400">View Tokens</p></div>
-                </a>
-                <a href="#sec_doctors" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
-                    <i data-lucide="stethoscope" class="text-red-500 w-5 h-5 shrink-0"></i>
-                    <div><h4 class="font-bold text-white">Surgeons</h4><p class="text-[10px] text-slate-400">Doctor Roster</p></div>
-                </a>
-                <a href="#sec_timings" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
-                    <i data-lucide="clock" class="text-red-500 w-5 h-5 shrink-0"></i>
-                    <div><h4 class="font-bold text-white">Fees & Schedule</h4><p class="text-[10px] text-slate-400">Clinic Hours</p></div>
-                </a>
-                <a href="#sec_gallery" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 rounded-xl flex items-center gap-2.5 transition">
-                    <i data-lucide="image" class="text-red-500 w-5 h-5 shrink-0"></i>
-                    <div><h4 class="font-bold text-white">Photo Gallery</h4><p class="text-[10px] text-slate-400">Clinic Facility</p></div>
-                </a>
+            <!-- PUBLIC QUICK LINKS GRID -->
+            <div class="space-y-3">
+                <h3 class="text-xl font-black text-white text-center uppercase tracking-wide">Quick Links</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div onclick="navigateTo('public-booking')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
+                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
+                            <i data-lucide="calendar-plus" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Apply For Visit</h4>
+                            <p class="text-[10px] text-slate-600">Book slot online</p>
+                        </div>
+                    </div>
+
+                    <a href="#sec_queue" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
+                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
+                            <i data-lucide="clock" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Check Availability</h4>
+                            <p class="text-[10px] text-slate-600">Live queue tokens</p>
+                        </div>
+                    </a>
+
+                    <a href="#sec_doctors" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
+                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
+                            <i data-lucide="stethoscope" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Attending Surgeons</h4>
+                            <p class="text-[10px] text-slate-600">Doctor profiles</p>
+                        </div>
+                    </a>
+
+                    <div onclick="navigateTo('track-appointment')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
+                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
+                            <i data-lucide="download" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Download Rx & Receipt</h4>
+                            <p class="text-[10px] text-slate-600">Health portal view</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 1. LIVE QUEUE TRACKER -->
@@ -149,28 +202,33 @@
                 </div>
             </div>
 
-            <!-- 4. PHOTO GALLERY -->
+            <!-- 4. PHOTO GALLERY WITH UNIVERSAL GALLERY MANAGER -->
             <div id="sec_gallery" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
-                <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                    <i data-lucide="image" class="text-red-500"></i> Clinic Photo Gallery
-                </h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="image" class="text-red-500"></i> Clinic Photo Gallery
+                    </h3>
+                    <button onclick="promptStaffAddGalleryImage()" id="btn_staff_add_gallery" class="hidden-section bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                        + Add Image
+                    </button>
+                </div>
                 <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
             </div>
 
-            <!-- 5. GOOGLE REVIEWS -->
+            <!-- 5. 30 GOOGLE MAPS REVIEWS (10-SECOND SHUFFLE) -->
             <div class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div>
                         <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="star" class="text-amber-400 fill-amber-400"></i> Verified Google Maps Reviews
+                            <i data-lucide="star" class="text-amber-400 fill-amber-400"></i> Verified Google Maps Patient Reviews (Santosh Nagar & Edi Bazar)
                         </h3>
-                        <p class="text-[11px] text-slate-400">Auto-rotates every 6 seconds</p>
+                        <p class="text-[11px] text-slate-400">30 Verified Patient Reviews • Auto-rotates every 10 seconds</p>
                     </div>
                     <div class="text-right">
                         <span class="text-lg sm:text-xl font-black text-amber-400">4.9 ★</span>
                     </div>
                 </div>
-                <div id="shufflingReviewsContainer" class="grid sm:grid-cols-3 gap-4 text-xs transition-opacity duration-500"></div>
+                <div id="shufflingReviewsContainer" class="grid sm:grid-cols-3 gap-4 text-xs transition-opacity duration-700"></div>
             </div>
         </section>
 
@@ -184,7 +242,7 @@
                     <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i data-lucide="user-check" class="text-amber-400"></i> Patient Downloads & Records Portal
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Enter patient full name and ID or registered mobile number to view and download prescriptions and receipts.</p>
+                    <p class="text-xs text-slate-400 mt-1">Enter patient full name and Patient ID or registered mobile number to view and download prescriptions and receipts.</p>
                 </div>
                 <form onsubmit="handleVerifiedPatientSearch(event)" class="space-y-3">
                     <div>
@@ -341,6 +399,9 @@
                     <p id="dashClockBar" class="text-xs text-red-400 font-mono mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <button id="btn_dash_backup" onclick="downloadJSONBackup()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 1-Click Backup
+                    </button>
                     <button onclick="triggerWhatsAppDoctorBriefing()" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1">
                         <i data-lucide="send" class="w-3.5 h-3.5"></i> WhatsApp Morning Briefing
                     </button>
@@ -364,7 +425,7 @@
             <div id="viewAppts" class="space-y-4">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="p-3 border-b border-slate-800 flex justify-between items-center">
-                        <span class="text-xs font-bold text-white">Daily Roster & Live Queue</span>
+                        <span class="text-xs font-bold text-white">Daily Roster & Token Assignment</span>
                         <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold border border-amber-500/30">Modified Today Highlighted</span>
                     </div>
                     <div class="overflow-x-auto">
@@ -372,7 +433,7 @@
                             <thead class="bg-slate-950/60 text-slate-400 uppercase border-b border-slate-800">
                                 <tr>
                                     <th class="p-3">Patient ID / Name</th>
-                                    <th class="p-3">Token</th>
+                                    <th class="p-3">Token #</th>
                                     <th class="p-3">Vitals / Risk</th>
                                     <th class="p-3">Doctor</th>
                                     <th class="p-3">Visit Date & Slot</th>
@@ -408,7 +469,6 @@
                         </div>
                     </div>
 
-                    <!-- Pre-Consultation Vitals & Medical Risk Alert -->
                     <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
                         <span class="text-xs font-bold text-amber-400 uppercase">Pre-Consultation Vitals & Risk Badges</span>
                         <div class="grid sm:grid-cols-3 gap-2">
@@ -568,7 +628,7 @@
                 </div>
             </div>
 
-            <!-- TAB 8: ADMIN MASTER CONTROL PANEL (20+ MASTER OVERRIDES) -->
+            <!-- TAB 8: ADMIN MASTER CONTROL PANEL (FULL CREDENTIALS & PROFILE OVERRIDER) -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
 
                 <!-- 1. FINANCIAL & REVENUE STATS -->
@@ -594,15 +654,15 @@
                     </div>
                 </div>
 
-                <!-- 2. ANNOUNCEMENT TICKER & CLINIC HOURS -->
+                <!-- 2. TICKER MARQUEE & CLINIC HOURS ADMIN EDITOR -->
                 <div class="grid sm:grid-cols-2 gap-4 text-xs">
                     <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                         <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                            <i data-lucide="megaphone" class="w-4 h-4"></i> Announcement Banner Publisher
+                            <i data-lucide="megaphone" class="w-4 h-4"></i> Live Top Ticker Marquee Controller
                         </h3>
-                        <input type="text" id="adm_announcement_text" placeholder="e.g. Clinic closed on Sunday for sanitization." class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-white">
-                        <button onclick="publishAnnouncement()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
-                            Publish Banner
+                        <textarea id="adm_ticker_input" rows="2" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-white" placeholder="Enter marquee text to slide across top header..."></textarea>
+                        <button onclick="updateLiveTickerAdmin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
+                            Update Top Ticker Text
                         </button>
                     </div>
 
@@ -615,26 +675,30 @@
                             <input type="text" id="adm_slot_evening" value="05:00 PM - 10:00 PM" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         </div>
                         <button onclick="saveClinicTimings()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl">
-                            Update Hours
+                            Update Operating Hours
                         </button>
                     </div>
                 </div>
 
-                <!-- 3. STAFF ACCOUNTS CONTROL TABLE -->
+                <!-- 3. STAFF ACCOUNTS CONTROL & CREDENTIALS VISIBILITY TABLE -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                        <i data-lucide="key" class="w-4 h-4"></i> Staff Accounts & Passwords Manager
-                    </h3>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                            <i data-lucide="key" class="w-4 h-4"></i> Doctor & Assistant Staff Account Credentials Manager
+                        </h3>
+                        <span class="text-[10px] text-slate-400">Admin can view passwords and edit all staff profiles</span>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
                                 <tr>
                                     <th class="p-2.5">Name</th>
                                     <th class="p-2.5">Role</th>
-                                    <th class="p-2.5">Contact</th>
+                                    <th class="p-2.5">Phone</th>
+                                    <th class="p-2.5">Email</th>
+                                    <th class="p-2.5">Password</th>
                                     <th class="p-2.5">Status</th>
-                                    <th class="p-2.5">Password Override</th>
-                                    <th class="p-2.5">Access Control</th>
+                                    <th class="p-2.5">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="adminUserManagementTable" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -715,12 +779,12 @@
 
                     <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                         <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                            <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Google Reviews Rotator
+                            <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Google Reviews Rotator Manager
                         </h3>
                         <input type="text" id="adm_rev_author" placeholder="Patient Name" class="w-full bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
                         <textarea id="adm_rev_text" rows="2" placeholder="Review Text" class="w-full bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white"></textarea>
                         <button onclick="addReviewAdmin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
-                            Add Review
+                            Add Google Review
                         </button>
                     </div>
                 </div>
@@ -736,7 +800,7 @@
                 <!-- 9. BACKUP & RESET -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                        <i data-lucide="database" class="w-4 h-4"></i> Data Backup & Restoration
+                        <i data-lucide="database" class="w-4 h-4"></i> Master Data Backup & Restoration
                     </h3>
                     <div class="flex flex-wrap gap-3">
                         <button onclick="downloadJSONBackup()" class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
@@ -758,7 +822,7 @@
             </div>
         </section>
 
-        <!-- CLINIC BOARD TEMPLATE PRESCRIPTION MODAL -->
+        <!-- CLINIC BOARD TEMPLATE PRESCRIPTION MODAL (READ-ONLY LOCKED FOR PATIENTS) -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -790,8 +854,8 @@
                     </div>
                 </div>
 
-                <!-- 32-Tooth Odontogram Tooth Charting System -->
-                <div class="no-print bg-slate-50 border border-slate-200 p-3 rounded-lg space-y-2">
+                <!-- 32-Tooth Odontogram Tooth Charting System (HIDDEN / LOCKED FOR PUBLIC VIEW) -->
+                <div id="odontogramWrapper" class="no-print bg-slate-50 border border-slate-200 p-3 rounded-lg space-y-2">
                     <span class="text-xs font-bold text-red-700 uppercase">Interactive 32-Tooth Charting</span>
                     <p class="text-[11px] text-slate-500">Click individual teeth to toggle selection for diagnosis:</p>
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
@@ -799,7 +863,7 @@
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Selected Teeth Diagnosis:</label>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Diagnosis:</label>
                         <textarea id="lh_notes" rows="2" class="w-full border rounded p-2 text-xs"></textarea>
                     </div>
                     <div>

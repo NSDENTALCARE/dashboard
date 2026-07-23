@@ -112,6 +112,20 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
+function updateMetricCards() {
+    const todays = appointments.filter(a => a.date === todayStr);
+    const activeQueue = todays.filter(a => a.queueStatus === 'In Waiting Room' || a.queueStatus === 'In Consultation');
+    const todayRev = ledgers.filter(l => l.date === todayStr).reduce((acc, c) => acc + (parseFloat(c.paidAmount) || 0), 0);
+    const labPending = labOrders.filter(o => o.status !== 'Delivered & Fitted');
+    const riskCount = todays.filter(a => a.risk && a.risk !== 'None').length;
+
+    if(document.getElementById('card_stat_visits')) document.getElementById('card_stat_visits').innerText = todays.length;
+    if(document.getElementById('card_stat_queue')) document.getElementById('card_stat_queue').innerText = activeQueue.length;
+    if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
+    if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
+    if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
+}
+
 function checkPublicTicker() {
     const textEl = document.getElementById('disp_marquee_text');
     const inputEl = document.getElementById('adm_ticker_input');
@@ -167,7 +181,6 @@ function renderAuditLogs() {
     if(box) box.innerHTML = auditLogs.map(l => `<div>[${l.time}] ${l.text}</div>`).join('');
 }
 
-// EXISTING PATIENT AUTO-CHECKER FOR BOOKING & UPLOADS
 function autoCheckExistingPatient(val) {
     const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
     const p = patients.find(x => x.phone === clean || x.patientId.toLowerCase() === clean.toLowerCase());
@@ -231,6 +244,7 @@ function resetDailyTokens() {
         localStorage.setItem('ns_appointments', JSON.stringify(appointments));
         renderAppointments();
         renderPublicTokenQueue();
+        updateMetricCards();
         logAction("Staff reset today's patient queue tokens starting from TK-01.");
         alert("Daily Token Queue Reset Complete!");
     }
@@ -438,7 +452,6 @@ function handleForgotPasswordSubmit(e) {
 function openDashboard() {
     navigateTo('dashboard');
     
-    // UPDATE LOGGED-IN PROFILE DISPLAY BADGE
     const hdrBadge = document.getElementById('hdr_user_badge');
     const hdrRole = document.getElementById('hdr_user_role');
     const hdrName = document.getElementById('hdr_user_name');
@@ -470,6 +483,7 @@ function openDashboard() {
     renderCalendar();
     renderLedgers();
     renderApprovals();
+    updateMetricCards();
 }
 
 function logout() {
@@ -553,7 +567,6 @@ function renderAppointments() {
     `).join('');
 }
 
-// ADVANCED MODAL EDIT DIALOG SYSTEM
 function openMasterEditModal(pid) {
     const p = patients.find(x => x.patientId === pid);
     const appt = appointments.find(a => a.patientId === pid) || {};
@@ -627,6 +640,7 @@ function handleMasterEditSubmit(e) {
     renderLedgers();
     renderPublicTokenQueue();
     calculateAdminStats();
+    updateMetricCards();
 
     logAction(`Advanced modal edit applied to patient ${pid}`);
     alert("Patient Record Updated via Master Editor!");
@@ -643,7 +657,6 @@ function openMasterEditModalFromReceipt() {
     }
 }
 
-// EMAIL BRIEFING SENDER
 function sendDoctorDailyBriefingEmail() {
     const todays = appointments.filter(a => a.date === todayStr);
     let subject = `N.S. DENTAL CARE - Daily Schedule Briefing (${todayStr})`;
@@ -657,7 +670,6 @@ function sendDoctorDailyBriefingEmail() {
     logAction(`Daily briefing email triggered to ${doctorEmail}`);
 }
 
-// DAY-WISE AUDIT & CA RECONCILIATION SUMMARY
 function openDayWiseAuditModal() {
     const todaysAppts = appointments.filter(a => a.date === todayStr);
     const todaysLedgers = ledgers.filter(l => l.date === todayStr || l.date === undefined);
@@ -720,6 +732,7 @@ function deletePatientRecordATOZ(pid) {
         renderAppointments();
         renderLedgers();
         calculateAdminStats();
+        updateMetricCards();
         logAction(`Deleted entire record for patient ${pid}`);
         alert("Patient purged permanently!");
     }
@@ -733,6 +746,7 @@ function approveAppointment(id) {
         localStorage.setItem('ns_appointments', JSON.stringify(appointments));
         renderAppointments();
         renderPublicTokenQueue();
+        updateMetricCards();
         logAction(`Approved appointment ${id} for ${appt.name}.`);
         alert("Appointment Approved!");
     }
@@ -766,6 +780,7 @@ function openNewLabOrderModal() {
         labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: todayStr, status: "Impression Taken" });
         localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
         renderLabOrders();
+        updateMetricCards();
         logAction(`Lab order created for ${pid}`);
     }
 }
@@ -780,6 +795,7 @@ function updateLabOrderStatus(id) {
 
         localStorage.setItem('ns_lab_orders', JSON.stringify(labOrders));
         renderLabOrders();
+        updateMetricCards();
         logAction(`Lab order ${id} status updated.`);
     }
 }
@@ -923,7 +939,6 @@ function renderCalendar() {
     }
 }
 
-// EXISTING PATIENT RE-BOOKING & NEW RECORD UPLOADER
 function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -972,6 +987,7 @@ function handleManualPatientUpload(e) {
     renderLedgers();
     renderPublicTokenQueue();
     calculateAdminStats();
+    updateMetricCards();
 }
 
 function applyAdminThemeSettings() {
@@ -1034,7 +1050,6 @@ function resetSystemData() {
     }
 }
 
-// MULTI-VISIT PATIENT TIMELINE SEARCH
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
     const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
@@ -1135,7 +1150,6 @@ function searchEHR() {
     container.innerHTML = matchedPatients.map(p => {
         const pAppts = appointments.filter(a => a.patientId === p.patientId);
         const pLedgers = ledgers.filter(l => l.patientId === p.patientId);
-        const pRecs = medicalRecords[p.patientId] || [];
 
         return `
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
@@ -1230,6 +1244,7 @@ function handlePublicBooking(e) {
     alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
     renderPublicTokenQueue();
+    updateMetricCards();
     navigateTo('public-home');
 }
 
@@ -1336,6 +1351,7 @@ function deleteLedgerRecord(id) {
         localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
         renderLedgers();
         calculateAdminStats();
+        updateMetricCards();
         logAction(`Deleted ledger receipt ${id}`);
     }
 }

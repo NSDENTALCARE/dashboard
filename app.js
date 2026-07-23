@@ -82,6 +82,7 @@ let activePrescriptionApptId = null;
 let activeReceiptId = null;
 let selectedTeeth = [];
 let currentSession = null;
+let selectedCalendarDateStr = todayStr;
 
 function initApp() {
     startRealtimeClock();
@@ -94,6 +95,7 @@ function initApp() {
     renderPublicTokenQueue();
     renderOdontogram();
     syncAdminEmailInputs();
+    renderCalendar();
 }
 
 function startRealtimeClock() {
@@ -112,6 +114,107 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
+// DATE-WISE DYNAMIC AUTO-TOKEN CALCULATOR
+function getNextTokenForDate(targetDate) {
+    const existing = appointments.filter(a => a.date === targetDate);
+    const count = existing.length + 1;
+    return "TK-" + (count < 10 ? "0" + count : count);
+}
+
+// STANDALONE MANUAL TOKEN ASSIGNER HANDLER
+function handleManualTokenAssignSubmit() {
+    const pid = document.getElementById('manual_token_pid').value.trim();
+    const tokenVal = document.getElementById('manual_token_val').value.trim();
+
+    if(!pid || !tokenVal) {
+        alert("Please enter Patient ID/Phone and Token Number!");
+        return;
+    }
+
+    const appt = appointments.find(a => (a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid) && a.date === todayStr) 
+              || appointments.find(a => a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid);
+
+    if(appt) {
+        appt.token = tokenVal;
+        appt.modifiedToday = true;
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        renderAppointments();
+        renderPublicTokenQueue();
+        updateMetricCards();
+        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
+        document.getElementById('manual_token_pid').value = '';
+        document.getElementById('manual_token_val').value = '';
+    } else {
+        alert("Patient appointment record not found for today!");
+    }
+}
+
+// REAL INTERACTIVE MONTHLY CALENDAR GRID ENGINE
+function renderCalendar() {
+    const grid = document.getElementById('calendarMonthlyGrid');
+    if(!grid) return;
+
+    const daysInMonth = 31; 
+    let html = '';
+
+    for(let d = 1; d <= daysInMonth; d++) {
+        const dayStr = d < 10 ? '0' + d : '' + d;
+        const fullDateStr = `2026-07-${dayStr}`;
+        const dayAppts = appointments.filter(a => a.date === fullDateStr);
+        const isToday = fullDateStr === todayStr;
+        const isSelected = fullDateStr === selectedCalendarDateStr;
+
+        html += `
+            <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 sm:p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 sm:h-24 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
+                <div class="flex justify-between items-center text-[10px] font-mono">
+                    <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>
+                    ${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
+                </div>
+                <div class="text-[9px] truncate text-slate-400 text-left">
+                    ${dayAppts.length > 0 ? `${dayAppts[0].name.split(' ')[0]}` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    grid.innerHTML = html;
+    renderCalendarAgenda(selectedCalendarDateStr);
+}
+
+function selectCalendarDate(dateStr) {
+    selectedCalendarDateStr = dateStr;
+    renderCalendar();
+}
+
+function renderCalendarAgenda(dateStr) {
+    const heading = document.getElementById('cal_selected_date_heading');
+    const badge = document.getElementById('cal_selected_count');
+    const container = document.getElementById('calendarAgendaList');
+
+    const dayAppts = appointments.filter(a => a.date === dateStr);
+
+    if(heading) heading.innerText = `Scheduled Patient Visits for Date: ${dateStr}`;
+    if(badge) badge.innerText = `${dayAppts.length} Appointments`;
+
+    if(!container) return;
+
+    if(dayAppts.length === 0) {
+        container.innerHTML = `<p class="text-slate-500 italic p-2">No visits scheduled for ${dateStr}.</p>`;
+    } else {
+        container.innerHTML = dayAppts.map((a, i) => `
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-2">
+                <div>
+                    <span class="text-amber-400 font-mono font-bold">${a.token || 'TK-01'}</span>
+                    <strong class="text-white ml-2">${a.name}</strong> (${a.patientId})
+                    <p class="text-[11px] text-slate-400">Doctor: ${a.doctor} | Slot: ${a.slot} | Issue: ${a.reason}</p>
+                </div>
+                <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2.5 py-1 rounded text-[10px]">Edit Record</button>
+            </div>
+        `).join('');
+    }
+}
+
 function updateMetricCards() {
     const todays = appointments.filter(a => a.date === todayStr);
     const activeQueue = todays.filter(a => a.queueStatus === 'In Waiting Room' || a.queueStatus === 'In Consultation');
@@ -126,7 +229,6 @@ function updateMetricCards() {
     if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
 }
 
-// DIRECT LOCAL BASE64 PHOTO UPLOADER ENGINE FOR GALLERY
 function uploadClinicPhotoFile(e) {
     const file = e.target.files[0];
     if(!file) return;
@@ -142,7 +244,6 @@ function uploadClinicPhotoFile(e) {
     reader.readAsDataURL(file);
 }
 
-// EXCEL BACKUP (.CSV / XLSX FILE GENERATOR)
 function downloadExcelBackup() {
     let csv = "Visit Date,Patient ID,Patient Full Name,Mobile Phone,Age and Gender,Doctor,Chief Purpose,Total Fee (INR),Amount Paid (INR),Due Balance (INR),Follow Up Date\n";
     
@@ -161,7 +262,6 @@ function downloadExcelBackup() {
     logAction("Generated and downloaded itemized Excel CSV daily backup.");
 }
 
-// 20+ ADMIN EMERGENCY FIX UTILITIES
 function adminFixMissingReceipts() {
     let created = 0;
     appointments.forEach(a => {
@@ -717,6 +817,7 @@ function handleMasterEditSubmit(e) {
     renderPublicTokenQueue();
     calculateAdminStats();
     updateMetricCards();
+    renderCalendar();
 
     logAction(`Advanced modal edit applied to patient ${pid}`);
     alert("Patient Record Updated via Master Editor!");
@@ -809,6 +910,7 @@ function deletePatientRecordATOZ(pid) {
         renderLedgers();
         calculateAdminStats();
         updateMetricCards();
+        renderCalendar();
         logAction(`Deleted entire record for patient ${pid}`);
         alert("Patient purged permanently!");
     }
@@ -823,6 +925,7 @@ function approveAppointment(id) {
         renderAppointments();
         renderPublicTokenQueue();
         updateMetricCards();
+        renderCalendar();
         logAction(`Approved appointment ${id} for ${appt.name}.`);
         alert("Appointment Approved!");
     }
@@ -998,23 +1101,6 @@ function handleAdminAddStaff(e) {
     e.target.reset();
 }
 
-function renderCalendar() {
-    const grid = document.getElementById('calendarGrid');
-    if(grid) {
-        grid.innerHTML = appointments.map(a => `
-            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2">
-                <div class="flex justify-between text-[10px] text-red-400 font-mono">
-                    <span>${a.patientId}</span>
-                    <span>${a.date}</span>
-                </div>
-                <h4 class="text-xs font-bold text-white">${a.name}</h4>
-                <p class="text-[11px] text-slate-300">Purpose: ${a.reason}</p>
-                <p class="text-[10px] text-amber-400 font-bold">Next Follow-Up: ${a.nextVisit || a.date}</p>
-            </div>
-        `).join('');
-    }
-}
-
 function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -1045,7 +1131,10 @@ function handleManualPatientUpload(e) {
         localStorage.setItem('ns_patients', JSON.stringify(patients));
 
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-        const token = "TK-0" + (appointments.length + 1);
+        
+        // AUTO-ASSIGN TOKEN FOR TARGET DATE
+        const token = getNextTokenForDate(date);
+
         appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
         localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
@@ -1062,11 +1151,11 @@ function handleManualPatientUpload(e) {
         e.target.reset();
         document.getElementById('man_existing_badge').classList.add('hidden-section');
         renderAppointments();
-        renderCalendar();
         renderLedgers();
         renderPublicTokenQueue();
         calculateAdminStats();
         updateMetricCards();
+        renderCalendar();
     }
 
     if(xrayFileInput && xrayFileInput.files[0]) {
@@ -1339,7 +1428,10 @@ function handlePublicBooking(e) {
     localStorage.setItem('ns_patients', JSON.stringify(patients));
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-    const token = "TK-0" + (appointments.length + 1);
+    
+    // AUTO TOKEN RESET BY DATE
+    const token = getNextTokenForDate(date);
+
     appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
@@ -1351,6 +1443,7 @@ function handlePublicBooking(e) {
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
     renderPublicTokenQueue();
     updateMetricCards();
+    renderCalendar();
     navigateTo('public-home');
 }
 

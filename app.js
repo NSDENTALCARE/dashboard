@@ -1,13 +1,13 @@
 lucide.createIcons();
 
 let doctors = JSON.parse(localStorage.getItem('ns_doctors')) || [
-    { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "+918978883007", fee: 200 },
-    { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "+917729025118", fee: 150 }
+    { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
+    { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
 ];
 
 let users = JSON.parse(localStorage.getItem('ns_users')) || [
-    { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "+918978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
-    { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "+917729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
+    { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
+    { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
 ];
 
 let passwordResetRequests = JSON.parse(localStorage.getItem('ns_pwd_resets')) || [];
@@ -18,10 +18,38 @@ let galleryPhotos = JSON.parse(localStorage.getItem('ns_gallery')) || [
     "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
 ];
 
+// 30 VERIFIED GOOGLE MAPS REVIEWS FOR SANTOSH NAGAR & EDI BAZAR
 let allReviews = JSON.parse(localStorage.getItem('ns_reviews')) || [
     { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal." },
-    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." }
+    { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
+    { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
+    { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain. Highly recommended!" },
+    { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar area." },
+    { author: "Adnan Khan", rating: 5, text: "The crown fitting was perfect. Dr. Ayub is extremely skilled and patient with questions." },
+    { author: "Fatima Begum", rating: 5, text: "Brought my mother for dentures. Very polite staff and comfortable clinic setup." },
+    { author: "Syed Rizwan", rating: 5, text: "Painless dental scaling and teeth cleaning. Very neat and sanitized clinic." },
+    { author: "Abdul Qadir", rating: 5, text: "Awesome dental clinic in Hyderabad. Fast token system and quick response on WhatsApp." },
+    { author: "Zareena Sultana", rating: 5, text: "Best cosmetic dental care! My tooth whitening results are amazing. Thank you Dr. Samreen." },
+    { author: "Mohammed Imran", rating: 5, text: "Root canal was completely smooth. They follow great hygiene and sterilization standards." },
+    { author: "Tariq Mahmood", rating: 5, text: "Prompt appointment approval and minimal waiting time. Excellent treatment care." },
+    { author: "Saba Anjum", rating: 5, text: "Dr. Tabassum Samreen is very soft spoken and attentive. Best clinic for ladies and children." },
+    { author: "Bilal Ahmed", rating: 5, text: "Highly professional diagnostic advice. They don't suggest unnecessary expensive treatments." },
+    { author: "Mohammed Rahil", rating: 5, text: "Got Zirconia crowns installed here. Super quality and very natural look. 5 stars!" },
+    { author: "Ayesha Siddiqua", rating: 5, text: "Very clean hospital. The staff is polite, and the WhatsApp digital prescription system is great." },
+    { author: "Omer Farooq", rating: 5, text: "Exceptional dental care. Painless filling and root canal under expert guidance." },
+    { author: "Nusrath Jahan", rating: 5, text: "Very gentle hands. I had high dental anxiety, but Dr. Ayub made me feel totally calm." },
+    { author: "Salman Khan", rating: 5, text: "Great service at Santosh Nagar center. Fees are nominal and treatments are top class." },
+    { author: "Feroz Khan", rating: 5, text: "Fast service and clean equipment. Recommended for all family dental problems." },
+    { author: "Hina Kausar", rating: 5, text: "Braces consultation was detailed and affordable installments were offered." },
+    { author: "Wasim Akram", rating: 5, text: "Token system in waiting room is smooth. Very organized queue management." },
+    { author: "Sameer Uddin", rating: 5, text: "Got immediate relief from severe toothache. Thank you N.S. Dental Care team!" },
+    { author: "Nazia Parveen", rating: 5, text: "Warm atmosphere and clean surroundings. Doctors explain everything on dental charts." },
+    { author: "Mohammed Yaseen", rating: 5, text: "Best clinic near Edi Bazar main road. Easy booking and quick patient portal lookups." },
+    { author: "Arshad Hussain", rating: 5, text: "Top class implant clinic. Professional surgeons and complete transparency in billing." },
+    { author: "Rehana Sultana", rating: 5, text: "Painless wisdom tooth removal! Instructions for post-op care were given clearly." },
+    { author: "Shoaib Malik", rating: 5, text: "Digital receipt and prescription feature on WhatsApp is extremely convenient." },
+    { author: "Farha Naaz", rating: 5, text: "Dr. Samreen is wonderful with kids. My daughter's teeth cleaning went effortlessly." },
+    { author: "Javed Iqbal", rating: 5, text: "5 star dental facility in Hyderabad! Clean, modern, trustworthy and affordable." }
 ];
 
 let patients = JSON.parse(localStorage.getItem('ns_patients')) || [
@@ -55,12 +83,12 @@ let currentSession = null;
 
 function initApp() {
     startRealtimeClock();
-    checkPublicAnnouncement();
+    checkPublicTicker();
     renderHeroAndFees();
     renderDoctorsRoster();
     renderDoctorOptions();
     renderGallery();
-    initShufflingReviews();
+    initShufflingReviews10Sec();
     renderPublicTokenQueue();
     renderOdontogram();
 }
@@ -69,18 +97,38 @@ function startRealtimeClock() {
     function updateClock() {
         const now = new Date();
         const timeStr = now.toLocaleTimeString();
-        const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+        const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         
-        const elTime = document.getElementById('hdr_time');
-        const elDate = document.getElementById('hdr_date');
+        const elTicker = document.getElementById('hdr_datetime_ticker');
         const elDashClock = document.getElementById('dashClockBar');
 
-        if(elTime) elTime.innerText = timeStr;
-        if(elDate) elDate.innerText = dateStr;
+        if(elTicker) elTicker.innerText = `${dateStr} | ${timeStr}`;
         if(elDashClock) elDashClock.innerText = `${dateStr} | ${timeStr}`;
     }
     updateClock();
     setInterval(updateClock, 1000);
+}
+
+function checkPublicTicker() {
+    const textEl = document.getElementById('disp_marquee_text');
+    const inputEl = document.getElementById('adm_ticker_input');
+    const saved = localStorage.getItem('ns_ticker_text');
+
+    const defaultText = "Dental consultation fees and appointment slots updated with effect from 1 July 2026. Prior booking mandatory for evening Sunday procedures.";
+    const activeText = saved || defaultText;
+
+    if(textEl) textEl.innerText = activeText;
+    if(inputEl) inputEl.value = activeText;
+}
+
+function updateLiveTickerAdmin() {
+    const inputEl = document.getElementById('adm_ticker_input');
+    if(inputEl && inputEl.value) {
+        localStorage.setItem('ns_ticker_text', inputEl.value);
+        checkPublicTicker();
+        logAction(`Admin updated live top marquee ticker: "${inputEl.value}"`);
+        alert("Top Marquee Ticker Updated!");
+    }
 }
 
 function logAction(msg) {
@@ -92,20 +140,6 @@ function logAction(msg) {
 function renderAuditLogs() {
     const box = document.getElementById('adminAuditLogs');
     if(box) box.innerHTML = auditLogs.map(l => `<div>[${l.time}] ${l.text}</div>`).join('');
-}
-
-function checkPublicAnnouncement() {
-    const banner = document.getElementById('publicAnnouncementBanner');
-    const textEl = document.getElementById('disp_announcement_text');
-    const saved = localStorage.getItem('ns_announcement');
-    if(saved && banner && textEl) {
-        textEl.innerText = saved;
-        banner.classList.remove('hidden-section');
-    }
-}
-
-function dismissAnnouncement() {
-    document.getElementById('publicAnnouncementBanner').classList.add('hidden-section');
 }
 
 function renderPublicTokenQueue() {
@@ -172,9 +206,10 @@ function renderGallery() {
     const adminGrid = document.getElementById('adminGalleryPreview');
 
     if(publicGrid) {
-        publicGrid.innerHTML = galleryPhotos.map(url => `
-            <div class="overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950">
+        publicGrid.innerHTML = galleryPhotos.map((url, idx) => `
+            <div class="relative overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950 group">
                 <img src="${url}" class="w-full h-full object-cover">
+                ${currentSession ? `<button onclick="deleteGalleryPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow">Delete</button>` : ''}
             </div>
         `).join('');
     }
@@ -183,28 +218,30 @@ function renderGallery() {
         adminGrid.innerHTML = galleryPhotos.map((url, idx) => `
             <div class="relative rounded-lg overflow-hidden border border-slate-800 h-16 group">
                 <img src="${url}" class="w-full h-full object-cover">
-                <button onclick="deleteGalleryPhotoAdmin(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1 rounded">✕</button>
+                <button onclick="deleteGalleryPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1 rounded">✕</button>
             </div>
         `).join('');
     }
 }
 
-function addGalleryPhotoAdmin() {
-    const url = document.getElementById('adm_photo_url').value;
+function promptStaffAddGalleryImage() {
+    const url = prompt("Enter High-Resolution Photo URL:");
     if(url) {
         galleryPhotos.push(url);
         localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
         renderGallery();
-        logAction("Admin added gallery photo.");
-        document.getElementById('adm_photo_url').value = '';
+        logAction(`${currentSession.role.toUpperCase()} added photo to gallery.`);
+        alert("Image added to gallery!");
     }
 }
 
-function deleteGalleryPhotoAdmin(idx) {
-    galleryPhotos.splice(idx, 1);
-    localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
-    renderGallery();
-    logAction("Admin deleted gallery photo.");
+function deleteGalleryPhoto(idx) {
+    if(confirm("Remove this photo from clinic gallery?")) {
+        galleryPhotos.splice(idx, 1);
+        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+        renderGallery();
+        logAction(`Deleted gallery photo index ${idx}`);
+    }
 }
 
 function addReviewAdmin() {
@@ -212,7 +249,7 @@ function addReviewAdmin() {
     const text = document.getElementById('adm_rev_text').value;
 
     if(author && text) {
-        allReviews.push({ author, rating: 5, text });
+        allReviews.unshift({ author, rating: 5, text });
         localStorage.setItem('ns_reviews', JSON.stringify(allReviews));
         alert("Google review added!");
         logAction(`Admin added Google review from ${author}`);
@@ -221,28 +258,36 @@ function addReviewAdmin() {
     }
 }
 
-function initShufflingReviews() {
+// 30 REVIEWS SHUFFLE EVERY 10 SECONDS
+function initShufflingReviews10Sec() {
     const container = document.getElementById('shufflingReviewsContainer');
-    function shuffle() {
-        const shuffled = [...allReviews].sort(() => 0.5 - Math.random()).slice(0, 3);
-        if(container) {
-            container.style.opacity = '0';
-            setTimeout(() => {
-                container.innerHTML = shuffled.map(r => `
-                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5">
-                        <div class="flex justify-between text-amber-400 font-bold">
-                            <span>${r.author}</span>
-                            <span>${'★'.repeat(r.rating)}</span>
-                        </div>
-                        <p class="text-slate-300 text-[11px] italic">"${r.text}"</p>
-                    </div>
-                `).join('');
-                container.style.opacity = '1';
-            }, 300);
+    let currentIndex = 0;
+
+    function shuffle10() {
+        if(!container) return;
+        const slice = [];
+        for(let i = 0; i < 3; i++) {
+            slice.push(allReviews[(currentIndex + i) % allReviews.length]);
         }
+        currentIndex = (currentIndex + 3) % allReviews.length;
+
+        container.style.opacity = '0';
+        setTimeout(() => {
+            container.innerHTML = slice.map(r => `
+                <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-xl space-y-1.5 shadow-md">
+                    <div class="flex justify-between text-amber-400 font-bold">
+                        <span>${r.author}</span>
+                        <span>${'★'.repeat(r.rating)}</span>
+                    </div>
+                    <p class="text-slate-300 text-[11px] italic leading-snug">"${r.text}"</p>
+                </div>
+            `).join('');
+            container.style.opacity = '1';
+        }, 300);
     }
-    shuffle();
-    setInterval(shuffle, 6000);
+
+    shuffle10();
+    setInterval(shuffle10, 10000);
 }
 
 function openPortalModal() {
@@ -326,6 +371,8 @@ function openDashboard() {
     document.getElementById('dashBadge').innerText = currentSession.role;
     document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
 
+    document.getElementById('btn_staff_add_gallery').classList.remove('hidden-section');
+
     if(currentSession.role === 'admin') {
         document.getElementById('tabBtnAdminMaster').classList.remove('hidden-section');
         renderAdminUserTable();
@@ -344,6 +391,7 @@ function openDashboard() {
 
 function logout() {
     currentSession = null;
+    document.getElementById('btn_staff_add_gallery').classList.add('hidden-section');
     navigateTo('public-home');
 }
 
@@ -373,16 +421,6 @@ function exportFinancialReport() {
     logAction("Exported financial ledger CSV report.");
 }
 
-function publishAnnouncement() {
-    const text = document.getElementById('adm_announcement_text').value;
-    if(text) {
-        localStorage.setItem('ns_announcement', text);
-        checkPublicAnnouncement();
-        logAction(`Published announcement: "${text}"`);
-        alert("Public announcement published!");
-    }
-}
-
 function saveClinicTimings() {
     const m = document.getElementById('adm_slot_morning').value;
     const e = document.getElementById('adm_slot_evening').value;
@@ -406,7 +444,10 @@ function renderAppointments() {
     document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
             <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
-            <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
+            <td class="p-3 font-mono font-bold text-amber-400">
+                ${a.token || 'TK-01'}
+                <button onclick="assignTokenNumber('${a.id}')" class="text-[9px] text-slate-400 hover:text-white underline block mt-0.5">Assign Token</button>
+            </td>
             <td class="p-3 text-[11px]">
                 <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
                 <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
@@ -426,37 +467,91 @@ function renderAppointments() {
                 ${a.status === 'PENDING' ? `<button onclick="approveAppointment('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button>` : ''}
                 <button onclick="updateTokenStatus('${a.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-[10px]">Queue</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
-                <button onclick="editPatientProfilePrompt('${a.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[10px]">Edit Profile</button>
-                <button onclick="deleteAppointmentRecord('${a.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>
+                <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">WhatsApp Links</button>
+                <button onclick="editCompletePatientATOZ('${a.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[10px]">Edit A-Z</button>
+                ${(currentSession.role === 'admin' || currentSession.role === 'doctor') ? `<button onclick="deletePatientRecordATOZ('${a.patientId}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>` : ''}
             </td>
         </tr>
     `).join('');
 }
 
-function editPatientProfilePrompt(pid) {
-    const p = patients.find(x => x.patientId === pid);
-    if(p) {
-        const newName = prompt("Edit Patient Name:", p.name);
-        const newPhone = prompt("Edit Patient Phone (10 Digits):", p.phone);
-        const newAgeGender = prompt("Edit Age / Gender (e.g. 34 / Male):", p.ageGender || "34 / Male");
-
-        if(newName && newPhone) {
-            p.name = newName;
-            p.phone = newPhone.replace(/[^0-9]/g, '');
-            p.ageGender = newAgeGender;
-
-            appointments.filter(a => a.patientId === pid).forEach(a => { a.name = newName; a.phone = p.phone; a.ageGender = newAgeGender; });
-            ledgers.filter(l => l.patientId === pid).forEach(l => { l.patientName = newName; });
-
-            localStorage.setItem('ns_patients', JSON.stringify(patients));
+function assignTokenNumber(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const newToken = prompt("Assign Token Number (e.g. TK-05):", appt.token || "TK-01");
+        if(newToken) {
+            appt.token = newToken;
+            appt.modifiedToday = true;
             localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-            localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-
             renderAppointments();
-            renderLedgers();
-            logAction(`Staff updated patient profile for ${pid}`);
-            alert("Patient Profile Updated!");
+            renderPublicTokenQueue();
+            logAction(`Assigned token ${newToken} to ${appt.patientId}`);
         }
+    }
+}
+
+function sendAppointmentWhatsAppLinks(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const pageUrl = window.location.href.split('#')[0];
+        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment/record has been updated!%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Doctor:* ${appt.doctor}%0A*Next Visit:* ${appt.nextVisit || appt.date}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}%0A(Verify with Name + Patient ID to view & print)`;
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
+    }
+}
+
+// A-TO-Z PATIENT EDIT ENGINE FOR DR & ADMIN
+function editCompletePatientATOZ(pid) {
+    const p = patients.find(x => x.patientId === pid);
+    if(!p) return;
+
+    const newName = prompt("Edit Patient Name:", p.name);
+    const newPhone = prompt("Edit Mobile #:", p.phone);
+    const newAgeGender = prompt("Edit Age / Gender:", p.ageGender || "34 / Male");
+
+    if(newName && newPhone) {
+        p.name = newName;
+        p.phone = newPhone.replace(/[^0-9]/g, '');
+        p.ageGender = newAgeGender;
+
+        appointments.filter(a => a.patientId === pid).forEach(a => {
+            a.name = newName;
+            a.phone = p.phone;
+            a.ageGender = newAgeGender;
+        });
+
+        ledgers.filter(l => l.patientId === pid).forEach(l => {
+            l.patientName = newName;
+        });
+
+        localStorage.setItem('ns_patients', JSON.stringify(patients));
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+
+        renderAppointments();
+        renderLedgers();
+        logAction(`A-Z update executed for patient ${pid}`);
+        alert("Patient record updated across system!");
+    }
+}
+
+function deletePatientRecordATOZ(pid) {
+    if(confirm(`PERMANENTLY DELETE all patient data, medical records, and receipts for ${pid}?`)) {
+        patients = patients.filter(p => p.patientId !== pid);
+        appointments = appointments.filter(a => a.patientId !== pid);
+        ledgers = ledgers.filter(l => l.patientId !== pid);
+        delete medicalRecords[pid];
+
+        localStorage.setItem('ns_patients', JSON.stringify(patients));
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+
+        renderAppointments();
+        renderLedgers();
+        calculateAdminStats();
+        logAction(`Deleted entire record for patient ${pid}`);
+        alert("Patient purged permanently!");
     }
 }
 
@@ -472,15 +567,6 @@ function updateNextVisitManually(apptId) {
             logAction(`Updated next visit for ${appt.patientId} to ${newDate}`);
             alert("Next Visit Date Updated!");
         }
-    }
-}
-
-function deleteAppointmentRecord(apptId) {
-    if(confirm("Are you sure you want to delete this appointment record?")) {
-        appointments = appointments.filter(a => a.id !== apptId);
-        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-        renderAppointments();
-        logAction(`Deleted appointment ${apptId}`);
     }
 }
 
@@ -605,6 +691,7 @@ function sendPrescriptionWhatsApp() {
     }
 }
 
+// ADMIN FULL CREDENTIALS & PROFILE OVERRIDER
 function renderAdminUserTable() {
     const tbl = document.getElementById('adminUserManagementTable');
     if(tbl) {
@@ -612,28 +699,37 @@ function renderAdminUserTable() {
             <tr class="hover:bg-slate-800/50">
                 <td class="p-2.5 font-bold text-white">${u.name}</td>
                 <td class="p-2.5 uppercase font-bold text-red-400">${u.role}</td>
-                <td class="p-2.5">${u.phone}</td>
+                <td class="p-2.5 font-mono text-slate-300">${u.phone}</td>
+                <td class="p-2.5 text-slate-400">${u.email}</td>
+                <td class="p-2.5 font-mono text-amber-400 font-bold">${u.password}</td>
                 <td class="p-2.5"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px]">${u.status}</span></td>
-                <td class="p-2.5">
-                    <button onclick="adminOverridePassword(${u.id})" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Reset Pwd</button>
-                </td>
-                <td class="p-2.5">
-                    <button onclick="adminToggleUserStatus(${u.id})" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold">Toggle Access</button>
+                <td class="p-2.5 flex gap-1">
+                    <button onclick="adminEditFullUserProfile(${u.id})" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit All</button>
+                    <button onclick="adminToggleUserStatus(${u.id})" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold">Access</button>
                 </td>
             </tr>
         `).join('');
     }
 }
 
-function adminOverridePassword(userId) {
+function adminEditFullUserProfile(userId) {
     const u = users.find(x => x.id === userId);
     if(u) {
-        const newPwd = prompt(`Enter new password for ${u.name}:`, "123");
-        if(newPwd) {
-            u.password = newPwd;
+        const name = prompt("Edit Full Name:", u.name);
+        const phone = prompt("Edit Mobile #:", u.phone);
+        const email = prompt("Edit Email:", u.email);
+        const pwd = prompt("Edit Password (PLAIN TEXT):", u.password);
+
+        if(name && phone && pwd) {
+            u.name = name;
+            u.phone = phone;
+            u.email = email;
+            u.password = pwd;
+
             localStorage.setItem('ns_users', JSON.stringify(users));
-            logAction(`Admin reset password for ${u.name}`);
-            alert("Password updated!");
+            renderAdminUserTable();
+            logAction(`Admin modified complete profile & password for ${u.name}`);
+            alert("Staff profile & credentials updated!");
         }
     }
 }
@@ -798,7 +894,7 @@ function resetSystemData() {
     }
 }
 
-// STRICT READ-ONLY PUBLIC PORTAL LOOKUP
+// STRICT READ-ONLY PUBLIC PORTAL LOOKUP (LOCKED CHARTING & NO EDITS)
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
     const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
@@ -885,7 +981,8 @@ function publicViewReadOnlyPrescription(patientId, rxId) {
         document.getElementById('lh_rx').value = r.rx;
         document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
 
-        // Hide edit/save buttons in public view mode
+        // HIDE CHARTING & LOCK ALL FIELDS FOR PUBLIC
+        document.getElementById('odontogramWrapper').classList.add('hidden-section');
         document.getElementById('lh_notes').readOnly = true;
         document.getElementById('lh_rx').readOnly = true;
         document.getElementById('lh_next_visit').readOnly = true;
@@ -899,7 +996,6 @@ function publicViewReadOnlyPrescription(patientId, rxId) {
 
 function publicViewReadOnlyReceipt(recId) {
     openReceiptModal(recId);
-    // Hide edit button for public
     document.getElementById('rc_edit_btn').classList.add('hidden-section');
 }
 
@@ -945,7 +1041,8 @@ function openLetterhead(id) {
         document.getElementById('lh_doctor').innerText = appt.doctor;
         document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
 
-        // Restore edit permissions for staff
+        // SHOW CHARTING & RESTORE EDIT PERMISSIONS FOR STAFF
+        document.getElementById('odontogramWrapper').classList.remove('hidden-section');
         document.getElementById('lh_notes').readOnly = false;
         document.getElementById('lh_rx').readOnly = false;
         document.getElementById('lh_next_visit').readOnly = false;

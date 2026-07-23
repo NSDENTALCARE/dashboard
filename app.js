@@ -70,7 +70,7 @@ let labOrders = JSON.parse(localStorage.getItem('ns_lab_orders')) || [
 
 let medicalRecords = JSON.parse(localStorage.getItem('ns_records')) || {
     "PAT-1001": [
-        { id: "RX-1001", date: todayStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr }
+        { id: "RX-1001", date: todayStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: todayStr, xrayBase64: null }
     ]
 };
 
@@ -124,6 +124,93 @@ function updateMetricCards() {
     if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
     if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
     if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
+}
+
+// DIRECT LOCAL BASE64 PHOTO UPLOADER ENGINE FOR GALLERY
+function uploadClinicPhotoFile(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        galleryPhotos.unshift(evt.target.result);
+        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
+        renderGallery();
+        logAction("Staff uploaded image/PDF photo asset into gallery.");
+        alert("Photo File Uploaded to Gallery!");
+    };
+    reader.readAsDataURL(file);
+}
+
+// EXCEL BACKUP (.CSV / XLSX FILE GENERATOR)
+function downloadExcelBackup() {
+    let csv = "Visit Date,Patient ID,Patient Full Name,Mobile Phone,Age and Gender,Doctor,Chief Purpose,Total Fee (INR),Amount Paid (INR),Due Balance (INR),Follow Up Date\n";
+    
+    appointments.forEach(a => {
+        const p = patients.find(x => x.patientId === a.patientId) || {};
+        const l = ledgers.find(x => x.apptId === a.id) || {};
+        csv += `"${a.date}","${a.patientId}","${a.name}","${a.phone}","${a.ageGender || ''}","${a.doctor}","${a.reason}",${l.totalCost || 0},${l.paidAmount || 0},${l.dueAmount || 0},"${a.nextVisit || a.date}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NS_Dental_Care_Daily_Ledger_Backup_${todayStr}.csv`;
+    a.click();
+    logAction("Generated and downloaded itemized Excel CSV daily backup.");
+}
+
+// 20+ ADMIN EMERGENCY FIX UTILITIES
+function adminFixMissingReceipts() {
+    let created = 0;
+    appointments.forEach(a => {
+        let l = ledgers.find(x => x.apptId === a.id);
+        if(!l) {
+            ledgers.push({ id: "REC-" + Math.floor(1000 + Math.random()*9000), apptId: a.id, patientId: a.patientId, patientName: a.name, purpose: a.reason || "Consultation", totalCost: 200, paidAmount: 200, dueAmount: 0, date: a.date });
+            created++;
+        }
+    });
+    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+    renderLedgers();
+    calculateAdminStats();
+    logAction(`Admin Repair Utility auto-generated ${created} missing billing receipts.`);
+    alert(`Auto-Repair Complete! ${created} missing billing receipts repaired.`);
+}
+
+function adminMergeDuplicatePatients() {
+    let initialCount = patients.length;
+    let uniquePatients = [];
+    let phoneMap = new Set();
+
+    patients.forEach(p => {
+        if(!phoneMap.has(p.phone)) {
+            phoneMap.add(p.phone);
+            uniquePatients.push(p);
+        }
+    });
+
+    patients = uniquePatients;
+    localStorage.setItem('ns_patients', JSON.stringify(patients));
+    logAction(`Merged duplicate profiles. Count reduced from ${initialCount} to ${patients.length}.`);
+    alert(`Duplicates Merged! Active profiles: ${patients.length}`);
+}
+
+function adminPurgeBase64Xrays() {
+    if(confirm("Purge stored X-Ray files to optimize local browser storage? Clinical text notes will be preserved.")) {
+        Object.keys(medicalRecords).forEach(pid => {
+            medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
+        });
+        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+        logAction("Admin purged base64 X-Ray assets to clear local storage.");
+        alert("Storage Cleaned! All X-Ray image binaries cleared.");
+    }
+}
+
+function adminForceLogoutAllSessions() {
+    currentSession = null;
+    logout();
+    alert("All staff session keys locked!");
 }
 
 function checkPublicTicker() {
@@ -292,7 +379,7 @@ function renderGallery() {
     if(publicGrid) {
         publicGrid.innerHTML = galleryPhotos.map((url, idx) => `
             <div class="relative overflow-hidden rounded-xl border border-slate-800 h-28 sm:h-32 bg-slate-950 group">
-                <img src="${url}" class="w-full h-full object-cover">
+                ${url.startsWith('data:application/pdf') ? `<div class="p-4 text-center text-xs font-bold text-amber-400">PDF Document Thumbnail</div>` : `<img src="${url}" class="w-full h-full object-cover">`}
                 ${currentSession ? `<button onclick="deleteGalleryPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow">Delete</button>` : ''}
             </div>
         `).join('');
@@ -300,27 +387,16 @@ function renderGallery() {
 
     if(adminGrid) {
         adminGrid.innerHTML = galleryPhotos.map((url, idx) => `
-            <div class="relative rounded-lg overflow-hidden border border-slate-800 h-16 group">
-                <img src="${url}" class="w-full h-full object-cover">
+            <div class="relative rounded-lg overflow-hidden border border-slate-800 h-16 group bg-slate-950">
+                ${url.startsWith('data:application/pdf') ? `<div class="p-1 text-[9px] text-amber-400">PDF Document</div>` : `<img src="${url}" class="w-full h-full object-cover">`}
                 <button onclick="deleteGalleryPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white text-[9px] px-1 rounded">✕</button>
             </div>
         `).join('');
     }
 }
 
-function promptStaffAddGalleryImage() {
-    const url = prompt("Enter High-Resolution Photo URL:");
-    if(url) {
-        galleryPhotos.push(url);
-        localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
-        renderGallery();
-        logAction(`${currentSession.role.toUpperCase()} added photo to gallery.`);
-        alert("Image added to gallery!");
-    }
-}
-
 function deleteGalleryPhoto(idx) {
-    if(confirm("Remove this photo from clinic gallery?")) {
+    if(confirm("Remove this photo asset from clinic gallery?")) {
         galleryPhotos.splice(idx, 1);
         localStorage.setItem('ns_gallery', JSON.stringify(galleryPhotos));
         renderGallery();
@@ -955,39 +1031,53 @@ function handleManualPatientUpload(e) {
     const sugar = document.getElementById('man_vitals_sugar').value;
     const risk = document.getElementById('man_vitals_risk').value;
 
-    let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
-    if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender };
-        patients.push(patient);
-    } else {
-        patient.name = name;
-        patient.ageGender = ageGender;
+    const xrayFileInput = document.getElementById('man_xray_file');
+
+    function saveRecordWithXray(xrayBase64) {
+        let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
+        if(!patient) {
+            patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender };
+            patients.push(patient);
+        } else {
+            patient.name = name;
+            patient.ageGender = ageGender;
+        }
+        localStorage.setItem('ns_patients', JSON.stringify(patients));
+
+        const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
+        const token = "TK-0" + (appointments.length + 1);
+        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
+        localStorage.setItem('ns_appointments', JSON.stringify(appointments));
+
+        if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
+        medicalRecords[patient.patientId].push({ id: "RX-" + Date.now(), date, diagnosis: reason, rx, doctor, nextVisit, xrayBase64: xrayBase64 || null });
+        localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
+
+        const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
+        ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0, date });
+        localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
+
+        logAction(`Record saved for ${name} (${patient.patientId})`);
+        alert(`Patient Visit Saved! Patient ID: ${patient.patientId} | Token: ${token}`);
+        e.target.reset();
+        document.getElementById('man_existing_badge').classList.add('hidden-section');
+        renderAppointments();
+        renderCalendar();
+        renderLedgers();
+        renderPublicTokenQueue();
+        calculateAdminStats();
+        updateMetricCards();
     }
-    localStorage.setItem('ns_patients', JSON.stringify(patients));
 
-    const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
-    const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
-    localStorage.setItem('ns_appointments', JSON.stringify(appointments));
-
-    if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
-    medicalRecords[patient.patientId].push({ id: "RX-" + Date.now(), date, diagnosis: reason, rx, doctor, nextVisit });
-    localStorage.setItem('ns_records', JSON.stringify(medicalRecords));
-
-    const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
-    ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason, totalCost: fee, paidAmount: fee, dueAmount: 0, date });
-    localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
-
-    logAction(`Record saved for ${name} (${patient.patientId})`);
-    alert(`Patient Visit Saved! Patient ID: ${patient.patientId} | Token: ${token}`);
-    e.target.reset();
-    document.getElementById('man_existing_badge').classList.add('hidden-section');
-    renderAppointments();
-    renderCalendar();
-    renderLedgers();
-    renderPublicTokenQueue();
-    calculateAdminStats();
-    updateMetricCards();
+    if(xrayFileInput && xrayFileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            saveRecordWithXray(evt.target.result);
+        };
+        reader.readAsDataURL(xrayFileInput.files[0]);
+    } else {
+        saveRecordWithXray(null);
+    }
 }
 
 function applyAdminThemeSettings() {
@@ -1095,13 +1185,14 @@ function handleVerifiedPatientSearch(e) {
             </div>
 
             <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription Downloads (PDF View):</h4>
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription & X-Ray Downloads:</h4>
                 <div class="space-y-2">
                     ${recs.length > 0 ? recs.map(r => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                             <div>
                                 <p class="font-bold text-white">Date: ${r.date} | Dr. ${r.doctor}</p>
                                 <p class="text-slate-400 text-[11px]">Findings: ${r.diagnosis}</p>
+                                ${r.xrayBase64 ? `<span class="text-amber-400 font-bold text-[10px] block">📷 Dental X-Ray Attachment Included</span>` : ''}
                             </div>
                             <button onclick="publicViewReadOnlyPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Rx
@@ -1150,6 +1241,7 @@ function searchEHR() {
     container.innerHTML = matchedPatients.map(p => {
         const pAppts = appointments.filter(a => a.patientId === p.patientId);
         const pLedgers = ledgers.filter(l => l.patientId === p.patientId);
+        const pRecs = medicalRecords[p.patientId] || [];
 
         return `
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
@@ -1177,6 +1269,20 @@ function searchEHR() {
                         `;
                     }).join('')}
                 </div>
+
+                ${pRecs.some(r => r.xrayBase64) ? `
+                    <div class="space-y-1 text-xs">
+                        <h5 class="font-bold text-amber-400 uppercase">Uploaded Patient Dental X-Rays:</h5>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${pRecs.filter(r => r.xrayBase64).map(r => `
+                                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                    <p class="text-[10px] text-slate-400 mb-1">${r.date}</p>
+                                    ${r.xrayBase64.startsWith('data:application/pdf') ? `<div class="p-2 text-center text-amber-400 font-bold text-[10px]">PDF Scan Document</div>` : `<img src="${r.xrayBase64}" class="w-full h-24 object-cover rounded">`}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');

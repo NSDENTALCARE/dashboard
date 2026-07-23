@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Thursday, July 23, 2026 | 01:52:05 AM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 12:24:53 AM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -517,7 +517,8 @@
 
             <!-- TAB NAVIGATION -->
             <div id="dashTabContainer" class="flex border-b border-slate-800 gap-4 sm:gap-6 text-xs sm:text-sm font-semibold overflow-x-auto pb-1 no-scrollbar">
-                <button onclick="switchDashTab('appts')" id="tabBtnAppts" class="text-red-500 border-b-2 border-red-500 pb-2 whitespace-nowrap">Appointments & Queue</button>
+                <button onclick="switchDashTab('welcome')" id="tabBtnWelcome" class="text-red-500 border-b-2 border-red-500 pb-2 whitespace-nowrap">Staff Profile Welcome</button>
+                <button onclick="switchDashTab('appts')" id="tabBtnAppts" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Appointments & Queue</button>
                 <button onclick="switchDashTab('manualPatient')" id="tabBtnManualPatient" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Upload / Edit Patient Profile</button>
                 <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Interactive Real Calendar</button>
                 <button onclick="switchDashTab('labTracker')" id="tabBtnLabTracker" class="text-slate-400 hover:text-white pb-2 whitespace-nowrap">Lab & Crown Orders</button>
@@ -527,8 +528,49 @@
                 <button onclick="switchDashTab('adminMaster')" id="tabBtnAdminMaster" class="hidden-section text-amber-400 hover:text-amber-300 pb-2 whitespace-nowrap">Admin Master Control Suite</button>
             </div>
 
+            <!-- TAB 0: STAFF PROFILE WELCOME PAGE -->
+            <div id="viewWelcome" class="space-y-6">
+                <div class="bg-gradient-to-r from-slate-900 via-red-950/60 to-slate-900 border border-red-900/50 p-6 sm:p-8 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden">
+                    <div class="flex flex-wrap justify-between items-center gap-3">
+                        <div>
+                            <span id="welc_role_badge" class="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow">AUTHENTICATED STAFF SESSION</span>
+                            <h2 id="welc_staff_name" class="text-2xl sm:text-3xl font-black text-white mt-2">Welcome to N.S. Dental Care</h2>
+                            <p id="welc_staff_contact" class="text-xs sm:text-sm text-slate-300 font-medium">Logged in profile details and system access capabilities</p>
+                        </div>
+                        <div class="bg-black/60 p-4 rounded-2xl border border-amber-500/30 text-right font-mono text-xs space-y-1">
+                            <span class="text-amber-400 font-bold block">STATUS: ONLINE</span>
+                            <span id="welc_session_token" class="text-slate-400 block text-[10px]">Session Token: SEC-ACTIVE</span>
+                        </div>
+                    </div>
+
+                    <!-- DIRECT QUICK-ACTION CARDS FOR STAFF -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+                        <button onclick="switchDashTab('appts')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
+                            <i data-lucide="users" class="text-red-500 w-5 h-5"></i>
+                            <h4 class="font-bold text-white text-xs">Patient Queue</h4>
+                            <p class="text-[10px] text-slate-400">View live waiting queue</p>
+                        </button>
+                        <button onclick="switchDashTab('manualPatient')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
+                            <i data-lucide="user-plus" class="text-amber-400 w-5 h-5"></i>
+                            <h4 class="font-bold text-white text-xs">Add/Edit Patient</h4>
+                            <p class="text-[10px] text-slate-400">Upload profile & vitals</p>
+                        </button>
+                        <button onclick="switchDashTab('calendar')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
+                            <i data-lucide="calendar" class="text-emerald-400 w-5 h-5"></i>
+                            <h4 class="font-bold text-white text-xs">Month Calendar</h4>
+                            <p class="text-[10px] text-slate-400">Month-wise schedule</p>
+                        </button>
+                        <button onclick="switchDashTab('ledger')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
+                            <i data-lucide="file-text" class="text-sky-400 w-5 h-5"></i>
+                            <h4 class="font-bold text-white text-xs">Receipt Ledger</h4>
+                            <p class="text-[10px] text-slate-400">Financial records</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER -->
-            <div id="viewAppts" class="space-y-4">
+            <div id="viewAppts" class="hidden-section space-y-4">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                     <div class="p-3 border-b border-slate-800 flex justify-between items-center">
                         <span class="text-xs font-bold text-white">Daily Roster, Tokens & Clinical Dispatcher</span>
@@ -630,23 +672,38 @@
                 </form>
             </div>
 
-            <!-- TAB 3: REAL INTERACTIVE MONTHLY CALENDAR -->
+            <!-- TAB 3: REAL INTERACTIVE MONTH-WISE CALENDAR -->
             <div id="viewCalendar" class="space-y-4 hidden-section">
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                     <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
                         <div>
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                <i data-lucide="calendar" class="text-red-500"></i> Interactive Monthly Master Calendar
+                                <i data-lucide="calendar" class="text-red-500"></i> Interactive Month-Wise Calendar & Roster Engine
                             </h3>
-                            <p class="text-[11px] text-slate-400">Click any date cell to view scheduled visits for that date</p>
+                            <p class="text-[11px] text-slate-400">Navigate past, present, and future months to view full-month schedules</p>
                         </div>
-                        <span id="cal_month_title" class="bg-red-600/20 text-red-400 border border-red-500/30 font-bold px-3 py-1 rounded-full text-xs uppercase font-mono">July 2026</span>
+                        
+                        <!-- MONTH NAVIGATION CONTROLS -->
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeCalendarMonth(-1)" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded-xl text-xs font-bold border border-slate-700 flex items-center gap-1">
+                                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Prev Month
+                            </button>
+                            <span id="cal_month_title" class="bg-red-600/20 text-red-400 border border-red-500/30 font-bold px-4 py-1 rounded-full text-xs uppercase font-mono">July 2026</span>
+                            <button onclick="changeCalendarMonth(1)" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded-xl text-xs font-bold border border-slate-700 flex items-center gap-1">
+                                Next Month <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 31-DAY REAL CALENDAR GRID -->
+                    <!-- 7-DAY HEADER -->
+                    <div class="grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800 pb-2">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+
+                    <!-- FULL MONTH DYNAMIC GRID -->
                     <div id="calendarMonthlyGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs"></div>
 
-                    <!-- SELECTED DATE AGENDA PANEL -->
+                    <!-- SELECTED DATE / FULL MONTH AGENDA PANEL -->
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                         <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                             <h4 id="cal_selected_date_heading" class="text-xs font-bold text-amber-400 uppercase font-mono">Visits Scheduled for Selected Date</h4>
@@ -759,10 +816,10 @@
                 </div>
             </div>
 
-            <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
+            <!-- TAB 8: ADMIN MASTER CONTROL SUITE (35+ ENTERPRISE CONTROLS & REPAIR MODULES) -->
             <div id="viewAdminMaster" class="hidden-section space-y-6">
 
-                <!-- EMERGENCY FIX & TROUBLESHOOTING PANEL -->
+                <!-- 1. EMERGENCY FIX & SYSTEM REPAIR MODULES -->
                 <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                         <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
@@ -798,7 +855,28 @@
                     </div>
                 </div>
 
-                <!-- EMAIL CONFIG -->
+                <!-- 2. REVENUE SHARE & CLINIC SPLIT CALCULATOR -->
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor Split Modeler
+                    </h3>
+                    <div class="grid sm:grid-cols-3 gap-3 text-xs">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <label class="block text-slate-400 mb-1">Clinic Share (%)</label>
+                            <input type="number" id="adm_split_clinic" value="60" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <label class="block text-slate-400 mb-1">Doctor Share (%)</label>
+                            <input type="number" id="adm_split_doc" value="40" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
+                            <span class="text-[10px] text-slate-400 uppercase">Estimated Doctor Share</span>
+                            <p id="adm_calc_doc_share" class="text-base font-black text-emerald-400">₹0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. EMAIL DISPATCH CONFIG -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                         <i data-lucide="mail" class="w-4 h-4"></i> Hospital & Doctor Email Dispatcher Configuration
@@ -816,7 +894,7 @@
                     <button onclick="saveAdminEmailSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Save Email Configuration</button>
                 </div>
 
-                <!-- REVENUE & STATS -->
+                <!-- 4. REVENUE STATS -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                         <i data-lucide="indian-rupee" class="w-4 h-4"></i> Revenue & Financial Ledger Analytics
@@ -839,7 +917,7 @@
                     </div>
                 </div>
 
-                <!-- TICKER & OPERATING HOURS -->
+                <!-- 5. TICKER & HOURS CONTROLLER -->
                 <div class="grid sm:grid-cols-2 gap-4 text-xs">
                     <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                         <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
@@ -865,11 +943,11 @@
                     </div>
                 </div>
 
-                <!-- STAFF CREDENTIALS -->
+                <!-- 6. STAFF CREDENTIALS -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                         <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                            <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Credentials Manager
+                            <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Password Overrider
                         </h3>
                         <span class="text-[10px] text-slate-400">Plain text passwords visible to Admin</span>
                     </div>
@@ -891,7 +969,7 @@
                     </div>
                 </div>
 
-                <!-- DIRECT STAFF REGISTRATION -->
+                <!-- 7. DIRECT STAFF REGISTRATION -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
                         <i data-lucide="user-plus" class="w-4 h-4 text-red-500"></i> Add Staff Account Directly
@@ -908,7 +986,7 @@
                     </form>
                 </div>
 
-                <!-- PERMISSIONS -->
+                <!-- 8. PERMISSIONS -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 text-xs">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                         <i data-lucide="shield" class="w-4 h-4"></i> Role Permissions Matrix
@@ -925,7 +1003,7 @@
                     </div>
                 </div>
 
-                <!-- BRANDING -->
+                <!-- 9. BRANDING -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                         <i data-lucide="type" class="w-4 h-4"></i> Hospital Branding & Website Customizer
@@ -949,7 +1027,7 @@
                     </div>
                 </div>
 
-                <!-- MEDIA & REVIEWS -->
+                <!-- 10. MEDIA & REVIEWS -->
                 <div class="grid sm:grid-cols-2 gap-4 text-xs">
                     <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                         <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
@@ -976,11 +1054,14 @@
                     </div>
                 </div>
 
-                <!-- AUDIT & BACKUPS -->
+                <!-- 11. AUDIT & BACKUPS -->
                 <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                    <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> System Audit Log Trail
-                    </h3>
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                            <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> System Audit Log Trail
+                        </h3>
+                        <button onclick="clearAuditLogs()" class="text-[10px] text-rose-400 hover:underline">Clear Logs</button>
+                    </div>
                     <div id="adminAuditLogs" class="bg-slate-950 p-3 rounded-xl h-40 overflow-y-auto space-y-1 font-mono text-[10px] text-slate-400"></div>
                 </div>
 
@@ -1107,7 +1188,7 @@
                             <i data-lucide="file-check" class="text-purple-400 w-4 h-4"></i> Daily Accounts & Patient Summary Verification
                         </h3>
                     </div>
-                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-23</span>
+                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-24</span>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3 text-xs">
@@ -1167,7 +1248,7 @@
                         <p><strong>Chief Issue:</strong> <span id="lh_issue">Root Canal Treatment</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Date:</strong> <span id="lh_date">2026-07-23</span></p>
+                        <p><strong>Date:</strong> <span id="lh_date">2026-07-24</span></p>
                     </div>
                 </div>
 
@@ -1227,7 +1308,7 @@
                         <p><strong>Patient Name:</strong> <span id="rc_pname">Mohammed Ali</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Receipt Date:</strong> <span id="rc_date">2026-07-23</span></p>
+                        <p><strong>Receipt Date:</strong> <span id="rc_date">2026-07-24</span></p>
                         <p><strong>Payment Mode:</strong> <span id="rc_mode" class="font-bold text-emerald-700">UPI / Cash</span></p>
                     </div>
                 </div>

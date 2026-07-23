@@ -167,6 +167,34 @@ function renderAuditLogs() {
     if(box) box.innerHTML = auditLogs.map(l => `<div>[${l.time}] ${l.text}</div>`).join('');
 }
 
+// EXISTING PATIENT AUTO-CHECKER FOR BOOKING & UPLOADS
+function autoCheckExistingPatient(val) {
+    const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
+    const p = patients.find(x => x.phone === clean || x.patientId.toLowerCase() === clean.toLowerCase());
+    const badge = document.getElementById('bk_existing_badge');
+    
+    if(p) {
+        document.getElementById('bk_name').value = p.name;
+        if(badge) badge.classList.remove('hidden-section');
+    } else {
+        if(badge) badge.classList.add('hidden-section');
+    }
+}
+
+function autoCheckExistingPatientUpload(val) {
+    const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
+    const p = patients.find(x => x.phone === clean || x.patientId.toLowerCase() === clean.toLowerCase());
+    const badge = document.getElementById('man_existing_badge');
+
+    if(p) {
+        document.getElementById('man_pname').value = p.name;
+        document.getElementById('man_page_gender').value = p.ageGender || "34 / Male";
+        if(badge) badge.classList.remove('hidden-section');
+    } else {
+        if(badge) badge.classList.add('hidden-section');
+    }
+}
+
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
     const todays = appointments.filter(a => a.date === todayStr);
@@ -359,7 +387,7 @@ function handlePortalLogin(e) {
     const pwd = document.getElementById('portalPassword').value;
 
     if (role === 'admin' && identifier === 'admin' && pwd === '9290') {
-        currentSession = { role: 'admin', name: 'Developer Admin' };
+        currentSession = { role: 'admin', name: 'Developer Admin', phone: '+91 8978883007' };
         logAction("Admin session started.");
         openDashboard();
         closePortalModal();
@@ -409,8 +437,22 @@ function handleForgotPasswordSubmit(e) {
 
 function openDashboard() {
     navigateTo('dashboard');
-    document.getElementById('dashBadge').innerText = currentSession.role;
-    document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name}`;
+    
+    // UPDATE LOGGED-IN PROFILE DISPLAY BADGE
+    const hdrBadge = document.getElementById('hdr_user_badge');
+    const hdrRole = document.getElementById('hdr_user_role');
+    const hdrName = document.getElementById('hdr_user_name');
+    const loginBtn = document.getElementById('btn_staff_login');
+
+    if(hdrBadge && currentSession) {
+        hdrRole.innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
+        hdrName.innerText = currentSession.name;
+        hdrBadge.classList.remove('hidden-section');
+        if(loginBtn) loginBtn.classList.add('hidden-section');
+    }
+
+    document.getElementById('dashBadge').innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
+    document.getElementById('dashWelcome').innerText = `Welcome, ${currentSession.name} (${currentSession.phone || ''})`;
 
     document.getElementById('btn_staff_add_gallery').classList.remove('hidden-section');
 
@@ -432,6 +474,8 @@ function openDashboard() {
 
 function logout() {
     currentSession = null;
+    document.getElementById('hdr_user_badge').classList.add('hidden-section');
+    document.getElementById('btn_staff_login').classList.remove('hidden-section');
     document.getElementById('btn_staff_add_gallery').classList.add('hidden-section');
     navigateTo('public-home');
 }
@@ -879,10 +923,11 @@ function renderCalendar() {
     }
 }
 
+// EXISTING PATIENT RE-BOOKING & NEW RECORD UPLOADER
 function handleManualPatientUpload(e) {
     e.preventDefault();
+    const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('man_pname').value;
-    const phone = document.getElementById('man_pphone').value.replace(/[^0-9]/g, '');
     const ageGender = document.getElementById('man_page_gender').value;
     const doctor = document.getElementById('man_pdoctor').value;
     const reason = document.getElementById('man_preason').value;
@@ -895,20 +940,19 @@ function handleManualPatientUpload(e) {
     const sugar = document.getElementById('man_vitals_sugar').value;
     const risk = document.getElementById('man_vitals_risk').value;
 
-    let patient = patients.find(p => p.phone === phone);
+    let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
     if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone, ageGender };
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender };
         patients.push(patient);
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
     } else {
         patient.name = name;
         patient.ageGender = ageGender;
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
     }
+    localStorage.setItem('ns_patients', JSON.stringify(patients));
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
     if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
@@ -920,8 +964,9 @@ function handleManualPatientUpload(e) {
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
     logAction(`Record saved for ${name} (${patient.patientId})`);
-    alert(`Patient Saved! ID: ${patient.patientId} | Token: ${token}`);
+    alert(`Patient Visit Saved! Patient ID: ${patient.patientId} | Token: ${token}`);
     e.target.reset();
+    document.getElementById('man_existing_badge').classList.add('hidden-section');
     renderAppointments();
     renderCalendar();
     renderLedgers();
@@ -989,6 +1034,7 @@ function resetSystemData() {
     }
 }
 
+// MULTI-VISIT PATIENT TIMELINE SEARCH
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
     const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
@@ -1010,14 +1056,27 @@ function handleVerifiedPatientSearch(e) {
                     <h3 class="text-base font-bold text-white">${matchedPatient.name}</h3>
                     <p class="text-[11px] text-slate-400">Age/Gender: ${matchedPatient.ageGender || '34 / Male'}</p>
                 </div>
-                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient Profile</span>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient Timeline</span>
             </div>
             
             <div class="space-y-2">
-                <h4 class="text-xs font-bold text-red-400 uppercase">Appointment & Follow-Up Timeline:</h4>
-                <ul class="text-xs space-y-1.5 text-slate-300">
-                    ${appts.map(a => `<li class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center"><div><strong>${a.date} (${a.slot})</strong> - Dr. ${a.doctor}<br>Issue: ${a.reason}</div><div class="text-right"><span class="text-amber-400 font-mono font-bold block text-xs">Next Follow-Up: ${a.nextVisit || a.date}</span></div></li>`).join('')}
-                </ul>
+                <h4 class="text-xs font-bold text-red-400 uppercase">Itemized Patient Visit Logs:</h4>
+                <div class="space-y-2">
+                    ${appts.map(a => {
+                        const l = pLedgers.find(x => x.apptId === a.id) || {};
+                        return `
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
+                                <div class="flex justify-between font-bold text-white">
+                                    <span>Date: ${a.date} (${a.slot})</span>
+                                    <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'}</span>
+                                </div>
+                                <p class="text-slate-300">Doctor: ${a.doctor} | Problem: ${a.reason}</p>
+                                <p class="text-slate-400 text-[11px]">BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'} | Charged: ₹${l.totalCost || 0} (Paid: ₹${l.paidAmount || 0})</p>
+                                <span class="text-emerald-400 font-bold text-[11px] block">Next Scheduled Follow-Up: ${a.nextVisit || a.date}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
 
             <div class="space-y-2 pt-2">
@@ -1043,8 +1102,8 @@ function handleVerifiedPatientSearch(e) {
                     ${pLedgers.length > 0 ? pLedgers.map(l => `
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                             <div>
-                                <p class="font-bold text-white">${l.id || 'REC-1001'} | Fee: ₹${l.totalCost}</p>
-                                <p class="text-slate-400 text-[11px]">${l.purpose} | Paid: ₹${l.paidAmount}</p>
+                                <p class="font-bold text-white">${l.id || 'REC-1001'} | Total Fee: ₹${l.totalCost}</p>
+                                <p class="text-slate-400 text-[11px]">${l.purpose} | Paid: ₹${l.paidAmount} | Due: ₹${l.dueAmount}</p>
                             </div>
                             <button onclick="publicViewReadOnlyReceipt('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Download Receipt
@@ -1058,6 +1117,55 @@ function handleVerifiedPatientSearch(e) {
     } else {
         container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Patient Full Name and ID or Mobile Number do not match our database records.</p>`;
     }
+}
+
+function searchEHR() {
+    const input = document.getElementById('ehrSearchInput').value.trim().toLowerCase();
+    const container = document.getElementById('ehrHistoryContainer');
+
+    if(!input) return;
+
+    const matchedPatients = patients.filter(p => p.name.toLowerCase().includes(input) || p.patientId.toLowerCase().includes(input) || p.phone.includes(input));
+
+    if(matchedPatients.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500">No matching EHR patient histories found.</p>`;
+        return;
+    }
+
+    container.innerHTML = matchedPatients.map(p => {
+        const pAppts = appointments.filter(a => a.patientId === p.patientId);
+        const pLedgers = ledgers.filter(l => l.patientId === p.patientId);
+        const pRecs = medicalRecords[p.patientId] || [];
+
+        return `
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <div>
+                        <span class="text-xs text-red-500 font-mono font-bold">${p.patientId}</span>
+                        <h4 class="text-sm font-bold text-white">${p.name} (${p.ageGender || '34 / Male'})</h4>
+                        <p class="text-[11px] text-slate-400">Mobile: ${p.phone}</p>
+                    </div>
+                    <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-3 py-1 rounded-xl text-xs font-bold">Edit Full Profile</button>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <h5 class="font-bold text-slate-300 uppercase">Complete Visit History Timeline (${pAppts.length} Visits):</h5>
+                    ${pAppts.map(a => {
+                        const l = pLedgers.find(x => x.apptId === a.id) || {};
+                        return `
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-0.5">
+                                <div class="flex justify-between font-bold text-slate-200">
+                                    <span>${a.date} - ${a.reason}</span>
+                                    <span class="text-emerald-400">Total Fee: ₹${l.totalCost || 0}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Doctor: ${a.doctor} | Token: ${a.token || 'TK-01'} | Vitals: BP ${a.bp || '120/80'}</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function publicViewReadOnlyPrescription(patientId, rxId) {
@@ -1094,23 +1202,25 @@ function publicViewReadOnlyReceipt(recId) {
 
 function handlePublicBooking(e) {
     e.preventDefault();
+    const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('bk_name').value;
-    const phone = document.getElementById('bk_phone').value.replace(/[^0-9]/g, '');
     const doctor = document.getElementById('bk_doctor').value;
     const date = document.getElementById('bk_date').value;
     const slot = document.getElementById('bk_slot').value;
     const reason = document.getElementById('bk_reason').value;
 
-    let patient = patients.find(p => p.phone === phone);
+    let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
     if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone, ageGender: "34 / Male" };
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender: "34 / Male" };
         patients.push(patient);
-        localStorage.setItem('ns_patients', JSON.stringify(patients));
+    } else {
+        patient.name = name;
     }
+    localStorage.setItem('ns_patients', JSON.stringify(patients));
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = "TK-0" + (appointments.length + 1);
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone, ageGender: "34 / Male", doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
     localStorage.setItem('ns_appointments', JSON.stringify(appointments));
 
     const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
@@ -1118,6 +1228,7 @@ function handlePublicBooking(e) {
     localStorage.setItem('ns_ledgers', JSON.stringify(ledgers));
 
     alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
+    document.getElementById('bk_existing_badge').classList.add('hidden-section');
     renderPublicTokenQueue();
     navigateTo('public-home');
 }

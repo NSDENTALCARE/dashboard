@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 11:00:00 PM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 11:15:00 PM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -69,7 +69,7 @@
     <!-- MAIN APP CONTAINER -->
     <main class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
-        <!-- ================= SECTION 1: PUBLIC HOMEPAGE ================= -->
+        <!-- PUBLIC HOMEPAGE -->
         <section id="public-home" class="w-full space-y-6 sm:space-y-8">
             <div id="pub_sec_hero" class="relative overflow-hidden bg-gradient-to-r from-slate-950 via-red-950 to-red-900 border border-red-800 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-2">
@@ -104,52 +104,6 @@
                                 <span class="text-[9px] text-emerald-400 font-bold">● Live Queue Active</span>
                                 <span class="text-[10px] text-slate-400">Hyderabad</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- QUICK LINKS GRID -->
-            <div id="pub_sec_quicklinks" class="space-y-3">
-                <h3 class="text-xl font-black text-white text-center uppercase tracking-wide">Quick Links</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div onclick="navigateTo('public-booking')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="calendar-plus" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Apply For Visit</h4>
-                            <p class="text-[10px] text-slate-600">Book slot online</p>
-                        </div>
-                    </div>
-
-                    <a href="#sec_queue" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="clock" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Check Availability</h4>
-                            <p class="text-[10px] text-slate-600">Live queue tokens</p>
-                        </div>
-                    </a>
-
-                    <a href="#sec_doctors" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="stethoscope" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Attending Surgeons</h4>
-                            <p class="text-[10px] text-slate-600">Doctor profiles</p>
-                        </div>
-                    </a>
-
-                    <div onclick="navigateTo('track-appointment')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="download" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Download Rx & Receipt</h4>
-                            <p class="text-[10px] text-slate-600">Health portal view</p>
                         </div>
                     </div>
                 </div>
@@ -211,7 +165,7 @@
                 </div>
             </div>
 
-            <!-- PHOTO GALLERY WITH LOCAL BASE64 FILE UPLOADER -->
+            <!-- PHOTO GALLERY -->
             <div id="sec_gallery" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
@@ -221,21 +175,21 @@
                         <p class="text-[11px] text-slate-400">Upload high-resolution JPEG, PNG, or PDF photo files directly</p>
                     </div>
                     <label id="btn_staff_add_gallery" class="hidden-section bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload JPEG/PDF Image
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload Image
                         <input type="file" accept="image/jpeg,image/png,application/pdf" onchange="uploadClinicPhotoFile(event)" class="hidden">
                     </label>
                 </div>
                 <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
             </div>
 
-            <!-- GOOGLE MAPS REVIEWS ROTATOR -->
+            <!-- GOOGLE MAPS REVIEWS -->
             <div id="pub_sec_reviews" class="bg-slate-900 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div>
                         <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="star" class="text-amber-400 fill-amber-400"></i> Verified Google Maps Reviews
                         </h3>
-                        <p class="text-[11px] text-slate-400">30 Verified Patient Reviews • Auto-rotates every 10 seconds</p>
+                        <p class="text-[11px] text-slate-400">Verified Patient Reviews • Auto-rotates every 10 seconds</p>
                     </div>
                     <div class="text-right">
                         <span class="text-lg sm:text-xl font-black text-amber-400">4.9 ★</span>
@@ -245,7 +199,7 @@
             </div>
         </section>
 
-        <!-- READ-ONLY PATIENT PORTAL -->
+        <!-- PATIENT TIMELINE TRACKER -->
         <section id="track-appointment" class="hidden-section max-w-3xl mx-auto w-full space-y-4">
             <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl shadow-2xl space-y-4">
                 <button onclick="navigateTo('public-home')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
@@ -255,7 +209,7 @@
                     <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i data-lucide="user-check" class="text-amber-400"></i> Patient Itemized History & Download Portal
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Enter registered Patient Full Name and Patient ID or Registered Mobile # to view past, present, and future visit logs, prescriptions, and receipts.</p>
+                    <p class="text-xs text-slate-400 mt-1">Enter registered Patient Full Name and Patient ID or Registered Mobile # to view visit logs, payment modes, prescriptions, and receipts.</p>
                 </div>
                 <form onsubmit="handleVerifiedPatientSearch(event)" class="space-y-3">
                     <div>
@@ -353,29 +307,7 @@
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Password</label>
                         <input type="password" id="portalPassword" required class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white" placeholder="••••••••">
                     </div>
-                    <div class="flex justify-end">
-                        <button type="button" onclick="switchPortalTab('forgot')" class="text-xs text-red-400 hover:underline">Forgot Password?</button>
-                    </div>
                     <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs">Sign In</button>
-                </form>
-
-                <form id="portalForgotForm" onsubmit="handleForgotPasswordSubmit(event)" class="hidden-section space-y-3">
-                    <div>
-                        <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Role</label>
-                        <select id="fg_role" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
-                            <option value="assistant">Assistant</option>
-                            <option value="doctor">Doctor</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Registered Identifier</label>
-                        <input type="text" id="fg_identifier" required class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">New Password Requested</label>
-                        <input type="password" id="fg_newpwd" required class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
-                    </div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Submit Request</button>
                 </form>
 
                 <form id="portalRegForm" onsubmit="handleStaffRegistration(event)" class="hidden-section space-y-3">
@@ -407,7 +339,7 @@
             </div>
         </div>
 
-        <!-- ================= CLINICAL OPERATIONS COMMAND DASHBOARD ================= -->
+        <!-- CLINICAL OPERATIONS COMMAND DASHBOARD -->
         <section id="dashboard" class="hidden-section flex-1 w-full space-y-6">
             
             <!-- REAL-TIME OPERATIONS SUMMARY CARDS -->
@@ -463,39 +395,6 @@
                 </div>
             </div>
 
-            <!-- INDEXEDB HIGH-CAPACITY STORAGE METER -->
-            <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-md text-xs">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="hard-drive" class="text-emerald-400 w-4 h-4"></i>
-                    <div>
-                        <span class="font-bold text-white block">IndexedDB High-Capacity Storage</span>
-                        <span id="storage_usage_text" class="text-[10px] text-slate-400">Calculating Storage...</span>
-                    </div>
-                </div>
-                <div class="w-32 bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden p-0.5">
-                    <div id="storage_usage_bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 2%;"></div>
-                </div>
-            </div>
-
-            <!-- STANDALONE TOKEN ASSIGNER TOOLBAR -->
-            <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
-                <div class="flex items-center gap-2">
-                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl font-bold">
-                        <i data-lucide="ticket" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-white uppercase">Manual Patient Token Assigner</h4>
-                        <p class="text-[10px] text-slate-400">Assign custom sequence tokens for walk-ins or existing patients</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-lg">
-                    <input type="text" id="manual_token_pid" placeholder="Patient ID (e.g. PAT-1001) or Mobile #" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
-                    <input type="text" id="manual_token_val" placeholder="Token # (e.g. TK-05)" class="w-28 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
-                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow">Assign Token</button>
-                </div>
-            </div>
-
             <!-- DASHBOARD TOOLBAR HEADER -->
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-3 shadow-xl">
                 <div>
@@ -513,26 +412,17 @@
                     <button onclick="resetDailyTokens()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Daily Queue Tokens
                     </button>
-                    <button onclick="sendDoctorDailyBriefingEmail()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email Briefing to Dr
-                    </button>
                     <button onclick="triggerWhatsAppDoctorBriefing()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 shadow">
                         <i data-lucide="send" class="w-3.5 h-3.5"></i> WhatsApp Briefing
-                    </button>
-                    <button onclick="openDayWiseAuditModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow">
-                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i> Staff & CA Daily Audit
-                    </button>
-                    <button onclick="downloadJSONBackup()" class="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 1-Click Backup
                     </button>
                     <button onclick="logout()" class="bg-rose-900/60 hover:bg-rose-900 text-rose-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-rose-800">Exit Session</button>
                 </div>
             </div>
 
-            <!-- ================= VERTICAL 1-BY-1 DASHBOARD LAYOUT ================= -->
+            <!-- VERTICAL SIDEBAR LAYOUT -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
                 
-                <!-- LEFT SIDE VERTICAL NAVIGATION LIST -->
+                <!-- LEFT SIDE SIDEBAR MENU -->
                 <div class="lg:col-span-1 bg-slate-900 border border-slate-800 p-3 rounded-2xl space-y-1.5 shadow-2xl sticky top-20">
                     <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider px-3 py-1 block border-b border-slate-800 mb-2">Navigation Portals</span>
                     
@@ -568,7 +458,7 @@
 
                     <button onclick="switchDashTab('ledger')" id="tabBtnLedger" class="sidebar-menu-btn">
                         <i data-lucide="indian-rupee" class="w-4 h-4 text-emerald-400"></i>
-                        <span>Billing Ledger & Receipts</span>
+                        <span>Billing Ledger & Multi-Mode Payments</span>
                     </button>
 
                     <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="sidebar-menu-btn">
@@ -582,10 +472,10 @@
                     </button>
                 </div>
 
-                <!-- RIGHT SIDE VIEWPORT WORKSPACE -->
+                <!-- RIGHT SIDE WORKSPACE -->
                 <div class="lg:col-span-3 space-y-6">
 
-                    <!-- TAB 0: STAFF PROFILE WELCOME PAGE -->
+                    <!-- TAB 0: STAFF WELCOME PAGE -->
                     <div id="viewWelcome" class="space-y-6">
                         <div class="bg-gradient-to-r from-slate-900 via-red-950/60 to-slate-900 border border-red-900/50 p-6 sm:p-8 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden">
                             <div class="flex flex-wrap justify-between items-center gap-3">
@@ -598,30 +488,6 @@
                                     <span class="text-amber-400 font-bold block">STATUS: ONLINE</span>
                                     <span id="welc_session_token" class="text-slate-400 block text-[10px]">Session Token: SEC-ACTIVE</span>
                                 </div>
-                            </div>
-
-                            <!-- DIRECT QUICK-ACTION CARDS FOR STAFF -->
-                            <div id="stf_sec_quickcards" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-                                <button onclick="switchDashTab('appts')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="users" class="text-red-500 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Patient Queue</h4>
-                                    <p class="text-[10px] text-slate-400">View live waiting queue</p>
-                                </button>
-                                <button onclick="switchDashTab('manualPatient')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="user-plus" class="text-amber-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Add/Edit Patient</h4>
-                                    <p class="text-[10px] text-slate-400">Upload profile & vitals</p>
-                                </button>
-                                <button onclick="switchDashTab('calendar')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="calendar" class="text-emerald-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Month Calendar</h4>
-                                    <p class="text-[10px] text-slate-400">Month-wise schedule</p>
-                                </button>
-                                <button onclick="switchDashTab('ledger')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="file-text" class="text-sky-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Receipt Ledger</h4>
-                                    <p class="text-[10px] text-slate-400">Financial records</p>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -642,9 +508,8 @@
                                             <th class="p-3">Vitals / Risks</th>
                                             <th class="p-3">Doctor</th>
                                             <th class="p-3">Visit Date & Slot</th>
-                                            <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
-                                            <th class="p-3">Master Action Controls</th>
+                                            <th class="p-3">Master Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblAppointments" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -653,10 +518,10 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: MANUAL PATIENT DATA & PROFILE UPLOADER -->
+                    <!-- TAB 2: MANUAL PATIENT UPLOADER & MULTI-MODE PAYMENT CREATOR -->
                     <div id="viewManualPatient" class="hidden-section max-w-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="user-plus" class="text-red-500"></i> Add or Upload Patient Record & Clinical Vitals
+                            <i data-lucide="user-plus" class="text-red-500"></i> Add Patient Record, Vitals & Payment Ledger
                         </h3>
                         <form onsubmit="handleManualPatientUpload(event)" class="space-y-3 text-xs">
                             <div class="grid sm:grid-cols-3 gap-3">
@@ -700,17 +565,42 @@
                                     <input type="text" id="man_preason" required placeholder="e.g. Root Canal Treatment, Implants" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                                 </div>
                             </div>
+
+                            <!-- ADVANCED MULTI-MODE PAYMENT SETUP -->
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-amber-500/30 space-y-3">
+                                <span class="text-xs font-bold text-emerald-400 uppercase block">Treatment Fees & Payment Entry</span>
+                                <div class="grid sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block uppercase text-slate-400 mb-1">Total Fee (₹)</label>
+                                        <input type="number" id="man_pfee" placeholder="5000" required class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                                    </div>
+                                    <div>
+                                        <label class="block uppercase text-slate-400 mb-1">Amount Paid Now (₹)</label>
+                                        <input type="number" id="man_ppaid" placeholder="2000" required class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block uppercase text-slate-400 mb-1">Payment Method Mode *</label>
+                                        <select id="man_pmode" required class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-amber-400 font-bold">
+                                            <option value="Cash">Cash Payment</option>
+                                            <option value="UPI (PhonePe/GPay)">UPI (PhonePe / GPay / Paytm)</option>
+                                            <option value="Debit/Credit Card">Debit / Credit Card</option>
+                                            <option value="Bank Transfer/NetBanking">Bank Net Banking</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block uppercase text-slate-400 mb-1">Prescribed Medication / Dosage</label>
                                 <textarea id="man_prx" rows="2" placeholder="e.g. Amoxicillin 500mg (1-0-1), Paracetamol 650mg" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
                             </div>
 
                             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                <label class="block uppercase text-amber-400 font-bold mb-1">Upload Patient X-Ray / Scan File (JPEG/PNG/PDF):</label>
+                                <label class="block uppercase text-amber-400 font-bold mb-1">Upload Patient Dental X-Ray / File (JPEG/PNG/PDF):</label>
                                 <input type="file" id="man_xray_file" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-slate-300 text-xs">
                             </div>
 
-                            <div class="grid sm:grid-cols-3 gap-3">
+                            <div class="grid sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block uppercase text-slate-400 mb-1">Visit Date</label>
                                     <input type="date" id="man_pdate" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
@@ -719,16 +609,12 @@
                                     <label class="block uppercase text-slate-400 mb-1">Next Follow-Up Date</label>
                                     <input type="date" id="man_pnext" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                                 </div>
-                                <div>
-                                    <label class="block uppercase text-slate-400 mb-1">Total Fee (₹)</label>
-                                    <input type="number" id="man_pfee" placeholder="500" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                </div>
                             </div>
-                            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg">Save Patient Record</button>
+                            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg">Save Patient Record & Payment Entry</button>
                         </form>
                     </div>
 
-                    <!-- TAB 3: REAL INTERACTIVE MONTH-WISE CALENDAR -->
+                    <!-- TAB 3: REAL INTERACTIVE CALENDAR -->
                     <div id="viewCalendar" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
@@ -766,7 +652,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: DENTAL LAB TRACKER WITH EDITABLE / MODIFIABLE FILE OPTIONS -->
+                    <!-- TAB 4: LAB TRACKER -->
                     <div id="viewLabTracker" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -788,7 +674,7 @@
                                             <th class="p-2.5">Lab Partner</th>
                                             <th class="p-2.5">Impression File</th>
                                             <th class="p-2.5">Status</th>
-                                            <th class="p-2.5">Master Edit Control</th>
+                                            <th class="p-2.5">Edit Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblLabOrders" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -809,22 +695,26 @@
                         </div>
                     </div>
 
-                    <!-- TAB 6: BILLING LEDGER -->
+                    <!-- TAB 6: BILLING LEDGER & MULTI-MODE PAYMENT TRACKER -->
                     <div id="viewLedger" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div class="p-3 border-b border-slate-800 flex justify-between items-center">
-                                <span class="text-xs font-bold text-white">Billing Ledger & Hospital Receipts</span>
-                                <span class="text-[10px] text-slate-400">Authorized staff edit mode active</span>
+                                <div>
+                                    <span class="text-xs font-bold text-white">Billing Ledger, Payment Modes & Patient Receipts</span>
+                                    <p class="text-[10px] text-slate-400">Tracks Cash, UPI, Card, and Bank Net Banking payments with timestamps</p>
+                                </div>
+                                <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">Payment Audit Active</span>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-950/60 text-slate-400 uppercase border-b border-slate-800">
                                         <tr>
-                                            <th class="p-3">Receipt ID / Patient</th>
+                                            <th class="p-3">Receipt # / Patient</th>
                                             <th class="p-3">Treatment</th>
+                                            <th class="p-3">Payment Mode & Date</th>
                                             <th class="p-3">Total Cost (₹)</th>
-                                            <th class="p-3">Paid Amount (₹)</th>
-                                            <th class="p-3">Due Balance (₹)</th>
+                                            <th class="p-3">Paid (₹)</th>
+                                            <th class="p-3">Due (₹)</th>
                                             <th class="p-3">Actions</th>
                                         </tr>
                                     </thead>
@@ -852,26 +742,9 @@
                                 </table>
                             </div>
                         </div>
-
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                            <div class="p-3 border-b border-slate-800 font-bold text-xs text-amber-400">Pending Password Resets</div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-950/60 text-slate-400 uppercase border-b border-slate-800">
-                                        <tr>
-                                            <th class="p-3">Role</th>
-                                            <th class="p-3">User Identifier</th>
-                                            <th class="p-3">New Password Requested</th>
-                                            <th class="p-3">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblPasswordResets" class="divide-y divide-slate-800 text-slate-300"></tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- TAB 8: ADMIN MASTER CONTROL SUITE (WITH PAGE LAYOUT CUSTOMIZER) -->
+                    <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
                     <div id="viewAdminMaster" class="hidden-section space-y-6">
 
                         <!-- 100% ADMIN PAGE LAYOUT CUSTOMIZER SUITE -->
@@ -887,16 +760,11 @@
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-4 text-xs">
-                                <!-- PUBLIC PAGE LAYOUT OPTIONS -->
                                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5">
                                     <span class="text-xs font-bold text-red-400 uppercase block border-b border-slate-800 pb-1">Public Website Components</span>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Hero Welcome Banner</span>
                                         <input type="checkbox" id="layout_pub_hero" checked onchange="toggleAdminPageLayout('pub_sec_hero', this.checked)" class="accent-red-600 w-4 h-4">
-                                    </label>
-                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Quick Links Grid</span>
-                                        <input type="checkbox" id="layout_pub_quicklinks" checked onchange="toggleAdminPageLayout('pub_sec_quicklinks', this.checked)" class="accent-red-600 w-4 h-4">
                                     </label>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Live Patient Token Queue</span>
@@ -907,159 +775,55 @@
                                         <input type="checkbox" id="layout_pub_doctors" checked onchange="toggleAdminPageLayout('sec_doctors', this.checked)" class="accent-red-600 w-4 h-4">
                                     </label>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Fees & Operating Hours</span>
-                                        <input type="checkbox" id="layout_pub_timings" checked onchange="toggleAdminPageLayout('sec_timings', this.checked)" class="accent-red-600 w-4 h-4">
-                                    </label>
-                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Facility Photo Gallery</span>
                                         <input type="checkbox" id="layout_pub_gallery" checked onchange="toggleAdminPageLayout('sec_gallery', this.checked)" class="accent-red-600 w-4 h-4">
                                     </label>
-                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Google Maps Reviews Rotator</span>
-                                        <input type="checkbox" id="layout_pub_reviews" checked onchange="toggleAdminPageLayout('pub_sec_reviews', this.checked)" class="accent-red-600 w-4 h-4">
-                                    </label>
                                 </div>
 
-                                <!-- STAFF DASHBOARD LAYOUT OPTIONS -->
                                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5">
-                                    <span class="text-xs font-bold text-emerald-400 uppercase block border-b border-slate-800 pb-1">Staff Dashboard Components</span>
+                                    <span class="text-xs font-bold text-emerald-400 uppercase block border-b border-slate-800 pb-1">Staff Permissions Matrix</span>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Quick Action Cards (Welcome Portal)</span>
-                                        <input type="checkbox" id="layout_stf_quickcards" checked onchange="toggleAdminPageLayout('stf_sec_quickcards', this.checked)" class="accent-emerald-600 w-4 h-4">
+                                        <span>Allow Doctor to Edit Billing Ledgers</span>
+                                        <input type="checkbox" id="perm_doc_edit_ledger" checked onchange="togglePerm('doc_edit_ledger')" class="accent-emerald-600 w-4 h-4">
+                                    </label>
+                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
+                                        <span>Allow Assistant to Delete Records</span>
+                                        <input type="checkbox" id="perm_asst_delete" onchange="togglePerm('asst_delete')" class="accent-emerald-600 w-4 h-4">
                                     </label>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- EMERGENCY FIX & SYSTEM REPAIR MODULES -->
-                        <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="wrench" class="w-4 h-4"></i> Admin Emergency Fix & System Repair Tools
-                                </h3>
-                                <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">Admin Master Authority</span>
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <button onclick="adminFixMissingReceipts()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="file-check" class="text-emerald-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Auto-Repair Receipts</strong>
-                                    <span class="text-[10px] text-slate-400 block">Fix missing billing ledger receipts</span>
-                                </button>
-
-                                <button onclick="adminMergeDuplicatePatients()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="users" class="text-sky-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Merge Duplicate Patients</strong>
-                                    <span class="text-[10px] text-slate-400 block">Consolidate profiles by phone #</span>
-                                </button>
-
-                                <button onclick="adminPurgeBase64Xrays()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="trash-2" class="text-rose-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Storage Optimizer</strong>
-                                    <span class="text-[10px] text-slate-400 block">Clear heavy X-Ray base64 images</span>
-                                </button>
-
-                                <button onclick="adminForceLogoutAllSessions()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="lock" class="text-amber-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Force Session Lock</strong>
-                                    <span class="text-[10px] text-slate-400 block">Invalidate staff logins</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- REVENUE SHARE CALCULATOR -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor Split Modeler
-                            </h3>
-                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <label class="block text-slate-400 mb-1">Clinic Share (%)</label>
-                                    <input type="number" id="adm_split_clinic" value="60" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <label class="block text-slate-400 mb-1">Doctor Share (%)</label>
-                                    <input type="number" id="adm_split_doc" value="40" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
-                                    <span class="text-[10px] text-slate-400 uppercase">Estimated Doctor Share</span>
-                                    <p id="adm_calc_doc_share" class="text-base font-black text-emerald-400">₹0</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EMAIL DISPATCH CONFIG -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="mail" class="w-4 h-4"></i> Hospital & Doctor Email Dispatcher Configuration
-                            </h3>
-                            <div class="grid sm:grid-cols-2 gap-3 text-xs">
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Hospital Contact Email Address</label>
-                                    <input type="email" id="adm_hosp_email" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white" placeholder="info@nsdentalcare.com">
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Doctor Primary Notification Email</label>
-                                    <input type="email" id="adm_doc_email" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white" placeholder="ayub@nsdentalcare.com">
-                                </div>
-                            </div>
-                            <button onclick="saveAdminEmailSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Save Email Configuration</button>
                         </div>
 
                         <!-- REVENUE STATS -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="indian-rupee" class="w-4 h-4"></i> Revenue & Financial Ledger Analytics
+                                <i data-lucide="indian-rupee" class="w-4 h-4"></i> Revenue & Payment Mode Analytics
                             </h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <span class="text-[10px] text-slate-400 uppercase">Total Revenue</span>
-                                    <p id="adm_stat_rev" class="text-lg font-black text-emerald-400">₹0</p>
+                                    <span class="text-[10px] text-slate-400 uppercase">Cash Collected</span>
+                                    <p id="adm_mode_cash" class="text-base font-black text-emerald-400">₹0</p>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 uppercase">UPI Collected</span>
+                                    <p id="adm_mode_upi" class="text-base font-black text-sky-400">₹0</p>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 uppercase">Card / NetBanking</span>
+                                    <p id="adm_mode_card" class="text-base font-black text-purple-400">₹0</p>
                                 </div>
                                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                                     <span class="text-[10px] text-slate-400 uppercase">Pending Dues</span>
-                                    <p id="adm_stat_due" class="text-base sm:text-lg font-black text-amber-400">₹0</p>
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
-                                    <span class="text-[10px] text-slate-400 uppercase">Export Ledger</span>
-                                    <button onclick="exportFinancialReport()" class="w-full mt-1 bg-slate-800 hover:bg-slate-700 text-xs text-white py-1.5 rounded-lg font-bold border border-slate-700 flex items-center justify-center gap-1">
-                                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
-                                    </button>
+                                    <p id="adm_stat_due" class="text-base font-black text-amber-400">₹0</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TICKER & HOURS CONTROLLER -->
-                        <div class="grid sm:grid-cols-2 gap-4 text-xs">
-                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                                <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="megaphone" class="w-4 h-4"></i> Top Marquee Ticker Controller
-                                </h3>
-                                <textarea id="adm_ticker_input" rows="2" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-white" placeholder="Enter marquee text to slide across top header..."></textarea>
-                                <button onclick="updateLiveTickerAdmin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
-                                    Update Top Ticker Text
-                                </button>
-                            </div>
-
-                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                                <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="clock" class="w-4 h-4"></i> Operating Hours & Slot Limits
-                                </h3>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input type="text" id="adm_slot_morning" value="10:00 AM - 02:00 PM" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                    <input type="text" id="adm_slot_evening" value="05:00 PM - 10:00 PM" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                </div>
-                                <button onclick="saveClinicTimings()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl">
-                                    Update Operating Hours
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- STAFF CREDENTIALS -->
+                        <!-- STAFF CREDENTIALS MANAGER -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Password Overrider
+                                    <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Credentials
                                 </h3>
                                 <span class="text-[10px] text-slate-400">Plain text passwords visible to Admin</span>
                             </div>
@@ -1070,7 +834,6 @@
                                             <th class="p-2.5">Name</th>
                                             <th class="p-2.5">Role</th>
                                             <th class="p-2.5">Phone</th>
-                                            <th class="p-2.5">Email</th>
                                             <th class="p-2.5">Password</th>
                                             <th class="p-2.5">Status</th>
                                             <th class="p-2.5">Actions</th>
@@ -1081,125 +844,22 @@
                             </div>
                         </div>
 
-                        <!-- DIRECT STAFF REGISTRATION -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                                <i data-lucide="user-plus" class="w-4 h-4 text-red-500"></i> Add Staff Account Directly
-                            </h3>
-                            <form onsubmit="handleAdminAddStaff(event)" class="grid sm:grid-cols-4 gap-3 text-xs">
-                                <input type="text" id="adm_stf_name" required placeholder="Full Name" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                <select id="adm_stf_role" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                    <option value="doctor">Doctor</option>
-                                    <option value="assistant">Assistant</option>
-                                </select>
-                                <input type="tel" id="adm_stf_phone" required placeholder="Phone Number" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                <input type="password" id="adm_stf_password" required placeholder="Initial Password" class="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-2 rounded-xl sm:col-span-4">Register Account</button>
-                            </form>
-                        </div>
-
-                        <!-- PERMISSIONS -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 text-xs">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="shield" class="w-4 h-4"></i> Role Permissions Matrix
-                            </h3>
-                            <div class="grid sm:grid-cols-2 gap-3">
-                                <label class="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer">
-                                    <input type="checkbox" id="perm_asst_delete" onchange="togglePerm('asst_delete')" class="accent-red-600 w-4 h-4">
-                                    <span>Allow Assistant to Delete Records</span>
-                                </label>
-                                <label class="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer">
-                                    <input type="checkbox" id="perm_asst_discount" onchange="togglePerm('asst_discount')" class="accent-red-600 w-4 h-4">
-                                    <span>Allow Assistant to Apply Billing Discounts</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- BRANDING -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="type" class="w-4 h-4"></i> Hospital Branding & Website Customizer
-                            </h3>
-                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Global Font Scale</label>
-                                    <select id="adm_font_size" onchange="applyAdminThemeSettings()" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                        <option value="text-sm">Standard (Default)</option>
-                                        <option value="text-base">Large (Accessible)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Clinic Brand Name</label>
-                                    <input type="text" id="adm_brand_name" onchange="applyAdminThemeSettings()" value="N.S. DENTAL CARE" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Clinic Contact Line</label>
-                                    <input type="text" id="adm_brand_contact" onchange="applyAdminThemeSettings()" value="Santosh Nagar, Edi Bazar, Hyderabad | 📞 +91 8978883007" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- MEDIA & REVIEWS -->
-                        <div class="grid sm:grid-cols-2 gap-4 text-xs">
-                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                                    <i data-lucide="image" class="w-4 h-4 text-red-500"></i> Photo Gallery Manager
-                                </h3>
-                                <div class="flex gap-2">
-                                    <label class="flex-1 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-400 cursor-pointer">
-                                        Choose JPEG/PNG/PDF Image
-                                        <input type="file" accept="image/jpeg,image/png,application/pdf" onchange="uploadClinicPhotoFile(event)" class="hidden">
-                                    </label>
-                                </div>
-                                <div id="adminGalleryPreview" class="grid grid-cols-3 gap-2 pt-2"></div>
-                            </div>
-
-                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                                <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Google Reviews Manager
-                                </h3>
-                                <input type="text" id="adm_rev_author" placeholder="Patient Name" class="w-full bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
-                                <textarea id="adm_rev_text" rows="2" placeholder="Review Text" class="w-full bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white"></textarea>
-                                <button onclick="addReviewAdmin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
-                                    Add Review
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- AUDIT & BACKUPS -->
+                        <!-- AUDIT LOGS & BACKUPS -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
-                                    <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> System Audit Log Trail
+                                    <i data-lucide="activity" class="w-4 h-4 text-red-500"></i> System Audit Trail
                                 </h3>
                                 <button onclick="clearAuditLogs()" class="text-[10px] text-rose-400 hover:underline">Clear Logs</button>
                             </div>
                             <div id="adminAuditLogs" class="bg-slate-950 p-3 rounded-xl h-40 overflow-y-auto space-y-1 font-mono text-[10px] text-slate-400"></div>
                         </div>
 
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="database" class="w-4 h-4"></i> Database Backup & Restoration
-                            </h3>
-                            <div class="flex flex-wrap gap-3">
-                                <button onclick="downloadExcelBackup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
-                                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Download Excel (.CSV) Backup
-                                </button>
-                                <button onclick="downloadJSONBackup()" class="bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
-                                    <i data-lucide="download" class="w-4 h-4"></i> Download JSON Backup
-                                </button>
-                                <label class="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer flex items-center gap-1.5">
-                                    <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i> Restore JSON
-                                    <input type="file" accept=".json" onchange="restoreJSONBackup(event)" class="hidden">
-                                </label>
-                            </div>
-                        </div>
-
                         <div class="bg-rose-950/30 border border-rose-900/50 p-5 rounded-2xl space-y-3">
                             <h3 class="text-sm font-bold text-rose-400 uppercase flex items-center gap-2">
-                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Factory Hard Reset
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> System Hard Reset
                             </h3>
-                            <button onclick="resetSystemData()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset System Data</button>
+                            <button onclick="resetSystemData()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset All Clinic Data</button>
                         </div>
                     </div>
 
@@ -1207,202 +867,59 @@
             </div>
         </section>
 
-        <!-- LAB & CROWN ORDER MODIFICATION / FILE EDIT MODAL -->
-        <div id="editLabOrderModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeEditLabOrderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <!-- ADD INSTALLMENT / PAYMENT COLLECTION MODAL -->
+        <div id="addPaymentModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeAddPaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
                     <i data-lucide="x"></i>
                 </button>
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <div>
-                        <span class="text-[10px] text-purple-400 font-mono uppercase font-bold">Lab Asset Modifier</span>
+                        <span class="text-[10px] text-emerald-400 font-mono uppercase font-bold">New Payment Collector</span>
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="edit-3" class="text-purple-400 w-4 h-4"></i> Edit Lab & Crown Order File
+                            <i data-lucide="indian-rupee" class="text-emerald-400 w-4 h-4"></i> Add Payment Installment
                         </h3>
                     </div>
-                    <span id="lab_edit_id_badge" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">LAB-101</span>
+                    <span id="pay_rec_badge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono px-2 py-0.5 rounded font-bold">REC-1001</span>
                 </div>
-                <form onsubmit="handleSaveLabOrderEdit(event)" class="space-y-3 text-xs">
-                    <input type="hidden" id="lab_edit_target_id">
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Patient Full Name</label>
-                            <input type="text" id="lab_edit_pname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Tooth Quadrant / #</label>
-                            <input type="text" id="lab_edit_tooth" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
+                <form onsubmit="handleAddPaymentSubmit(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="pay_target_recid">
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Patient Name</label>
+                        <input type="text" id="pay_pname" readonly class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-400">
                     </div>
-                    <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
                         <div>
-                            <label class="block text-slate-400 uppercase mb-1">Crown Material</label>
-                            <input type="text" id="lab_edit_material" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                            <span class="text-[10px] text-slate-400 uppercase">Total Treatment Fee</span>
+                            <p id="pay_total_disp" class="text-sm font-bold text-white">₹0</p>
                         </div>
                         <div>
-                            <label class="block text-slate-400 uppercase mb-1">Lab Partner Name</label>
-                            <input type="text" id="lab_edit_labname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Impression Date</label>
-                            <input type="date" id="lab_edit_date" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Production Status</label>
-                            <select id="lab_edit_status" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                <option value="Impression Taken">Impression Taken</option>
-                                <option value="In Lab Production">In Lab Production</option>
-                                <option value="Delivered & Fitted">Delivered & Fitted</option>
-                            </select>
+                            <span class="text-[10px] text-amber-400 uppercase">Current Pending Due</span>
+                            <p id="pay_due_disp" class="text-sm font-bold text-amber-400">₹0</p>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-slate-400 uppercase mb-1">Order Notes / Shade Details</label>
-                        <textarea id="lab_edit_notes" rows="2" placeholder="A2 Shade, Translucent Zirconia..." class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
+                        <label class="block text-slate-400 uppercase mb-1">New Payment Amount (₹) *</label>
+                        <input type="number" id="pay_amount_input" required placeholder="Enter amount paid" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-bold text-sm">
                     </div>
-
-                    <!-- IMPRESSION FILE ATTACHMENT MODIFIER -->
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                        <label class="block uppercase text-purple-400 font-bold">Replace / Upload Impression Scan (JPEG/PNG/PDF):</label>
-                        <input type="file" id="lab_edit_file_input" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl text-slate-300 text-xs">
-                        <span id="lab_edit_current_file_badge" class="text-[10px] text-emerald-400 font-mono block"></span>
-                    </div>
-
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="closeEditLabOrderModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
-                        <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-xl">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- MASTER EDITING MODAL -->
-        <div id="masterEditModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeMasterEditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                    <i data-lucide="x"></i>
-                </button>
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <div>
-                        <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Authorized Editor</span>
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="edit-3" class="text-red-500 w-4 h-4"></i> Edit Patient Record Details
-                        </h3>
+                        <label class="block text-slate-400 uppercase mb-1">Payment Method Mode *</label>
+                        <select id="pay_mode_select" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                            <option value="Cash">Cash Payment</option>
+                            <option value="UPI (PhonePe/GPay)">UPI (PhonePe / GPay / Paytm)</option>
+                            <option value="Debit/Credit Card">Debit / Credit Card</option>
+                            <option value="Bank Transfer/NetBanking">Bank Net Banking</option>
+                        </select>
                     </div>
-                    <span id="med_pid_badge" class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">PAT-1001</span>
-                </div>
-                <form onsubmit="handleMasterEditSubmit(event)" class="space-y-3 text-xs">
-                    <input type="hidden" id="med_target_pid">
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Patient Full Name</label>
-                            <input type="text" id="med_name" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Mobile # (WhatsApp)</label>
-                            <input type="tel" id="med_phone" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Age / Gender</label>
-                            <input type="text" id="med_age_gender" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Token #</label>
-                            <input type="text" id="med_token" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Attending Doctor</label>
-                            <select id="med_doctor" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></select>
-                        </div>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                        <span class="text-amber-400 font-bold uppercase text-[10px]">Medical Vitals & Risk Override</span>
-                        <div class="grid sm:grid-cols-3 gap-2">
-                            <input type="text" id="med_bp" placeholder="BP (e.g. 120/80)" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
-                            <input type="text" id="med_sugar" placeholder="Sugar (e.g. 140 mg/dL)" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
-                            <select id="med_risk" class="bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded text-white">
-                                <option value="None">No Major Risks</option>
-                                <option value="Diabetic">Diabetic</option>
-                                <option value="Hypertension">Hypertension</option>
-                                <option value="Penicillin Allergy">Penicillin Allergy</option>
-                                <option value="Cardiac Patient">Cardiac Patient</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Chief Issue / Purpose</label>
-                            <input type="text" id="med_reason" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Next Follow-Up Date</label>
-                            <input type="date" id="med_next_visit" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Total Fee (₹)</label>
-                            <input type="number" id="med_total_cost" required class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Amount Paid (₹)</label>
-                            <input type="number" id="med_paid_amount" required class="w-full bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Payment Date & Time</label>
+                        <input type="text" id="pay_timestamp" readonly class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-400 font-mono">
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="closeMasterEditModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
-                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-xl">Save All Changes</button>
+                        <button type="button" onclick="closeAddPaymentModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Payment Entry</button>
                     </div>
                 </form>
-            </div>
-        </div>
-
-        <!-- DAY-WISE AUDIT MODAL -->
-        <div id="dayAuditModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-2xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeDayWiseAuditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                    <i data-lucide="x"></i>
-                </button>
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <div>
-                        <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">CA & Staff Reconciliation</span>
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="file-check" class="text-purple-400 w-4 h-4"></i> Daily Accounts & Patient Summary Verification
-                        </h3>
-                    </div>
-                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-24</span>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-3 text-xs">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Total Patients Today</span>
-                        <p id="aud_pcount" class="text-lg font-black text-white">0</p>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Collected Cash/UPI</span>
-                        <p id="aud_rev" class="text-lg font-black text-emerald-400">₹0</p>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Pending Due Balance</span>
-                        <p id="aud_due" class="text-lg font-black text-amber-400">₹0</p>
-                    </div>
-                </div>
-
-                <div class="space-y-2 text-xs">
-                    <h4 class="font-bold text-slate-300 uppercase">Today's Patient Breakup Log:</h4>
-                    <div id="auditBreakupList" class="bg-slate-950 p-3 rounded-xl border border-slate-800 max-h-48 overflow-y-auto space-y-1.5 font-mono text-[11px]"></div>
-                </div>
-
-                <div class="flex justify-between items-center border-t border-slate-800 pt-3">
-                    <button onclick="markDayAuditVerified()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Lock & Verify Day Audit (Staff / CA)
-                    </button>
-                    <button onclick="closeDayWiseAuditModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Close Summary</button>
-                </div>
             </div>
         </div>
 
@@ -1442,13 +959,6 @@
                     <span class="text-xs font-bold text-red-700 uppercase">Interactive 32-Tooth Charting</span>
                     <p class="text-[11px] text-slate-500">Click individual teeth to toggle selection for diagnosis:</p>
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
-                </div>
-
-                <div class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
-                    <span class="font-bold text-slate-700">Preset Rx Kits:</span>
-                    <button onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded">RCT Kit</button>
-                    <button onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded">Extraction Kit</button>
-                    <button onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">Scaling/Cleaning</button>
                 </div>
 
                 <div class="space-y-3 text-xs">
@@ -1502,36 +1012,28 @@
                     </div>
                     <div class="text-right">
                         <p><strong>Receipt Date:</strong> <span id="rc_date">2026-07-24</span></p>
-                        <p><strong>Payment Mode:</strong> <span id="rc_mode" class="font-bold text-emerald-700">UPI / Cash</span></p>
+                        <p><strong>Latest Mode:</strong> <span id="rc_mode" class="font-bold text-emerald-700">UPI / Cash</span></p>
                     </div>
                 </div>
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead>
-                        <tr class="bg-red-700 text-white uppercase">
-                            <th class="p-2">Treatment / Clinical Service Description</th>
-                            <th class="p-2 text-right">Amount (₹)</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y border-b">
-                        <tr>
-                            <td id="rc_purpose" class="p-2 font-medium">Root Canal Treatment & Crown Fitting</td>
-                            <td id="rc_total" class="p-2 text-right font-bold">₹5,000</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="flex justify-between items-end text-xs pt-2">
+                
+                <!-- ITEMIZED PAYMENT HISTORY LOG INSIDE RECEIPT -->
+                <div class="space-y-1 text-xs">
+                    <span class="font-bold text-slate-800 uppercase text-[10px]">Transaction & Installment Breakdown:</span>
+                    <div id="rc_payment_history_box" class="bg-slate-50 p-2.5 rounded border border-slate-200 max-h-32 overflow-y-auto space-y-1 font-mono text-[11px]"></div>
+                </div>
+
+                <div class="flex justify-between items-end text-xs pt-2 border-t">
                     <div>
                         <p class="text-[10px] text-slate-500">Authorized Hospital Seal & Signature</p>
                         <p class="font-bold text-slate-800 mt-4">N.S. Dental Care Management</p>
                     </div>
                     <div class="text-right space-y-0.5">
                         <p><strong>Total Treatment Fee:</strong> <span id="rc_sum_total">₹5,000</span></p>
-                        <p class="text-emerald-700 font-bold"><strong>Amount Received:</strong> <span id="rc_sum_paid">₹5,000</span></p>
-                        <p class="text-amber-700 font-bold"><strong>Pending Due Balance:</strong> <span id="rc_sum_due">₹0</span></p>
+                        <p class="text-emerald-700 font-bold"><strong>Total Paid Amount:</strong> <span id="rc_sum_paid">₹5,000</span></p>
+                        <p class="text-amber-700 font-bold"><strong>Remaining Balance Due:</strong> <span id="rc_sum_due">₹0</span></p>
                     </div>
                 </div>
-                <div class="no-print flex justify-between items-center pt-3 border-t">
-                    <button id="rc_edit_btn" onclick="openMasterEditModalFromReceipt()" class="bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-xs">Edit Ledger Charges</button>
+                <div class="no-print flex justify-end gap-2 pt-3 border-t">
                     <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print / Download Receipt</button>
                 </div>
             </div>

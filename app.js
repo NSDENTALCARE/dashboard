@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// 1. INDEXEDB LOCAL STORAGE ENGINE
+// 1. INDEXEDB HIGH-CAPACITY STORAGE ENGINE WITH CROSS-DEVICE AUTO-SYNC
 // ==========================================================================
 class ClinicStorageEngine {
     constructor() {
@@ -75,7 +75,7 @@ class ClinicStorageEngine {
 
 const storageEngine = new ClinicStorageEngine();
 
-// REAL-TIME BROADCAST CHANNEL FOR CROSS-DEVICE & TAB SYNC
+// REAL-TIME BROADCAST CHANNEL FOR MULTI-TAB & CROSS-DEVICE SYNC
 const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sync_channel") : null;
 
 function notifySyncBroadcast() {
@@ -146,7 +146,9 @@ async function initApp() {
     syncAdminEmailInputs();
     renderCalendar();
     fetchDeviceAndIPDetails();
+    updateStorageMeter();
 
+    // AUTO-POLLING HEARTBEAT FOR CROSS-DEVICE SYNCHRONIZATION
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -175,7 +177,7 @@ async function loadStateFromIndexedDB() {
         { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
     ];
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Cross-Device Sync." }];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Multi-Device Sync." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
@@ -184,7 +186,10 @@ async function loadStateFromIndexedDB() {
 
     allReviews = await storageEngine.getItem('ns_reviews') || [
         { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" }
+        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
+        { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
+        { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain!" },
+        { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar." }
     ];
 
     patients = await storageEngine.getItem('ns_patients') || [
@@ -240,6 +245,24 @@ function refreshAllUIViews() {
     if (currentSession && currentSession.role === 'admin') {
         renderAdminUsers();
         renderAuditLogs();
+    }
+}
+
+async function updateStorageMeter() {
+    const txt = document.getElementById('storage_usage_text');
+    const bar = document.getElementById('storage_usage_bar');
+
+    if (navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+        const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
+        const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
+
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
+        if (bar) {
+            bar.style.width = `${Math.max(pct, 2)}%`;
+            bar.className = "h-full rounded-full transition-all bg-emerald-500";
+        }
     }
 }
 
@@ -304,7 +327,7 @@ function updateMetricCards() {
 async function fetchDeviceAndIPDetails() {
     const ua = navigator.userAgent;
     let deviceName = "Desktop Browser";
-    let osName = "Windows / Linux";
+    let osName = "Windows OS";
 
     if (/Mobi|Android|iPhone|iPad/i.test(ua)) {
         deviceName = /iPhone/i.test(ua) ? "Apple iPhone" : /iPad/i.test(ua) ? "Apple iPad" : "Android Mobile Device";
@@ -564,6 +587,16 @@ function closeReceiptModal() {
     document.getElementById('receiptModal').classList.remove('flex');
 }
 
+function openMasterEditModalFromReceipt() {
+    if(activeReceiptId) {
+        const item = ledgers.find(l => l.id === activeReceiptId);
+        if(item) {
+            closeReceiptModal();
+            openMasterEditModal(item.patientId);
+        }
+    }
+}
+
 function openAddPaymentModal(recId) {
     const item = ledgers.find(l => l.id === recId);
     if(!item) return;
@@ -639,9 +672,19 @@ function renderLedgers() {
                 <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs font-bold">Receipt</button>
                 ${l.dueAmount > 0 ? `<button onclick="openAddPaymentModal('${l.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold shadow">+ Collect Due</button>` : ''}
                 <button onclick="openMasterEditModal('${l.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs font-bold">Edit</button>
+                <button onclick="deleteLedgerRecord('${l.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-xs">Delete</button>
             </td>
         </tr>
     `).join('');
+}
+
+async function deleteLedgerRecord(id) {
+    if(confirm("Are you sure you want to delete this receipt ledger?")) {
+        ledgers = ledgers.filter(l => l.id !== id);
+        await storageEngine.setItem('ns_ledgers', ledgers);
+        refreshAllUIViews();
+        logAction(`Deleted ledger receipt ${id}`);
+    }
 }
 
 function calculateAdminStats() {
@@ -845,6 +888,35 @@ async function handleManualPatientUpload(e) {
     }
 }
 
+function handleManualTokenAssignSubmit() {
+    const pid = document.getElementById('manual_token_pid').value.trim();
+    const tokenVal = document.getElementById('manual_token_val').value.trim();
+
+    if(!pid || !tokenVal) {
+        alert("Please enter Patient ID/Phone and Token Number!");
+        return;
+    }
+
+    const appt = appointments.find(a => (a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid) && a.date === currentLiveDateStr) 
+              || appointments.find(a => a.patientId.toLowerCase() === pid.toLowerCase() || a.phone === pid);
+
+    if(appt) {
+        appt.token = tokenVal;
+        appt.modifiedToday = true;
+        storageEngine.setItem('ns_appointments', appointments);
+        refreshAllUIViews();
+        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
+        document.getElementById('manual_token_pid').value = '';
+        document.getElementById('manual_token_val').value = '';
+    } else {
+        alert("Patient appointment record not found!");
+    }
+}
+
+// ==========================================================================
+// 11. PUBLIC SEARCH, VERIFICATION & EHR LOOKUP
+// ==========================================================================
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
     const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
@@ -910,6 +982,88 @@ function handleVerifiedPatientSearch(e) {
     }
 }
 
+function searchEHR() {
+    const input = document.getElementById('ehrSearchInput').value.trim().toLowerCase();
+    const container = document.getElementById('ehrHistoryContainer');
+
+    if(!input) return;
+
+    const matchedPatients = patients.filter(p => p.name.toLowerCase().includes(input) || p.patientId.toLowerCase().includes(input) || p.phone.includes(input));
+
+    if(matchedPatients.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500">No matching EHR patient histories found.</p>`;
+        return;
+    }
+
+    container.innerHTML = matchedPatients.map(p => {
+        const pAppts = appointments.filter(a => a.patientId === p.patientId);
+        const pLedgers = ledgers.filter(l => l.patientId === p.patientId);
+
+        return `
+            <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <div>
+                        <span class="text-xs text-red-500 font-mono font-bold">${p.patientId}</span>
+                        <h4 class="text-sm font-bold text-white">${p.name} (${p.ageGender || '34 / Male'})</h4>
+                        <p class="text-[11px] text-slate-400">Mobile: ${p.phone}</p>
+                    </div>
+                    <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-3 py-1 rounded-xl text-xs font-bold">Edit Full Profile</button>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <h5 class="font-bold text-slate-300 uppercase">Complete Visit History Timeline (${pAppts.length} Visits):</h5>
+                    ${pAppts.map(a => {
+                        const l = pLedgers.find(x => x.apptId === a.id) || {};
+                        return `
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-0.5">
+                                <div class="flex justify-between font-bold text-slate-200">
+                                    <span>${a.date} - ${a.reason}</span>
+                                    <span class="text-emerald-400">Total Fee: ₹${l.totalCost || 0}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Doctor: ${a.doctor} | Token: ${a.token || 'TK-01'} | Vitals: BP ${a.bp || '120/80'}</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function handlePublicBooking(e) {
+    e.preventDefault();
+    const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
+    const name = document.getElementById('bk_name').value;
+    const doctor = document.getElementById('bk_doctor').value;
+    const date = document.getElementById('bk_date').value;
+    const slot = document.getElementById('bk_slot').value;
+    const reason = document.getElementById('bk_reason').value;
+
+    let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
+    if(!patient) {
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender: "34 / Male" };
+        patients.push(patient);
+    } else {
+        patient.name = name;
+    }
+    await storageEngine.setItem('ns_patients', patients);
+
+    const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
+    const token = getNextTokenForDate(date);
+
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
+    await storageEngine.setItem('ns_appointments', appointments);
+
+    const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
+    ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, lastPaymentMode: "Cash", date });
+    await storageEngine.setItem('ns_ledgers', ledgers);
+
+    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
+    document.getElementById('bk_existing_badge').classList.add('hidden-section');
+    refreshAllUIViews();
+    navigateTo('public-home');
+}
+
 // PUBLIC NAVIGATION & ROUTINES
 function navigateTo(id) {
     document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden-section'));
@@ -959,6 +1113,22 @@ function handlePortalLogin(e) {
     } else {
         alert("Invalid login credentials or account pending approval!");
     }
+}
+
+async function handleStaffRegistration(e) {
+    e.preventDefault();
+    const role = document.getElementById('regRole').value;
+    const name = document.getElementById('regName').value;
+    const phone = document.getElementById('regPhone').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending" });
+    await storageEngine.setItem('ns_users', users);
+
+    logAction(`New ${role} registration request for ${name}.`);
+    alert("Registration request submitted!");
+    closePortalModal();
 }
 
 function openDashboard() {
@@ -1028,21 +1198,9 @@ function switchDashTab(tab) {
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
 }
 
-function toggleAdminPageLayout(sectionId, isVisible) {
-    const targetEl = document.getElementById(sectionId);
-    if(targetEl) {
-        if(isVisible) targetEl.classList.remove('hidden-section');
-        else targetEl.classList.add('hidden-section');
-        logAction(`Admin toggled ${sectionId}: ${isVisible ? 'VISIBLE' : 'HIDDEN'}`);
-    }
-}
-
-function togglePerm(key) {
-    const current = localStorage.getItem(`ns_${key}`) === 'true';
-    localStorage.setItem(`ns_${key}`, (!current).toString());
-    logAction(`Updated permission flag: ${key} = ${!current}`);
-}
-
+// ==========================================================================
+// 12. CLINICAL APPOINTMENTS, LAB ORDERS, PRESCRIPTION & ODONTOGRAM
+// ==========================================================================
 function renderAppointments() {
     document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
@@ -1054,6 +1212,7 @@ function renderAppointments() {
             </td>
             <td class="p-3">${a.doctor}</td>
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
+            <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
             <td class="p-3">
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
                     ${a.status}
@@ -1062,12 +1221,130 @@ function renderAppointments() {
             <td class="p-3 flex gap-1 flex-wrap">
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
+                <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">WhatsApp</button>
                 ${(currentSession && (currentSession.role === 'admin' || currentSession.role === 'doctor')) ? `<button onclick="deletePatientRecordATOZ('${a.patientId}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>` : ''}
             </td>
         </tr>
     `).join('');
 }
 
+function renderLabOrders() {
+    const tbl = document.getElementById('tblLabOrders');
+    if(tbl) {
+        tbl.innerHTML = labOrders.map(o => `
+            <tr class="hover:bg-slate-800/50">
+                <td class="p-2.5 font-bold text-white">${o.id}<br><span class="text-amber-400 font-normal text-[11px]">${o.patientName} (${o.patientId})</span></td>
+                <td class="p-2.5 font-mono text-amber-400 font-bold">${o.tooth}</td>
+                <td class="p-2.5 font-bold">${o.material}</td>
+                <td class="p-2.5">${o.labName}</td>
+                <td class="p-2.5">
+                    ${o.fileBase64 ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded">Scan Attached</span>` : `<span class="text-slate-500 text-[10px]">No Scan</span>`}
+                </td>
+                <td class="p-2.5"><span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold border border-sky-500/30">${o.status}</span></td>
+                <td class="p-2.5">
+                    <button onclick="editLabOrderDetails('${o.id}')" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-2.5 py-1 rounded text-[10px] shadow">Edit Order</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+function openLetterhead(id) {
+    activePrescriptionApptId = id;
+    const appt = appointments.find(a => a.id === id);
+    if(appt) {
+        document.getElementById('lh_pid').innerText = appt.patientId;
+        document.getElementById('lh_pname').innerText = appt.name;
+        document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
+        document.getElementById('lh_issue').innerText = appt.reason;
+        document.getElementById('lh_date').innerText = new Date().toLocaleDateString();
+        document.getElementById('lh_doctor').innerText = appt.doctor;
+        document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+
+        document.getElementById('letterheadModal').classList.remove('hidden');
+        document.getElementById('letterheadModal').classList.add('flex');
+    }
+}
+
+function closeLetterheadModal() {
+    document.getElementById('letterheadModal').classList.add('hidden');
+    document.getElementById('letterheadModal').classList.remove('flex');
+}
+
+async function savePrescriptionAndSync() {
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+    if(appt) {
+        const notes = document.getElementById('lh_notes').value;
+        const rx = document.getElementById('lh_rx').value;
+        const nextVisit = document.getElementById('lh_next_visit').value;
+
+        if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
+        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: new Date().toLocaleDateString(), diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
+
+        await storageEngine.setItem('ns_records', medicalRecords);
+        appt.nextVisit = nextVisit;
+        appt.modifiedToday = true;
+        await storageEngine.setItem('ns_appointments', appointments);
+
+        logAction(`Prescription saved for ${appt.patientId}.`);
+        alert("Prescription saved & Next visit synced!");
+        refreshAllUIViews();
+    }
+}
+
+function sendPrescriptionWhatsApp() {
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+    if(appt) {
+        const notes = document.getElementById('lh_notes').value;
+        const rx = document.getElementById('lh_rx').value;
+        const nextVisit = document.getElementById('lh_next_visit').value;
+
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings:* ${notes}%0A*Rx / Medications:*%0A${rx}%0A%0A*Next Follow-Up Date:* ${nextVisit}`;
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
+    }
+}
+
+function applyRxPreset(type) {
+    const rxArea = document.getElementById('lh_rx');
+    if(!rxArea) return;
+
+    if(type === 'rct') {
+        rxArea.value = "1. Tab Amoxicillin 500mg | 1-0-1 | After Food (5 Days)\n2. Tab Zero-P (Aceclofenac + Paracetamol) | 1-0-1 | After Food (3 Days)\n3. Cap Pantoprazole 40mg | 1-0-0 | Before Breakfast (5 Days)";
+    } else if(type === 'extraction') {
+        rxArea.value = "1. Tab Augmentin 625mg | 1-0-1 | After Food (5 Days)\n2. Tab Ketorol DT | 1-0-1 | Dissolve in water (3 Days)\n3. Chlorhexidine Mouthwash | Rinse 2 times daily";
+    } else if(type === 'scaling') {
+        rxArea.value = "1. Gum Paint (Tannic Acid) | Apply on gums twice daily\n2. Chlorhexidine 0.2% Mouthwash | Rinse 10ml twice daily for 7 days";
+    }
+    logAction(`Doctor applied Rx Speed-Dial preset: ${type.toUpperCase()}`);
+}
+
+function renderOdontogram() {
+    const grid = document.getElementById('odontogramGrid');
+    if(!grid) return;
+    let html = '';
+    for(let i = 1; i <= 32; i++) {
+        html += `<button type="button" onclick="toggleToothSelection(${i})" id="toothBtn_${i}" class="border border-slate-300 bg-white text-slate-900 px-2 py-1 rounded font-bold hover:bg-red-100">#${i}</button>`;
+    }
+    grid.innerHTML = html;
+}
+
+function toggleToothSelection(toothNum) {
+    const btn = document.getElementById(`toothBtn_${toothNum}`);
+    if(selectedTeeth.includes(toothNum)) {
+        selectedTeeth = selectedTeeth.filter(t => t !== toothNum);
+        btn.classList.remove('tooth-btn-selected');
+    } else {
+        selectedTeeth.push(toothNum);
+        btn.classList.add('tooth-btn-selected');
+    }
+
+    document.getElementById('lh_notes').value = `Teeth Selected: #${selectedTeeth.join(', #')} | Procedure Planned: `;
+}
+
+// ==========================================================================
+// 13. PUBLIC QUEUE, REVIEWS, GALLERY & APPROVALS
+// ==========================================================================
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
     const todays = appointments.filter(a => a.date === currentLiveDateStr);
@@ -1126,6 +1403,21 @@ function renderGallery() {
     }
 }
 
+async function uploadClinicPhotoFile(e) {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+        galleryPhotos.unshift(evt.target.result);
+        await storageEngine.setItem('ns_gallery', galleryPhotos);
+        renderGallery();
+        logAction("Staff uploaded photo into gallery.");
+        alert("Photo Uploaded!");
+    };
+    reader.readAsDataURL(file);
+}
+
 function initShufflingReviews10Sec() {
     const container = document.getElementById('shufflingReviewsContainer');
     let currentIndex = 0;
@@ -1157,6 +1449,53 @@ function initShufflingReviews10Sec() {
     setInterval(shuffle10, 10000);
 }
 
+function renderApprovals() {
+    const tbl = document.getElementById('tblApprovals');
+    const pending = users.filter(u => u.status === 'Pending');
+
+    if(tbl) {
+        if(pending.length === 0) {
+            tbl.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No pending staff registrations.</td></tr>`;
+        } else {
+            tbl.innerHTML = pending.map(u => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="p-3 font-bold text-white">${u.name}</td>
+                    <td class="p-3 uppercase font-bold text-amber-400">${u.role}</td>
+                    <td class="p-3 font-mono text-slate-300">${u.phone}<br><span class="text-[10px] text-slate-500">${u.email}</span></td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="approveUserRegistration(${u.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded text-xs shadow">Approve</button>
+                        <button onclick="rejectUserRegistration(${u.id})" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1 rounded text-xs">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+async function approveUserRegistration(id) {
+    const u = users.find(x => x.id === id);
+    if(u) {
+        u.status = "Approved";
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        renderAdminUsers();
+        logAction(`Approved staff registration for ${u.name}`);
+        alert(`User ${u.name} approved!`);
+    }
+}
+
+async function rejectUserRegistration(id) {
+    if(confirm("Reject this staff account request?")) {
+        users = users.filter(u => u.id !== id);
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        logAction(`Rejected staff registration #${id}`);
+    }
+}
+
+// ==========================================================================
+// 14. EMERGENCY FIXES, RECONCILIATION & ADMIN UTILITIES
+// ==========================================================================
 function autoCheckExistingPatient(val) {
     const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
     const p = patients.find(x => x.phone === clean || x.patientId.toLowerCase() === clean.toLowerCase());
@@ -1207,6 +1546,16 @@ async function checkPublicTicker() {
     if(textEl) textEl.innerText = saved || "Dental consultation fees and appointment slots updated with effect from 1 July 2026. Prior booking mandatory for evening Sunday procedures.";
 }
 
+async function updateLiveTickerAdmin() {
+    const inputEl = document.getElementById('adm_ticker_input');
+    if(inputEl && inputEl.value) {
+        await storageEngine.setItem('ns_ticker_text', inputEl.value);
+        checkPublicTicker();
+        logAction(`Admin updated marquee ticker: "${inputEl.value}"`);
+        alert("Top Ticker Updated!");
+    }
+}
+
 function syncAdminEmailInputs() {
     const elHdr = document.getElementById('disp_hdr_email');
     if(elHdr) elHdr.innerText = hospitalEmail;
@@ -1219,6 +1568,19 @@ function triggerWhatsAppDoctorBriefing() {
         msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Slot: ${a.slot}%0A   BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'}%0A%0A`;
     });
     window.open(`https://wa.me/918978883007?text=${msg}`, '_blank');
+}
+
+function sendDoctorDailyBriefingEmail() {
+    const todays = appointments.filter(a => a.date === currentLiveDateStr);
+    let subject = `N.S. DENTAL CARE - Daily Schedule Briefing (${currentLiveDateStr})`;
+    let body = `N.S. DENTAL CARE DAILY CLINICAL SUMMARY (${currentLiveDateStr})\n\nTotal Patients Scheduled: ${todays.length}\n\n`;
+
+    todays.forEach((a, i) => {
+        body += `${i+1}. Token ${a.token || 'TK-01'} | ${a.name} (${a.patientId})\n   Slot: ${a.slot} | Doctor: ${a.doctor}\n   Issue: ${a.reason}\n\n`;
+    });
+
+    window.location.href = `mailto:${doctorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    logAction(`Daily briefing email sent to ${doctorEmail}`);
 }
 
 function downloadExcelBackup() {
@@ -1236,6 +1598,16 @@ function downloadExcelBackup() {
     a.click();
 }
 
+function downloadJSONBackup() {
+    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, users, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NS_Dental_Care_Backup_${currentLiveDateStr}.json`;
+    a.click();
+}
+
 async function resetDailyTokens() {
     if(confirm("Reset token numbers for today's queue starting from TK-01?")) {
         let todays = appointments.filter(a => a.date === currentLiveDateStr);
@@ -1247,6 +1619,214 @@ async function resetDailyTokens() {
         await storageEngine.setItem('ns_appointments', appointments);
         refreshAllUIViews();
         alert("Tokens reset to TK-01!");
+    }
+}
+
+function openDayWiseAuditModal() {
+    const todaysAppts = appointments.filter(a => a.date === currentLiveDateStr);
+    const todaysLedgers = ledgers.filter(l => l.date === currentLiveDateStr || l.date === undefined);
+
+    let totRev = todaysLedgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    let totDue = todaysLedgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
+
+    document.getElementById('audit_date_display').innerText = currentLiveDateStr;
+    document.getElementById('aud_pcount').innerText = todaysAppts.length;
+    document.getElementById('aud_rev').innerText = `₹${totRev.toLocaleString('en-IN')}`;
+    document.getElementById('aud_due').innerText = `₹${totDue.toLocaleString('en-IN')}`;
+
+    const listContainer = document.getElementById('auditBreakupList');
+    if(todaysAppts.length === 0) {
+        listContainer.innerHTML = `<p class="text-slate-500 italic">No visits logged for today.</p>`;
+    } else {
+        listContainer.innerHTML = todaysAppts.map((a, i) => {
+            const l = todaysLedgers.find(x => x.patientId === a.patientId) || {};
+            return `<div class="border-b border-slate-800 pb-1">${i+1}. <strong>${a.name}</strong> (${a.patientId}) - ${a.reason} | Fee: ₹${l.totalCost || 0} | Paid: ₹${l.paidAmount || 0} | Status: ${a.status}</div>`;
+        }).join('');
+    }
+
+    document.getElementById('dayAuditModal').classList.remove('hidden');
+    document.getElementById('dayAuditModal').classList.add('flex');
+}
+
+function closeDayWiseAuditModal() {
+    document.getElementById('dayAuditModal').classList.add('hidden');
+    document.getElementById('dayAuditModal').classList.remove('flex');
+}
+
+function markDayAuditVerified() {
+    logAction(`Verified day-wise audit summary for ${currentLiveDateStr}`);
+    alert(`Day Summary Locked & Verified!`);
+    closeDayWiseAuditModal();
+}
+
+function sendAppointmentWhatsAppLinks(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const pageUrl = window.location.href.split('#')[0];
+        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment/record has been updated!%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Doctor:* ${appt.doctor}%0A*Next Visit:* ${appt.nextVisit || appt.date}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}`;
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
+    }
+}
+
+async function deletePatientRecordATOZ(pid) {
+    if(confirm(`PERMANENTLY DELETE all patient data, medical records, and receipts for ${pid}?`)) {
+        patients = patients.filter(p => p.patientId !== pid);
+        appointments = appointments.filter(a => a.patientId !== pid);
+        ledgers = ledgers.filter(l => l.patientId !== pid);
+        delete medicalRecords[pid];
+
+        await storageEngine.setItem('ns_patients', patients);
+        await storageEngine.setItem('ns_appointments', appointments);
+        await storageEngine.setItem('ns_ledgers', ledgers);
+        await storageEngine.setItem('ns_records', medicalRecords);
+
+        refreshAllUIViews();
+        logAction(`Deleted patient ${pid}`);
+        alert("Patient purged permanently!");
+    }
+}
+
+async function openNewLabOrderModal() {
+    const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
+    const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
+    const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
+    const labName = prompt("Lab Partner Name:", "Apex Dental Lab");
+
+    if(pid && tooth) {
+        const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
+        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: currentLiveDateStr, status: "Impression Taken", notes: "Standard Order", fileBase64: null });
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        refreshAllUIViews();
+        logAction(`Lab order created for ${pid}`);
+    }
+}
+
+function editLabOrderDetails(orderId) {
+    const order = labOrders.find(o => o.id === orderId);
+    if(!order) return;
+
+    document.getElementById('lab_edit_target_id').value = order.id;
+    document.getElementById('lab_edit_id_badge').innerText = order.id;
+    document.getElementById('lab_edit_pname').value = order.patientName;
+    document.getElementById('lab_edit_tooth').value = order.tooth;
+    document.getElementById('lab_edit_material').value = order.material;
+    document.getElementById('lab_edit_labname').value = order.labName;
+    document.getElementById('lab_edit_date').value = order.date;
+    document.getElementById('lab_edit_status').value = order.status;
+    document.getElementById('lab_edit_notes').value = order.notes || '';
+
+    const fileBadge = document.getElementById('lab_edit_current_file_badge');
+    if(order.fileBase64) {
+        fileBadge.innerText = "✓ Custom Scan File Attached";
+    } else {
+        fileBadge.innerText = "No impression file uploaded yet.";
+    }
+
+    document.getElementById('editLabOrderModal').classList.remove('hidden');
+    document.getElementById('editLabOrderModal').classList.add('flex');
+}
+
+function closeEditLabOrderModal() {
+    document.getElementById('editLabOrderModal').classList.add('hidden');
+    document.getElementById('editLabOrderModal').classList.remove('flex');
+}
+
+async function handleSaveLabOrderEdit(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('lab_edit_target_id').value;
+    const order = labOrders.find(o => o.id === orderId);
+
+    if(!order) return;
+
+    order.patientName = document.getElementById('lab_edit_pname').value;
+    order.tooth = document.getElementById('lab_edit_tooth').value;
+    order.material = document.getElementById('lab_edit_material').value;
+    order.labName = document.getElementById('lab_edit_labname').value;
+    order.date = document.getElementById('lab_edit_date').value;
+    order.status = document.getElementById('lab_edit_status').value;
+    order.notes = document.getElementById('lab_edit_notes').value;
+
+    const fileInput = document.getElementById('lab_edit_file_input');
+
+    async function finishSave() {
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        refreshAllUIViews();
+        logAction(`Updated lab order details and impression file for ${order.id}`);
+        alert(`Lab Order ${order.id} Updated Successfully!`);
+        closeEditLabOrderModal();
+    }
+
+    if(fileInput && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+            order.fileBase64 = evt.target.result;
+            await finishSave();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        await finishSave();
+    }
+}
+
+async function adminFixMissingReceipts() {
+    let created = 0;
+    appointments.forEach(a => {
+        let l = ledgers.find(x => x.apptId === a.id);
+        if(!l) {
+            ledgers.push({ id: "REC-" + Math.floor(1000 + Math.random()*9000), apptId: a.id, patientId: a.patientId, patientName: a.name, purpose: a.reason || "Consultation", totalCost: 200, paidAmount: 200, dueAmount: 0, lastPaymentMode: "Cash", date: a.date });
+            created++;
+        }
+    });
+    await storageEngine.setItem('ns_ledgers', ledgers);
+    refreshAllUIViews();
+    alert(`Repaired ${created} receipts.`);
+}
+
+async function adminMergeDuplicatePatients() {
+    let uniquePatients = [];
+    let phoneMap = new Set();
+    patients.forEach(p => {
+        if(!phoneMap.has(p.phone)) {
+            phoneMap.add(p.phone);
+            uniquePatients.push(p);
+        }
+    });
+    patients = uniquePatients;
+    await storageEngine.setItem('ns_patients', patients);
+    refreshAllUIViews();
+    alert("Duplicates merged!");
+}
+
+async function adminPurgeBase64Xrays() {
+    if(confirm("Purge stored X-Ray binaries?")) {
+        Object.keys(medicalRecords).forEach(pid => {
+            medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
+        });
+        await storageEngine.setItem('ns_records', medicalRecords);
+        refreshAllUIViews();
+        alert("X-Ray binaries cleared.");
+    }
+}
+
+function adminForceLogoutAllSessions() {
+    currentSession = null;
+    logout();
+    alert("All sessions locked!");
+}
+
+function calculateRevenueSplit() {
+    const docPct = parseFloat(document.getElementById('adm_split_doc').value) || 40;
+    const totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    const docShare = (totalRev * docPct) / 100;
+    document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
+}
+
+async function clearAuditLogs() {
+    if(confirm("Clear audit logs?")) {
+        auditLogs = [];
+        await storageEngine.setItem('ns_logs', auditLogs);
+        renderAuditLogs();
     }
 }
 

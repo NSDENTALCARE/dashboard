@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// 1. HIGH-CAPACITY STORAGE ENGINE (IndexedDB Wrapper for Unlimited Data)
+// 1. INDEXEDB HIGH-CAPACITY LOCAL STORAGE ENGINE
 // ==========================================================================
 class ClinicStorageEngine {
     constructor() {
@@ -70,13 +70,12 @@ class ClinicStorageEngine {
 const storageEngine = new ClinicStorageEngine();
 
 // ==========================================================================
-// 2. GLOBAL APPLICATION STATE & DATA STRUCTURES
+// 2. GLOBAL CLINIC APPLICATION STATE
 // ==========================================================================
 let hospitalEmail = "info@nsdentalcare.com";
 let doctorEmail = "ayub@nsdentalcare.com";
 let doctors = [];
 let users = [];
-let passwordResetRequests = [];
 let auditLogs = [];
 let galleryPhotos = [];
 let allReviews = [];
@@ -98,7 +97,7 @@ let currentCalMonth = 6;
 let selectedCalendarDateStr = todayStr;
 
 // ==========================================================================
-// 3. INITIALIZATION & STATE LOADING
+// 3. SYSTEM INITIALIZATION & DATA LOADING
 // ==========================================================================
 async function initApp() {
     await storageEngine.init();
@@ -132,7 +131,6 @@ async function loadStateFromIndexedDB() {
         { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
     ];
 
-    passwordResetRequests = await storageEngine.getItem('ns_pwd_resets') || [];
     auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Multi-Mode Payments Engine." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
@@ -143,9 +141,9 @@ async function loadStateFromIndexedDB() {
     allReviews = await storageEngine.getItem('ns_reviews') || [
         { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
         { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
-        { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
-        { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain. Highly recommended!" },
-        { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar area." }
+        { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly doctors. Best dental clinic in Edi Bazar." },
+        { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain!" },
+        { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar." }
     ];
 
     patients = await storageEngine.getItem('ns_patients') || [
@@ -195,7 +193,7 @@ async function updateStorageMeter() {
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
         const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
 
-        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Active)`;
         if (bar) {
             bar.style.width = `${Math.max(pct, 2)}%`;
             bar.className = "h-full rounded-full transition-all bg-emerald-500";
@@ -219,9 +217,162 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
+// POPULATE ALL DOCTOR DROPDOWNS INCLUDING MASTER EDIT MODAL
+function renderDoctorOptions() {
+    const opts = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+    if(document.getElementById('bk_doctor')) document.getElementById('bk_doctor').innerHTML = opts;
+    if(document.getElementById('man_pdoctor')) document.getElementById('man_pdoctor').innerHTML = opts;
+    if(document.getElementById('med_doctor')) document.getElementById('med_doctor').innerHTML = opts;
+}
+
 // ==========================================================================
-// 4. MULTI-MODE PAYMENT & LEDGER COLLECTION UTILITIES
+// 4. MASTER EDIT & RECORD MODIFICATION
 // ==========================================================================
+function openMasterEditModal(pid) {
+    renderDoctorOptions();
+
+    const p = patients.find(x => x.patientId === pid);
+    const appt = appointments.find(a => a.patientId === pid) || {};
+    const ledger = ledgers.find(l => l.patientId === pid) || {};
+
+    if(!p) return;
+
+    document.getElementById('med_target_pid').value = pid;
+    document.getElementById('med_pid_badge').innerText = pid;
+    document.getElementById('med_name').value = p.name;
+    document.getElementById('med_phone').value = p.phone;
+    document.getElementById('med_age_gender').value = p.ageGender || "34 / Male";
+    document.getElementById('med_token').value = appt.token || "TK-01";
+    
+    const docSelect = document.getElementById('med_doctor');
+    if(docSelect) {
+        docSelect.value = appt.doctor || doctors[0].name;
+    }
+
+    document.getElementById('med_bp').value = appt.bp || "120/80";
+    document.getElementById('med_sugar').value = appt.sugar || "140 mg/dL";
+    document.getElementById('med_risk').value = appt.risk || "None";
+    document.getElementById('med_reason').value = appt.reason || "Consultation";
+    document.getElementById('med_next_visit').value = appt.nextVisit || todayStr;
+    document.getElementById('med_total_cost').value = ledger.totalCost || 0;
+    document.getElementById('med_paid_amount').value = ledger.paidAmount || 0;
+
+    document.getElementById('masterEditModal').classList.remove('hidden');
+    document.getElementById('masterEditModal').classList.add('flex');
+}
+
+function closeMasterEditModal() {
+    document.getElementById('masterEditModal').classList.add('hidden');
+    document.getElementById('masterEditModal').classList.remove('flex');
+}
+
+async function handleMasterEditSubmit(e) {
+    e.preventDefault();
+    const pid = document.getElementById('med_target_pid').value;
+    const p = patients.find(x => x.patientId === pid);
+    const appt = appointments.find(a => a.patientId === pid);
+    const ledger = ledgers.find(l => l.patientId === pid);
+
+    if(p) {
+        p.name = document.getElementById('med_name').value;
+        p.phone = document.getElementById('med_phone').value.replace(/[^0-9]/g, '');
+        p.ageGender = document.getElementById('med_age_gender').value;
+    }
+
+    if(appt) {
+        appt.name = p.name;
+        appt.phone = p.phone;
+        appt.ageGender = p.ageGender;
+        appt.token = document.getElementById('med_token').value;
+        appt.doctor = document.getElementById('med_doctor').value;
+        appt.bp = document.getElementById('med_bp').value;
+        appt.sugar = document.getElementById('med_sugar').value;
+        appt.risk = document.getElementById('med_risk').value;
+        appt.reason = document.getElementById('med_reason').value;
+        appt.nextVisit = document.getElementById('med_next_visit').value;
+        appt.modifiedToday = true;
+    }
+
+    if(ledger) {
+        ledger.patientName = p.name;
+        ledger.totalCost = parseFloat(document.getElementById('med_total_cost').value) || 0;
+        ledger.paidAmount = parseFloat(document.getElementById('med_paid_amount').value) || 0;
+        ledger.dueAmount = ledger.totalCost - ledger.paidAmount;
+    }
+
+    await storageEngine.setItem('ns_patients', patients);
+    await storageEngine.setItem('ns_appointments', appointments);
+    await storageEngine.setItem('ns_ledgers', ledgers);
+
+    renderAppointments();
+    renderLedgers();
+    renderPublicTokenQueue();
+    calculateAdminStats();
+    updateMetricCards();
+    renderCalendar();
+
+    logAction(`Advanced modal edit applied to patient ${pid}`);
+    alert("Patient Record Updated via Master Editor!");
+    closeMasterEditModal();
+}
+
+// ==========================================================================
+// 5. RECEIPT GENERATOR & INSTALLMENT COLLECTION
+// ==========================================================================
+function openReceiptModal(recId) {
+    activeReceiptId = recId;
+    let item = ledgers.find(l => l.id === recId);
+
+    if(!item) {
+        item = ledgers.find(l => l.patientId === recId) || ledgers[0];
+    }
+
+    if(item) {
+        document.getElementById('rc_num').innerText = item.id;
+        document.getElementById('rc_pid').innerText = item.patientId;
+        document.getElementById('rc_pname').innerText = item.patientName;
+        document.getElementById('rc_date').innerText = item.date || todayStr;
+        document.getElementById('rc_mode').innerText = item.lastPaymentMode || "Cash";
+        document.getElementById('rc_sum_total').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
+        document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount.toLocaleString('en-IN')}`;
+        document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
+
+        const historyBox = document.getElementById('rc_payment_history_box');
+        if(historyBox) {
+            if(item.paymentHistory && item.paymentHistory.length > 0) {
+                historyBox.innerHTML = item.paymentHistory.map((ph, idx) => `
+                    <div class="flex justify-between border-b border-slate-200 pb-0.5">
+                        <span>${idx+1}. ${ph.timestamp} (${ph.mode})</span>
+                        <strong class="text-emerald-700">₹${ph.amount}</strong>
+                    </div>
+                `).join('');
+            } else {
+                historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode || 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
+            }
+        }
+
+        document.getElementById('receiptModal').classList.remove('hidden');
+        document.getElementById('receiptModal').classList.add('flex');
+    } else {
+        alert("Receipt ledger entry not found!");
+    }
+}
+
+function closeReceiptModal() {
+    document.getElementById('receiptModal').classList.add('hidden');
+    document.getElementById('receiptModal').classList.remove('flex');
+}
+
+function openMasterEditModalFromReceipt() {
+    if(activeReceiptId) {
+        const item = ledgers.find(l => l.id === activeReceiptId);
+        if(item) {
+            closeReceiptModal();
+            openMasterEditModal(item.patientId);
+        }
+    }
+}
+
 function openAddPaymentModal(recId) {
     const item = ledgers.find(l => l.id === recId);
     if(!item) return;
@@ -316,59 +467,6 @@ async function deleteLedgerRecord(id) {
     }
 }
 
-function openReceiptModal(recId) {
-    activeReceiptId = recId;
-    const item = ledgers.find(l => l.id === recId) || ledgers[0];
-    if(item) {
-        document.getElementById('rc_num').innerText = item.id;
-        document.getElementById('rc_pid').innerText = item.patientId;
-        document.getElementById('rc_pname').innerText = item.patientName;
-        document.getElementById('rc_date').innerText = item.date || todayStr;
-        document.getElementById('rc_mode').innerText = item.lastPaymentMode || "Cash";
-        document.getElementById('rc_purpose').innerText = item.purpose;
-        document.getElementById('rc_total').innerText = `₹${item.totalCost}`;
-        document.getElementById('rc_sum_total').innerText = `₹${item.totalCost}`;
-        document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount}`;
-        document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount}`;
-
-        const historyBox = document.getElementById('rc_payment_history_box');
-        if(item.paymentHistory && item.paymentHistory.length > 0) {
-            historyBox.innerHTML = item.paymentHistory.map((ph, idx) => `
-                <div class="flex justify-between border-b border-slate-200 pb-0.5">
-                    <span>${idx+1}. ${ph.timestamp} (${ph.mode})</span>
-                    <strong class="text-emerald-700">₹${ph.amount}</strong>
-                </div>
-            `).join('');
-        } else {
-            historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode || 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
-        }
-
-        if(currentSession) {
-            document.getElementById('rc_edit_btn').classList.remove('hidden-section');
-        } else {
-            document.getElementById('rc_edit_btn').classList.add('hidden-section');
-        }
-
-        document.getElementById('receiptModal').classList.remove('hidden');
-        document.getElementById('receiptModal').classList.add('flex');
-    }
-}
-
-function closeReceiptModal() {
-    document.getElementById('receiptModal').classList.add('hidden');
-    document.getElementById('receiptModal').classList.remove('flex');
-}
-
-function openMasterEditModalFromReceipt() {
-    if(activeReceiptId) {
-        const item = ledgers.find(l => l.id === activeReceiptId);
-        if(item) {
-            closeReceiptModal();
-            openMasterEditModal(item.patientId);
-        }
-    }
-}
-
 function calculateAdminStats() {
     let totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
     let totalDue = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
@@ -397,7 +495,98 @@ function calculateAdminStats() {
 }
 
 // ==========================================================================
-// 5. MANUAL PATIENT UPLOADER & RECEPTION INPUTS
+// 6. INTERACTIVE CALENDAR WITH DIRECT PATIENT LINKING & SCHEDULING
+// ==========================================================================
+function renderCalendar() {
+    const grid = document.getElementById('calendarMonthlyGrid');
+    const title = document.getElementById('cal_month_title');
+    if(!grid) return;
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    if(title) title.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
+
+    const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
+    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+
+    let html = '';
+
+    for(let e = 0; e < firstDay; e++) html += `<div class="p-2 border border-slate-900/40 bg-slate-950/20 rounded-xl"></div>`;
+
+    for(let d = 1; d <= daysInMonth; d++) {
+        const mStr = (currentCalMonth + 1) < 10 ? '0' + (currentCalMonth + 1) : '' + (currentCalMonth + 1);
+        const dStr = d < 10 ? '0' + d : '' + d;
+        const fullDateStr = `${currentCalYear}-${mStr}-${dStr}`;
+
+        const dayAppts = appointments.filter(a => a.date === fullDateStr);
+        const isToday = fullDateStr === todayStr;
+        const isSelected = fullDateStr === selectedCalendarDateStr;
+
+        html += `
+            <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
+                <div class="flex justify-between items-center text-[10px] font-mono">
+                    <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>
+                    ${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    grid.innerHTML = html;
+    renderSelectedCalendarAgenda();
+}
+
+function selectCalendarDate(dateStr) {
+    selectedCalendarDateStr = dateStr;
+    renderCalendar();
+}
+
+function renderSelectedCalendarAgenda() {
+    const container = document.getElementById('calendarAgendaList');
+    const heading = document.getElementById('cal_selected_date_heading');
+    const badge = document.getElementById('cal_selected_count');
+
+    if(!container) return;
+
+    if(heading) heading.innerText = `Visits Scheduled for ${selectedCalendarDateStr}`;
+
+    const dayAppts = appointments.filter(a => a.date === selectedCalendarDateStr);
+    if(badge) badge.innerText = `${dayAppts.length} Appointments`;
+
+    if(dayAppts.length === 0) {
+        container.innerHTML = `<p class="text-slate-500 italic text-xs">No patient visits scheduled for this date. Click "+ Add/Link Visit on Selected Date" above to add one.</p>`;
+    } else {
+        container.innerHTML = dayAppts.map(a => `
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-400 font-mono font-bold">${a.token || 'TK-01'}</span>
+                        <strong class="text-white">${a.name} (${a.patientId})</strong>
+                    </div>
+                    <p class="text-slate-400 text-[11px]">Doctor: ${a.doctor} | Purpose: ${a.reason} | Slot: ${a.slot}</p>
+                </div>
+                <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1 rounded-xl font-bold text-xs shadow">
+                    Modify Record
+                </button>
+            </div>
+        `).join('');
+    }
+}
+
+function openCalendarQuickAddModal() {
+    switchDashTab('manualPatient');
+    document.getElementById('man_pdate').value = selectedCalendarDateStr;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function changeCalendarMonth(delta) {
+    currentCalMonth += delta;
+    if(currentCalMonth < 0) { currentCalMonth = 11; currentCalYear--; }
+    else if(currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
+    renderCalendar();
+}
+
+// ==========================================================================
+// 7. MANUAL PATIENT UPLOADER & RECEPTION OPERATIONS
 // ==========================================================================
 async function handleManualPatientUpload(e) {
     e.preventDefault();
@@ -513,7 +702,7 @@ function handleManualTokenAssignSubmit() {
 }
 
 // ==========================================================================
-// 6. PATIENT VERIFICATION & PUBLIC TIMELINE LOOKUP
+// 8. PUBLIC SEARCH, VERIFICATION & EHR LOOKUP
 // ==========================================================================
 function handleVerifiedPatientSearch(e) {
     e.preventDefault();
@@ -526,7 +715,6 @@ function handleVerifiedPatientSearch(e) {
 
     if(matchedPatient) {
         const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
-        const recs = medicalRecords[matchedPatient.patientId] || [];
         const pLedgers = ledgers.filter(l => l.patientId === matchedPatient.patientId);
 
         container.innerHTML = `
@@ -555,24 +743,6 @@ function handleVerifiedPatientSearch(e) {
                             </div>
                         `;
                     }).join('')}
-                </div>
-            </div>
-
-            <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-emerald-400 uppercase">Prescription & X-Ray Downloads:</h4>
-                <div class="space-y-2">
-                    ${recs.length > 0 ? recs.map(r => `
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-white">Date: ${r.date} | Dr. ${r.doctor}</p>
-                                <p class="text-slate-400 text-[11px]">Findings: ${r.diagnosis}</p>
-                                ${r.xrayBase64 ? `<span class="text-amber-400 font-bold text-[10px] block">📷 Dental X-Ray Attachment Included</span>` : ''}
-                            </div>
-                            <button onclick="publicViewReadOnlyPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Rx
-                            </button>
-                        </div>
-                    `).join('') : '<p class="text-xs text-slate-500">No prescriptions found.</p>'}
                 </div>
             </div>
 
@@ -615,7 +785,6 @@ function searchEHR() {
     container.innerHTML = matchedPatients.map(p => {
         const pAppts = appointments.filter(a => a.patientId === p.patientId);
         const pLedgers = ledgers.filter(l => l.patientId === p.patientId);
-        const pRecs = medicalRecords[p.patientId] || [];
 
         return `
             <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3">
@@ -643,50 +812,9 @@ function searchEHR() {
                         `;
                     }).join('')}
                 </div>
-
-                ${pRecs.some(r => r.xrayBase64) ? `
-                    <div class="space-y-1 text-xs">
-                        <h5 class="font-bold text-amber-400 uppercase">Uploaded Patient Dental X-Rays:</h5>
-                        <div class="grid grid-cols-2 gap-2">
-                            ${pRecs.filter(r => r.xrayBase64).map(r => `
-                                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                                    <p class="text-[10px] text-slate-400 mb-1">${r.date}</p>
-                                    ${r.xrayBase64.startsWith('data:application/pdf') ? `<div class="p-2 text-center text-amber-400 font-bold text-[10px]">PDF Scan Document</div>` : `<img src="${r.xrayBase64}" class="w-full h-24 object-cover rounded">`}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
             </div>
         `;
     }).join('');
-}
-
-function publicViewReadOnlyPrescription(patientId, rxId) {
-    const recs = medicalRecords[patientId] || [];
-    const r = recs.find(x => x.id === rxId) || recs[0];
-    const patient = patients.find(p => p.patientId === patientId) || { name: "Patient", ageGender: "34 / Male" };
-
-    if(r) {
-        document.getElementById('lh_pid').innerText = patientId;
-        document.getElementById('lh_pname').innerText = patient.name;
-        document.getElementById('lh_age_gender').innerText = patient.ageGender || "34 / Male";
-        document.getElementById('lh_date').innerText = r.date;
-        document.getElementById('lh_doctor').innerText = r.doctor;
-        document.getElementById('lh_notes').value = r.diagnosis;
-        document.getElementById('lh_rx').value = r.rx;
-        document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
-
-        document.getElementById('odontogramWrapper').classList.add('hidden-section');
-        document.getElementById('lh_notes').readOnly = true;
-        document.getElementById('lh_rx').readOnly = true;
-        document.getElementById('lh_next_visit').readOnly = true;
-        document.getElementById('lh_save_btn').classList.add('hidden-section');
-        document.getElementById('lh_wa_btn').classList.add('hidden-section');
-
-        document.getElementById('letterheadModal').classList.remove('hidden');
-        document.getElementById('letterheadModal').classList.add('flex');
-    }
 }
 
 async function handlePublicBooking(e) {
@@ -726,7 +854,7 @@ async function handlePublicBooking(e) {
 }
 
 // ==========================================================================
-// 7. PUBLIC NAVIGATION & AUTHENTICATION ROUTINES
+// 9. PUBLIC NAVIGATION & AUTHENTICATION ROUTINES
 // ==========================================================================
 function navigateTo(id) {
     document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden-section'));
@@ -882,7 +1010,7 @@ function updateMetricCards() {
 }
 
 // ==========================================================================
-// 8. ADMIN CUSTOMIZATION & PERMISSION TOGGLERS
+// 10. ADMIN LAYOUT TOGGLER & PERMISSION MATRIX
 // ==========================================================================
 function toggleAdminPageLayout(sectionId, isVisible) {
     const targetEl = document.getElementById(sectionId);
@@ -900,7 +1028,7 @@ function togglePerm(key) {
 }
 
 // ==========================================================================
-// 9. CLINICAL APPOINTMENTS, LAB ORDERS & PRESCRIPTIONS
+// 11. CLINICAL APPOINTMENTS, LAB ORDERS & PRESCRIPTION KITS
 // ==========================================================================
 function renderAppointments() {
     document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
@@ -927,155 +1055,6 @@ function renderAppointments() {
             </td>
         </tr>
     `).join('');
-}
-
-function openMasterEditModal(pid) {
-    const p = patients.find(x => x.patientId === pid);
-    const appt = appointments.find(a => a.patientId === pid) || {};
-    const ledger = ledgers.find(l => l.patientId === pid) || {};
-
-    if(!p) return;
-
-    document.getElementById('med_target_pid').value = pid;
-    document.getElementById('med_pid_badge').innerText = pid;
-    document.getElementById('med_name').value = p.name;
-    document.getElementById('med_phone').value = p.phone;
-    document.getElementById('med_age_gender').value = p.ageGender || "34 / Male";
-    document.getElementById('med_token').value = appt.token || "TK-01";
-    document.getElementById('med_doctor').value = appt.doctor || doctors[0].name;
-    document.getElementById('med_bp').value = appt.bp || "120/80";
-    document.getElementById('med_sugar').value = appt.sugar || "140 mg/dL";
-    document.getElementById('med_risk').value = appt.risk || "None";
-    document.getElementById('med_reason').value = appt.reason || "Consultation";
-    document.getElementById('med_next_visit').value = appt.nextVisit || todayStr;
-    document.getElementById('med_total_cost').value = ledger.totalCost || 0;
-    document.getElementById('med_paid_amount').value = ledger.paidAmount || 0;
-
-    document.getElementById('masterEditModal').classList.remove('hidden');
-    document.getElementById('masterEditModal').classList.add('flex');
-}
-
-function closeMasterEditModal() {
-    document.getElementById('masterEditModal').classList.add('hidden');
-    document.getElementById('masterEditModal').classList.remove('flex');
-}
-
-async function handleMasterEditSubmit(e) {
-    e.preventDefault();
-    const pid = document.getElementById('med_target_pid').value;
-    const p = patients.find(x => x.patientId === pid);
-    const appt = appointments.find(a => a.patientId === pid);
-    const ledger = ledgers.find(l => l.patientId === pid);
-
-    if(p) {
-        p.name = document.getElementById('med_name').value;
-        p.phone = document.getElementById('med_phone').value.replace(/[^0-9]/g, '');
-        p.ageGender = document.getElementById('med_age_gender').value;
-    }
-
-    if(appt) {
-        appt.name = p.name;
-        appt.phone = p.phone;
-        appt.ageGender = p.ageGender;
-        appt.token = document.getElementById('med_token').value;
-        appt.doctor = document.getElementById('med_doctor').value;
-        appt.bp = document.getElementById('med_bp').value;
-        appt.sugar = document.getElementById('med_sugar').value;
-        appt.risk = document.getElementById('med_risk').value;
-        appt.reason = document.getElementById('med_reason').value;
-        appt.nextVisit = document.getElementById('med_next_visit').value;
-        appt.modifiedToday = true;
-    }
-
-    if(ledger) {
-        ledger.patientName = p.name;
-        ledger.totalCost = parseFloat(document.getElementById('med_total_cost').value) || 0;
-        ledger.paidAmount = parseFloat(document.getElementById('med_paid_amount').value) || 0;
-        ledger.dueAmount = ledger.totalCost - ledger.paidAmount;
-    }
-
-    await storageEngine.setItem('ns_patients', patients);
-    await storageEngine.setItem('ns_appointments', appointments);
-    await storageEngine.setItem('ns_ledgers', ledgers);
-
-    renderAppointments();
-    renderLedgers();
-    renderPublicTokenQueue();
-    calculateAdminStats();
-    updateMetricCards();
-    renderCalendar();
-
-    logAction(`Advanced modal edit applied to patient ${pid}`);
-    alert("Patient Record Updated via Master Editor!");
-    closeMasterEditModal();
-}
-
-function editLabOrderDetails(orderId) {
-    const order = labOrders.find(o => o.id === orderId);
-    if(!order) return;
-
-    document.getElementById('lab_edit_target_id').value = order.id;
-    document.getElementById('lab_edit_id_badge').innerText = order.id;
-    document.getElementById('lab_edit_pname').value = order.patientName;
-    document.getElementById('lab_edit_tooth').value = order.tooth;
-    document.getElementById('lab_edit_material').value = order.material;
-    document.getElementById('lab_edit_labname').value = order.labName;
-    document.getElementById('lab_edit_date').value = order.date;
-    document.getElementById('lab_edit_status').value = order.status;
-    document.getElementById('lab_edit_notes').value = order.notes || '';
-
-    const fileBadge = document.getElementById('lab_edit_current_file_badge');
-    if(order.fileBase64) {
-        fileBadge.innerText = "✓ Custom Scan File Attached (Click save to keep or upload new file below)";
-    } else {
-        fileBadge.innerText = "No impression file uploaded yet.";
-    }
-
-    document.getElementById('editLabOrderModal').classList.remove('hidden');
-    document.getElementById('editLabOrderModal').classList.add('flex');
-}
-
-function closeEditLabOrderModal() {
-    document.getElementById('editLabOrderModal').classList.add('hidden');
-    document.getElementById('editLabOrderModal').classList.remove('flex');
-}
-
-async function handleSaveLabOrderEdit(e) {
-    e.preventDefault();
-    const orderId = document.getElementById('lab_edit_target_id').value;
-    const order = labOrders.find(o => o.id === orderId);
-
-    if(!order) return;
-
-    order.patientName = document.getElementById('lab_edit_pname').value;
-    order.tooth = document.getElementById('lab_edit_tooth').value;
-    order.material = document.getElementById('lab_edit_material').value;
-    order.labName = document.getElementById('lab_edit_labname').value;
-    order.date = document.getElementById('lab_edit_date').value;
-    order.status = document.getElementById('lab_edit_status').value;
-    order.notes = document.getElementById('lab_edit_notes').value;
-
-    const fileInput = document.getElementById('lab_edit_file_input');
-
-    async function finishSave() {
-        await storageEngine.setItem('ns_lab_orders', labOrders);
-        renderLabOrders();
-        updateMetricCards();
-        logAction(`Updated lab order details and impression file for ${order.id}`);
-        alert(`Lab Order ${order.id} Updated Successfully!`);
-        closeEditLabOrderModal();
-    }
-
-    if(fileInput && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
-            order.fileBase64 = evt.target.result;
-            await finishSave();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        await finishSave();
-    }
 }
 
 function renderLabOrders() {
@@ -1193,7 +1172,7 @@ function toggleToothSelection(toothNum) {
 }
 
 // ==========================================================================
-// 10. PUBLIC RENDERERS, REVIEWS & GALLERY
+// 12. PUBLIC RENDERERS, REVIEWS & GALLERY
 // ==========================================================================
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
@@ -1240,12 +1219,6 @@ function renderDoctorsRoster() {
             </div>
         </div>
     `).join('');
-}
-
-function renderDoctorOptions() {
-    const opts = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
-    document.getElementById('bk_doctor').innerHTML = opts;
-    document.getElementById('man_pdoctor').innerHTML = opts;
 }
 
 function renderGallery() {
@@ -1306,7 +1279,7 @@ function initShufflingReviews10Sec() {
 }
 
 // ==========================================================================
-// 11. ADMIN USER MANAGEMENT & CREDENTIAL OVERRIDES
+// 13. ADMIN USER MANAGEMENT & CREDENTIAL OVERRIDES
 // ==========================================================================
 function renderAdminUserTable() {
     const tbl = document.getElementById('adminUserManagementTable');
@@ -1346,60 +1319,52 @@ async function adminEditFullUserProfile(userId) {
     }
 }
 
-// ==========================================================================
-// 12. INTERACTIVE CALENDAR & AGENDA ENGINE
-// ==========================================================================
-function renderCalendar() {
-    const grid = document.getElementById('calendarMonthlyGrid');
-    const title = document.getElementById('cal_month_title');
-    if(!grid) return;
+function renderApprovals() {
+    const tbl = document.getElementById('tblApprovals');
+    const pending = users.filter(u => u.status === 'Pending');
 
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    if(title) title.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
-
-    const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
-    const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
-
-    let html = '';
-
-    for(let e = 0; e < firstDay; e++) html += `<div class="p-2 border border-slate-900/40 bg-slate-950/20 rounded-xl"></div>`;
-
-    for(let d = 1; d <= daysInMonth; d++) {
-        const mStr = (currentCalMonth + 1) < 10 ? '0' + (currentCalMonth + 1) : '' + (currentCalMonth + 1);
-        const dStr = d < 10 ? '0' + d : '' + d;
-        const fullDateStr = `${currentCalYear}-${mStr}-${dStr}`;
-
-        const dayAppts = appointments.filter(a => a.date === fullDateStr);
-        const isToday = fullDateStr === todayStr;
-        const isSelected = fullDateStr === selectedCalendarDateStr;
-
-        html += `
-            <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
-                <div class="flex justify-between items-center text-[10px] font-mono">
-                    <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>
-                    ${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
-                </div>
-            </div>
-        `;
+    if(tbl) {
+        if(pending.length === 0) {
+            tbl.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No pending staff registrations.</td></tr>`;
+        } else {
+            tbl.innerHTML = pending.map(u => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="p-3 font-bold text-white">${u.name}</td>
+                    <td class="p-3 uppercase font-bold text-amber-400">${u.role}</td>
+                    <td class="p-3 font-mono text-slate-300">${u.phone}<br><span class="text-[10px] text-slate-500">${u.email}</span></td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="approveUserRegistration(${u.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded text-xs shadow">Approve</button>
+                        <button onclick="rejectUserRegistration(${u.id})" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1 rounded text-xs">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
     }
-
-    grid.innerHTML = html;
 }
 
-function selectCalendarDate(dateStr) {
-    selectedCalendarDateStr = dateStr;
-    renderCalendar();
+async function approveUserRegistration(id) {
+    const u = users.find(x => x.id === id);
+    if(u) {
+        u.status = "Approved";
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        renderAdminUserTable();
+        logAction(`Approved staff registration for ${u.name}`);
+        alert(`User ${u.name} approved!`);
+    }
 }
 
-function changeCalendarMonth(delta) {
-    currentCalMonth += delta;
-    if(currentCalMonth < 0) { currentCalMonth = 11; currentCalYear--; }
-    else if(currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
-    renderCalendar();
+async function rejectUserRegistration(id) {
+    if(confirm("Reject this staff account request?")) {
+        users = users.filter(u => u.id !== id);
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        logAction(`Rejected staff registration #${id}`);
+    }
 }
 
 // ==========================================================================
-// 13. AUDIT LOGS, TICKER, DISPATCHERS & BACKUPS
+// 14. AUDIT TRAIL, DISPATCHERS & DATA BACKUPS
 // ==========================================================================
 function autoCheckExistingPatient(val) {
     const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
@@ -1614,6 +1579,74 @@ async function openNewLabOrderModal() {
     }
 }
 
+function editLabOrderDetails(orderId) {
+    const order = labOrders.find(o => o.id === orderId);
+    if(!order) return;
+
+    document.getElementById('lab_edit_target_id').value = order.id;
+    document.getElementById('lab_edit_id_badge').innerText = order.id;
+    document.getElementById('lab_edit_pname').value = order.patientName;
+    document.getElementById('lab_edit_tooth').value = order.tooth;
+    document.getElementById('lab_edit_material').value = order.material;
+    document.getElementById('lab_edit_labname').value = order.labName;
+    document.getElementById('lab_edit_date').value = order.date;
+    document.getElementById('lab_edit_status').value = order.status;
+    document.getElementById('lab_edit_notes').value = order.notes || '';
+
+    const fileBadge = document.getElementById('lab_edit_current_file_badge');
+    if(order.fileBase64) {
+        fileBadge.innerText = "✓ Custom Scan File Attached";
+    } else {
+        fileBadge.innerText = "No impression file uploaded yet.";
+    }
+
+    document.getElementById('editLabOrderModal').classList.remove('hidden');
+    document.getElementById('editLabOrderModal').classList.add('flex');
+}
+
+function closeEditLabOrderModal() {
+    document.getElementById('editLabOrderModal').classList.add('hidden');
+    document.getElementById('editLabOrderModal').classList.remove('flex');
+}
+
+async function handleSaveLabOrderEdit(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('lab_edit_target_id').value;
+    const order = labOrders.find(o => o.id === orderId);
+
+    if(!order) return;
+
+    order.patientName = document.getElementById('lab_edit_pname').value;
+    order.tooth = document.getElementById('lab_edit_tooth').value;
+    order.material = document.getElementById('lab_edit_material').value;
+    order.labName = document.getElementById('lab_edit_labname').value;
+    order.date = document.getElementById('lab_edit_date').value;
+    order.status = document.getElementById('lab_edit_status').value;
+    order.notes = document.getElementById('lab_edit_notes').value;
+
+    const fileInput = document.getElementById('lab_edit_file_input');
+
+    async function finishSave() {
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        renderLabOrders();
+        updateMetricCards();
+        logAction(`Updated lab order details and impression file for ${order.id}`);
+        alert(`Lab Order ${order.id} Updated Successfully!`);
+        closeEditLabOrderModal();
+    }
+
+    if(fileInput && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+            order.fileBase64 = evt.target.result;
+            await finishSave();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        await finishSave();
+    }
+}
+
 async function adminFixMissingReceipts() {
     let created = 0;
     appointments.forEach(a => {
@@ -1681,5 +1714,5 @@ async function resetSystemData() {
     }
 }
 
-// RUN APPLICATION INITIALIZATION
+// INITIALIZE APPLICATION
 initApp();

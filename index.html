@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 12:05:00 AM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 12:30:00 AM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -245,7 +245,7 @@
             </div>
         </section>
 
-        <!-- PATIENT TIMELINE TRACKER (PUBLIC DOWNLOAD ACCESS RESTORED) -->
+        <!-- PATIENT TIMELINE TRACKER (PUBLIC ACCESS RESTORED) -->
         <section id="track-appointment" class="hidden-section max-w-3xl mx-auto w-full space-y-4">
             <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl shadow-2xl space-y-4">
                 <button onclick="navigateTo('public-home')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
@@ -478,6 +478,20 @@
                 <div class="w-32 bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden p-0.5">
                     <div id="storage_usage_bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 2%;"></div>
                 </div>
+            </div>
+
+            <!-- UNIVERSAL PATIENT MASTER SEARCH & CREATE STAFF CONTROL BAR -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-xl">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <h3 class="text-xs font-bold text-white uppercase flex items-center gap-2">
+                        <i data-lucide="search" class="text-amber-400 w-4 h-4"></i> Universal Patient Master Search & Instant Modifier
+                    </h3>
+                    <button onclick="openCreateStaffModal()" class="bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> + Create Staff Profile & ID Proof
+                    </button>
+                </div>
+                <input type="text" id="staffUniversalSearchInput" oninput="handleUniversalStaffSearch()" placeholder="Search Patient Full Name, Mobile #, or PAT-XXXX ID..." class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
+                <div id="staffUniversalSearchResult" class="hidden-section space-y-2 pt-2"></div>
             </div>
 
             <!-- MANUAL PATIENT TOKEN ASSIGNER TOOLBAR -->
@@ -1411,7 +1425,7 @@
             </div>
         </div>
 
-        <!-- EDIT STAFF CREDENTIALS & PERMISSIONS MODAL -->
+        <!-- EDIT STAFF CREDENTIALS, ACCESS PERMISSIONS & IDENTITY PROOF MODAL -->
         <div id="editStaffModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeEditStaffModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1420,7 +1434,7 @@
                 <div class="border-b border-slate-800 pb-3">
                     <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Admin Governance Control</span>
                     <h3 class="text-base font-bold text-white flex items-center gap-2">
-                        <i data-lucide="shield-check" class="text-red-500 w-4 h-4"></i> Edit Staff Credentials & Access Rights
+                        <i data-lucide="shield-check" class="text-red-500 w-4 h-4"></i> Create / Edit Staff Credentials & Access Rights
                     </h3>
                 </div>
                 <form onsubmit="handleStaffEditSubmit(event)" class="space-y-3 text-xs">
@@ -1458,8 +1472,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-slate-400 uppercase mb-1">Update Account Password</label>
-                        <input type="text" id="edit_staff_password" required placeholder="Enter new password" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-mono font-bold">
+                        <label class="block text-slate-400 uppercase mb-1">Set Account Password *</label>
+                        <input type="text" id="edit_staff_password" required placeholder="Enter login password" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-mono font-bold">
                     </div>
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                         <span class="text-xs font-bold text-amber-400 uppercase block">Access Tier Configuration</span>
@@ -1472,6 +1486,14 @@
                             <span>Limited Access (Queue / Standard Entries Only)</span>
                         </label>
                     </div>
+
+                    <!-- PROOF OF IDENTITY UPLOADER -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                        <label class="block uppercase text-amber-400 font-bold">Upload Identity Proof Document (Aadhaar/PAN/Passport):</label>
+                        <input type="file" id="edit_staff_proof_file" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl text-slate-300 text-xs">
+                        <span id="edit_staff_proof_preview" class="text-[10px] text-emerald-400 font-mono block"></span>
+                    </div>
+
                     <div class="flex justify-between items-center pt-3 border-t border-slate-800">
                         <button type="button" onclick="deleteStaffAccount()" class="bg-rose-900/40 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold px-3 py-2 rounded-xl">
                             Delete Profile
@@ -1612,6 +1634,11 @@
 
     </main>
 
+    <!-- SEQUENTIAL MODULAR SCRIPT LOADER -->
+    <script src="db.js"></script>
+    <script src="timecard.js"></script>
+    <script src="prescription.js"></script>
+    <script src="admin.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

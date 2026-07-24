@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// 1. INDEXEDB HIGH-CAPACITY STORAGE ENGINE WITH CROSS-DEVICE AUTO-SYNC
+// 1. INDEXEDB HIGH-CAPACITY STORAGE ENGINE WITH REAL-TIME AUTO-SYNC
 // ==========================================================================
 class ClinicStorageEngine {
     constructor() {
@@ -75,7 +75,7 @@ class ClinicStorageEngine {
 
 const storageEngine = new ClinicStorageEngine();
 
-// REAL-TIME BROADCAST CHANNEL FOR MULTI-TAB & CROSS-DEVICE SYNC
+// BROADCAST CHANNEL FOR REAL-TIME CROSS-DEVICE SYNC
 const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sync_channel") : null;
 
 function notifySyncBroadcast() {
@@ -115,6 +115,11 @@ let labOrders = [];
 let medicalRecords = {};
 let ledgers = [];
 
+// ASSISTANT TIMECARDS & WORK ACTIVITY STATE
+let assistantPunchLogs = [];
+let assistantWorkActivity = [];
+let activeAsstActivityFilter = 'day';
+
 let currentLiveDateStr = new Date().toISOString().split('T')[0];
 
 let activePrescriptionApptId = null;
@@ -128,7 +133,7 @@ let currentCalMonth = new Date().getMonth();
 let selectedCalendarDateStr = currentLiveDateStr;
 
 // ==========================================================================
-// 3. SYSTEM INITIALIZATION & DATA LOADING
+// 3. SYSTEM INITIALIZATION & REFRESH ENGINE
 // ==========================================================================
 async function initApp() {
     await storageEngine.init();
@@ -148,7 +153,7 @@ async function initApp() {
     fetchDeviceAndIPDetails();
     updateStorageMeter();
 
-    // AUTO-POLLING HEARTBEAT FOR CROSS-DEVICE SYNCHRONIZATION
+    // AUTO-POLLING HEARTBEAT (3 SECONDS) FOR REAL-TIME MULTI-DEVICE AUTO-REFRESH
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -173,11 +178,14 @@ async function loadStateFromIndexedDB() {
     ];
 
     users = await storageEngine.getItem('ns_users') || [
-        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved" },
-        { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved" }
+        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved", accessTier: "full" },
+        { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved", accessTier: "limited" }
     ];
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Multi-Device Sync." }];
+    assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
+    assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
+
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Immutable Assistant Timecards." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
@@ -186,10 +194,7 @@ async function loadStateFromIndexedDB() {
 
     allReviews = await storageEngine.getItem('ns_reviews') || [
         { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" },
-        { author: "Syeda Afroz", rating: 5, text: "Hygienic clinic and friendly nature of doctors. Best dental clinic in Edi Bazar." },
-        { author: "Mirza Faizan Baig", rating: 5, text: "Very gentle treatment. Got my wisdom tooth extracted without any pain!" },
-        { author: "Khaja Moinuddin", rating: 5, text: "Clean environment, expert surgeons, and fair fee structure in Santosh Nagar." }
+        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" }
     ];
 
     patients = await storageEngine.getItem('ns_patients') || [
@@ -206,7 +211,7 @@ async function loadStateFromIndexedDB() {
 
     medicalRecords = await storageEngine.getItem('ns_records') || {
         "PAT-1001": [
-            { id: "RX-1001", date: currentLiveDateStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "Tab Amoxicillin 500mg (1-0-1)\nTab Paracetamol 650mg (1-0-1)", doctor: "Dr. Md Salahuddin Ayub", nextVisit: currentLiveDateStr, xrayBase64: null }
+            { id: "RX-1001", date: currentLiveDateStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "1. Tab Amoxicillin 500mg | 1-0-1 | After Food | 5 Days\n2. Tab Paracetamol 650mg | 1-0-1 | After Food | 3 Days", doctor: "Dr. Md Salahuddin Ayub", nextVisit: currentLiveDateStr, xrayBase64: null }
         ]
     };
 
@@ -242,6 +247,9 @@ function refreshAllUIViews() {
     renderCalendar();
     updateMetricCards();
     calculateAdminStats();
+    renderAssistantPunchStatusUI();
+    renderAssistantPunchTable();
+    renderAssistantWorkActivityLog();
     if (currentSession && currentSession.role === 'admin') {
         renderAdminUsers();
         renderAuditLogs();
@@ -283,81 +291,184 @@ function startRealtimeClock() {
 }
 
 // ==========================================================================
-// 4. DYNAMIC DATE-WISE KPI CALCULATOR
+// 4. ASSISTANT IMMUTABLE PUNCH-IN / PUNCH-OUT & WORK ACTIVITY TRACKER
 // ==========================================================================
-function updateMetricCards() {
-    currentLiveDateStr = new Date().toISOString().split('T')[0];
+async function executeAssistantPunch(type) {
+    if (!currentSession) return;
 
-    const todayAppts = appointments.filter(a => a.date === currentLiveDateStr);
-    const activeQueue = todayAppts.filter(a => a.queueStatus === 'In Waiting Room' || a.queueStatus === 'In Consultation');
-    
-    const todayLedgers = ledgers.filter(l => l.date === currentLiveDateStr);
-    let todayRev = 0;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString();
+    const dateStr = now.toISOString().split('T')[0];
+    const deviceName = document.getElementById('disp_device_name') ? document.getElementById('disp_device_name').innerText : "Standard Device";
 
-    todayLedgers.forEach(l => {
-        if(l.paymentHistory && l.paymentHistory.length > 0) {
-            l.paymentHistory.forEach(ph => {
-                if(ph.timestamp && ph.timestamp.startsWith(currentLiveDateStr)) {
-                    todayRev += (parseFloat(ph.amount) || 0);
-                }
-            });
-        } else {
-            todayRev += (parseFloat(l.paidAmount) || 0);
+    let activePunch = assistantPunchLogs.find(p => p.staffName === currentSession.name && p.status === 'ACTIVE');
+
+    if (type === 'PUNCH_IN') {
+        if (activePunch) {
+            alert("You are already Punched In!");
+            return;
         }
-    });
 
-    const labPending = labOrders.filter(o => o.status !== 'Delivered & Fitted');
-    const riskCount = todayAppts.filter(a => a.risk && a.risk !== 'None').length;
+        const newPunch = {
+            id: "PUNCH-" + Date.now(),
+            staffName: currentSession.name,
+            staffPhone: currentSession.phone,
+            date: dateStr,
+            inTime: timeStr,
+            outTime: "In Shift...",
+            duration: "Calculating...",
+            device: deviceName,
+            status: "ACTIVE",
+            immutable: true
+        };
 
-    const lbl1 = document.getElementById('kpi_date_label_1');
-    const lbl2 = document.getElementById('kpi_date_label_2');
-    if(lbl1) lbl1.innerText = `Visits Today (${currentLiveDateStr})`;
-    if(lbl2) lbl2.innerText = `Today Collections (${currentLiveDateStr})`;
+        assistantPunchLogs.unshift(newPunch);
+        await storageEngine.setItem('ns_asst_punches', assistantPunchLogs);
+        logAssistantWorkActivity("Punch-In Shift Started");
+        alert(`PUNCH-IN RECORDED at ${timeStr}. Timecard is locked and non-editable.`);
+    } else if (type === 'PUNCH_OUT') {
+        if (!activePunch) {
+            alert("No active Punch-In shift found!");
+            return;
+        }
 
-    if(document.getElementById('card_stat_visits')) document.getElementById('card_stat_visits').innerText = todayAppts.length;
-    if(document.getElementById('card_stat_queue')) document.getElementById('card_stat_queue').innerText = activeQueue.length;
-    if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
-    if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
-    if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
+        const inDateObj = new Date(`${activePunch.date} ${activePunch.inTime}`);
+        const diffMs = now - inDateObj;
+        const hrs = (diffMs / (1000 * 60 * 60)).toFixed(2);
+
+        activePunch.outTime = timeStr;
+        activePunch.duration = `${hrs} Hours`;
+        activePunch.status = "COMPLETED";
+
+        await storageEngine.setItem('ns_asst_punches', assistantPunchLogs);
+        logAssistantWorkActivity("Punch-Out Shift Completed");
+        alert(`PUNCH-OUT RECORDED at ${timeStr}. Total Shift: ${hrs} Hours.`);
+    }
+
+    refreshAllUIViews();
+}
+
+async function logAssistantWorkActivity(actionDetails) {
+    if (!currentSession) return;
+    const now = new Date();
+    const activityEntry = {
+        id: "ACT-" + Date.now(),
+        staffName: currentSession.name,
+        role: currentSession.role,
+        action: actionDetails,
+        date: now.toISOString().split('T')[0],
+        timestamp: `${now.toISOString().split('T')[0]} ${now.toLocaleTimeString()}`
+    };
+
+    assistantWorkActivity.unshift(activityEntry);
+    await storageEngine.setItem('ns_asst_activity', assistantWorkActivity);
+}
+
+function renderAssistantPunchStatusUI() {
+    const bar = document.getElementById('asstTimecardHeaderBar');
+    const badge = document.getElementById('punch_live_status_badge');
+    const timeTxt = document.getElementById('punch_last_action_time');
+    const btnIn = document.getElementById('btn_punch_in');
+    const btnOut = document.getElementById('btn_punch_out');
+
+    if (!bar) return;
+
+    if (currentSession && currentSession.role === 'assistant') {
+        bar.classList.remove('hidden-section');
+        const activePunch = assistantPunchLogs.find(p => p.staffName === currentSession.name && p.status === 'ACTIVE');
+
+        if (activePunch) {
+            badge.innerText = "PUNCHED IN (SHIFT ACTIVE)";
+            badge.className = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold animate-pulse";
+            timeTxt.innerText = `Punched In Today at ${activePunch.inTime} on ${activePunch.device}`;
+            btnIn.classList.add('hidden-section');
+            btnOut.classList.remove('hidden-section');
+        } else {
+            badge.innerText = "PUNCHED OUT";
+            badge.className = "bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold";
+            timeTxt.innerText = "Timecard records are permanently locked upon submission & auto-synced to Doctor/Admin.";
+            btnIn.classList.remove('hidden-section');
+            btnOut.classList.add('hidden-section');
+        }
+    } else {
+        bar.classList.add('hidden-section');
+    }
+}
+
+function renderAssistantPunchTable() {
+    const tbl = document.getElementById('tblAssistantPunchLogs');
+    if (!tbl) return;
+
+    if (assistantPunchLogs.length === 0) {
+        tbl.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-slate-500">No assistant shift punches recorded yet.</td></tr>`;
+        return;
+    }
+
+    tbl.innerHTML = assistantPunchLogs.map(p => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-2.5 font-bold text-white">${p.staffName}</td>
+            <td class="p-2.5 text-amber-400 font-bold">${p.date}</td>
+            <td class="p-2.5 text-emerald-400">${p.inTime}</td>
+            <td class="p-2.5 text-rose-400">${p.outTime}</td>
+            <td class="p-2.5 font-bold text-white">${p.duration}</td>
+            <td class="p-2.5 text-[10px] text-slate-400">${p.device}</td>
+        </tr>
+    `).join('');
+}
+
+function setAsstActivityFilter(filter) {
+    activeAsstActivityFilter = filter;
+    const btnDay = document.getElementById('btn_asst_filter_day');
+    const btnWeek = document.getElementById('btn_asst_filter_week');
+    const btnMonth = document.getElementById('btn_asst_filter_month');
+
+    btnDay.className = "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white";
+    btnWeek.className = "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white";
+    btnMonth.className = "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white";
+
+    if(filter === 'day') btnDay.className = "px-3 py-1 rounded-lg font-bold bg-red-700 text-white shadow";
+    if(filter === 'week') btnWeek.className = "px-3 py-1 rounded-lg font-bold bg-red-700 text-white shadow";
+    if(filter === 'month') btnMonth.className = "px-3 py-1 rounded-lg font-bold bg-red-700 text-white shadow";
+
+    renderAssistantWorkActivityLog();
+}
+
+function renderAssistantWorkActivityLog() {
+    const container = document.getElementById('asstActivityContainer');
+    if (!container) return;
+
+    const now = new Date();
+    let filtered = assistantWorkActivity;
+
+    if (activeAsstActivityFilter === 'day') {
+        filtered = assistantWorkActivity.filter(a => a.date === currentLiveDateStr);
+    } else if (activeAsstActivityFilter === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filtered = assistantWorkActivity.filter(a => new Date(a.date) >= weekAgo);
+    } else if (activeAsstActivityFilter === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filtered = assistantWorkActivity.filter(a => new Date(a.date) >= monthAgo);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-slate-500 italic p-3">No assistant work activity recorded for selected range (${activeAsstActivityFilter.toUpperCase()}).</p>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((act, i) => `
+        <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center text-slate-300">
+            <div>
+                <span class="text-amber-400 font-bold">${i+1}. [${act.timestamp}]</span>
+                <strong class="text-white font-sans ml-1">${act.staffName} (${act.role.toUpperCase()})</strong>
+                <p class="text-slate-400 text-[11px] font-sans mt-0.5">${act.action}</p>
+            </div>
+            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5 rounded">Verified Log</span>
+        </div>
+    `).join('');
 }
 
 // ==========================================================================
-// 5. DEVICE NAME & PUBLIC IP ADDRESS TRACKER
-// ==========================================================================
-async function fetchDeviceAndIPDetails() {
-    const ua = navigator.userAgent;
-    let deviceName = "Desktop Browser";
-    let osName = "Windows OS";
-
-    if (/Mobi|Android|iPhone|iPad/i.test(ua)) {
-        deviceName = /iPhone/i.test(ua) ? "Apple iPhone" : /iPad/i.test(ua) ? "Apple iPad" : "Android Mobile Device";
-    } else if (/Macintosh/i.test(ua)) {
-        deviceName = "Apple Mac Workstation";
-    }
-
-    if (/Windows/i.test(ua)) osName = "Windows OS";
-    else if (/Mac OS/i.test(ua)) osName = "macOS";
-    else if (/Android/i.test(ua)) osName = "Android OS";
-    else if (/iOS|iPhone|iPad/i.test(ua)) osName = "iOS";
-
-    const dispDevice = document.getElementById('disp_device_name');
-    const dispOS = document.getElementById('disp_device_os');
-    const dispIP = document.getElementById('disp_device_ip');
-
-    if(dispDevice) dispDevice.innerText = deviceName;
-    if(dispOS) dispOS.innerText = osName;
-
-    try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const data = await res.json();
-        if(dispIP) dispIP.innerText = data.ip || "127.0.0.1 (Local)";
-    } catch(err) {
-        if(dispIP) dispIP.innerText = "Active Network Client";
-    }
-}
-
-// ==========================================================================
-// 6. STAFF PROFILES LIST / GRID VIEW SWITCHER
+// 5. PROFESSIONAL STAFF CREDENTIALS & GOVERNANCE MODAL
 // ==========================================================================
 function setStaffViewMode(mode) {
     staffViewMode = mode;
@@ -393,10 +504,12 @@ function renderAdminUserTable() {
                 <td class="p-2.5 font-bold text-white">${u.name}</td>
                 <td class="p-2.5 uppercase font-bold text-red-400">${u.role}</td>
                 <td class="p-2.5 font-mono text-slate-300">${u.phone}</td>
-                <td class="p-2.5 font-mono text-amber-400 font-bold">${u.password}</td>
-                <td class="p-2.5"><span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px]">${u.status}</span></td>
+                <td class="p-2.5 font-mono text-amber-400 font-bold">${u.accessTier ? u.accessTier.toUpperCase() : 'LIMITED'}</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">${u.status}</span></td>
                 <td class="p-2.5">
-                    <button onclick="adminEditFullUserProfile(${u.id})" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold shadow">Edit Credentials</button>
+                    <button onclick="openEditStaffModal(${u.id})" class="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow">
+                        Manage Profile / Access
+                    </button>
                 </td>
             </tr>
         `).join('');
@@ -413,41 +526,265 @@ function renderAdminUserGrid() {
                         <h4 class="text-sm font-bold text-white">${u.name}</h4>
                         <span class="text-[10px] font-black uppercase text-amber-400 block">${u.role} ACCOUNT</span>
                     </div>
-                    <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-500/30">${u.status}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">${u.status}</span>
                 </div>
                 <div class="text-xs space-y-1 text-slate-300 font-mono">
                     <p>📞 Phone: ${u.phone}</p>
-                    <p>🔑 Password: <strong class="text-amber-400">${u.password}</strong></p>
+                    <p>🔑 Access Tier: <strong class="text-amber-400">${u.accessTier ? u.accessTier.toUpperCase() : 'LIMITED'}</strong></p>
                 </div>
-                <button onclick="adminEditFullUserProfile(${u.id})" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs mt-2 shadow">
-                    Edit Credentials / Password
+                <button onclick="openEditStaffModal(${u.id})" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs mt-2 shadow">
+                    Manage Credentials & Access Rights
                 </button>
             </div>
         `).join('');
     }
 }
 
-async function adminEditFullUserProfile(userId) {
+function openEditStaffModal(userId) {
     const u = users.find(x => x.id === userId);
-    if(u) {
-        const name = prompt("Edit Full Name:", u.name);
-        const phone = prompt("Edit Mobile #:", u.phone);
-        const pwd = prompt("Edit Password (PLAIN TEXT):", u.password);
+    if (!u) return;
 
-        if(name && phone && pwd) {
-            u.name = name;
-            u.phone = phone;
-            u.password = pwd;
+    document.getElementById('edit_staff_target_id').value = u.id;
+    document.getElementById('edit_staff_name').value = u.name;
+    document.getElementById('edit_staff_phone').value = u.phone;
+    document.getElementById('edit_staff_email').value = u.email || "";
+    document.getElementById('edit_staff_role').value = u.role;
+    document.getElementById('edit_staff_status').value = u.status || "Approved";
+    document.getElementById('edit_staff_password').value = u.password;
 
-            await storageEngine.setItem('ns_users', users);
-            renderAdminUsers();
-            logAction(`Admin updated credentials for ${u.name}`);
-            alert("Staff account credentials updated!");
+    if (u.accessTier === 'full') {
+        document.getElementById('tier_full').checked = true;
+    } else {
+        document.getElementById('tier_limited').checked = true;
+    }
+
+    document.getElementById('editStaffModal').classList.remove('hidden');
+    document.getElementById('editStaffModal').classList.add('flex');
+}
+
+function closeEditStaffModal() {
+    document.getElementById('editStaffModal').classList.add('hidden');
+    document.getElementById('editStaffModal').classList.remove('flex');
+}
+
+async function handleStaffEditSubmit(e) {
+    e.preventDefault();
+    const uid = parseInt(document.getElementById('edit_staff_target_id').value);
+    const u = users.find(x => x.id === uid);
+
+    if (u) {
+        u.name = document.getElementById('edit_staff_name').value;
+        u.phone = document.getElementById('edit_staff_phone').value;
+        u.email = document.getElementById('edit_staff_email').value;
+        u.role = document.getElementById('edit_staff_role').value;
+        u.status = document.getElementById('edit_staff_status').value;
+        u.password = document.getElementById('edit_staff_password').value;
+        u.accessTier = document.getElementById('tier_full').checked ? 'full' : 'limited';
+
+        await storageEngine.setItem('ns_users', users);
+        renderAdminUsers();
+        logAction(`Admin modified credentials and access rights for ${u.name}`);
+        alert(`Staff Profile for ${u.name} updated successfully!`);
+        closeEditStaffModal();
+    }
+}
+
+async function deleteStaffAccount() {
+    const uid = parseInt(document.getElementById('edit_staff_target_id').value);
+    const u = users.find(x => x.id === uid);
+
+    if (u && confirm(`PERMANENTLY DELETE staff profile for ${u.name}?`)) {
+        users = users.filter(x => x.id !== uid);
+        await storageEngine.setItem('ns_users', users);
+        renderAdminUsers();
+        logAction(`Deleted staff account #${uid}`);
+        alert("Staff Profile deleted.");
+        closeEditStaffModal();
+    }
+}
+
+// ==========================================================================
+// 6. CLINICAL PRESCRIPTION BUILDER & LETTERHEAD
+// ==========================================================================
+function openLetterhead(id) {
+    activePrescriptionApptId = id;
+    const appt = appointments.find(a => a.id === id);
+    if(appt) {
+        document.getElementById('lh_pid').innerText = appt.patientId;
+        document.getElementById('lh_pname').innerText = appt.name;
+        document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
+        document.getElementById('lh_issue').innerText = appt.reason;
+        document.getElementById('lh_date').innerText = currentLiveDateStr;
+        document.getElementById('lh_doctor').innerText = appt.doctor;
+        document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+
+        // SHOW FULL EDIT CONTROLS FOR STAFF
+        document.getElementById('odontogramWrapper').classList.remove('hidden-section');
+        document.getElementById('rxPresetsBar').classList.remove('hidden-section');
+        document.getElementById('lh_notes').readOnly = false;
+        document.getElementById('lh_rx').readOnly = false;
+        document.getElementById('lh_next_visit').readOnly = false;
+        document.getElementById('lh_save_btn').classList.remove('hidden-section');
+        document.getElementById('lh_wa_btn').classList.remove('hidden-section');
+
+        document.getElementById('letterheadModal').classList.remove('hidden');
+        document.getElementById('letterheadModal').classList.add('flex');
+    }
+}
+
+function publicViewReadOnlyPrescription(patientId, rxId) {
+    const recs = medicalRecords[patientId] || [];
+    const r = recs.find(x => x.id === rxId) || recs[0];
+    const patient = patients.find(p => p.patientId === patientId) || { name: "Patient", ageGender: "34 / Male" };
+
+    if(r) {
+        document.getElementById('lh_pid').innerText = patientId;
+        document.getElementById('lh_pname').innerText = patient.name;
+        document.getElementById('lh_age_gender').innerText = patient.ageGender || "34 / Male";
+        document.getElementById('lh_date').innerText = r.date;
+        document.getElementById('lh_doctor').innerText = r.doctor;
+        document.getElementById('lh_notes').value = r.diagnosis;
+        document.getElementById('lh_rx').value = r.rx;
+        document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
+
+        // HIDE EDIT CONTROLS FOR PUBLIC VIEW
+        document.getElementById('odontogramWrapper').classList.add('hidden-section');
+        document.getElementById('rxPresetsBar').classList.add('hidden-section');
+        document.getElementById('lh_notes').readOnly = true;
+        document.getElementById('lh_rx').readOnly = true;
+        document.getElementById('lh_next_visit').readOnly = true;
+        document.getElementById('lh_save_btn').classList.add('hidden-section');
+        document.getElementById('lh_wa_btn').classList.add('hidden-section');
+
+        document.getElementById('letterheadModal').classList.remove('hidden');
+        document.getElementById('letterheadModal').classList.add('flex');
+    }
+}
+
+function closeLetterheadModal() {
+    document.getElementById('letterheadModal').classList.add('hidden');
+    document.getElementById('letterheadModal').classList.remove('flex');
+}
+
+async function savePrescriptionAndSync() {
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+    if(appt) {
+        const notes = document.getElementById('lh_notes').value;
+        const rx = document.getElementById('lh_rx').value;
+        const nextVisit = document.getElementById('lh_next_visit').value;
+
+        if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
+        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: currentLiveDateStr, diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
+
+        await storageEngine.setItem('ns_records', medicalRecords);
+        appt.nextVisit = nextVisit;
+        appt.modifiedToday = true;
+        await storageEngine.setItem('ns_appointments', appointments);
+
+        logAction(`Prescription saved for ${appt.patientId}.`);
+        if(currentSession && currentSession.role === 'assistant') {
+            logAssistantWorkActivity(`Updated Prescription & Next Visit Date for ${appt.name} (${appt.patientId})`);
+        }
+        alert("Prescription saved & Next visit synced!");
+        refreshAllUIViews();
+    }
+}
+
+function sendPrescriptionWhatsApp() {
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+    if(appt) {
+        const notes = document.getElementById('lh_notes').value;
+        const rx = document.getElementById('lh_rx').value;
+        const nextVisit = document.getElementById('lh_next_visit').value;
+
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings & Reason:* ${notes}%0A*Rx / Medications Schedule:*%0A${rx}%0A%0A*Next Follow-Up Visit:* ${nextVisit}`;
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
+    }
+}
+
+function applyRxPreset(type) {
+    const rxArea = document.getElementById('lh_rx');
+    if(!rxArea) return;
+
+    if(type === 'rct') {
+        rxArea.value = "1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Zero-P (Aceclofenac + Paracetamol) | Morning-Evening (1-0-1) | After Food | 3 Days\n3. Cap Pantoprazole 40mg | Morning (1-0-0) | Before Breakfast | 5 Days";
+    } else if(type === 'extraction') {
+        rxArea.value = "1. Tab Augmentin 625mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Ketorol DT | Morning-Evening (1-0-1) | Dissolve in 1/2 glass water | 3 Days\n3. Chlorhexidine Mouthwash 0.2% | Rinse 10ml twice daily for 7 days";
+    } else if(type === 'scaling') {
+        rxArea.value = "1. Gum Paint (Tannic Acid) | Apply gently on gums twice daily\n2. Chlorhexidine 0.2% Mouthwash | Rinse 10ml twice daily after meals for 7 days";
+    }
+    logAction(`Applied Rx Speed-Dial preset: ${type.toUpperCase()}`);
+}
+
+// ==========================================================================
+// 7. RECEIPT GENERATOR (PUBLIC EDIT STRICTLY REMOVED)
+// ==========================================================================
+function openReceiptModal(recId) {
+    activeReceiptId = recId;
+    let item = ledgers.find(l => l.id === recId);
+
+    if(!item) {
+        item = ledgers.find(l => l.patientId === recId) || ledgers[0];
+    }
+
+    if(item) {
+        document.getElementById('rc_num').innerText = item.id;
+        document.getElementById('rc_pid').innerText = item.patientId;
+        document.getElementById('rc_pname').innerText = item.patientName;
+        document.getElementById('rc_date').innerText = item.date || currentLiveDateStr;
+        document.getElementById('rc_mode').innerText = item.lastPaymentMode || "Cash";
+        document.getElementById('rc_sum_total').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
+        document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount.toLocaleString('en-IN')}`;
+        document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
+
+        const historyBox = document.getElementById('rc_payment_history_box');
+        if(historyBox) {
+            if(item.paymentHistory && item.paymentHistory.length > 0) {
+                historyBox.innerHTML = item.paymentHistory.map((ph, idx) => `
+                    <div class="flex justify-between border-b border-slate-200 pb-0.5">
+                        <span>${idx+1}. ${ph.timestamp} (${ph.mode})</span>
+                        <strong class="text-emerald-700">₹${ph.amount}</strong>
+                    </div>
+                `).join('');
+            } else {
+                historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode || 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
+            }
+        }
+
+        // SHOW EDIT BUTTON ONLY FOR AUTHENTICATED STAFF
+        const editBtn = document.getElementById('rc_edit_btn');
+        if (currentSession) {
+            editBtn.classList.remove('hidden-section');
+        } else {
+            editBtn.classList.add('hidden-section');
+        }
+
+        document.getElementById('receiptModal').classList.remove('hidden');
+        document.getElementById('receiptModal').classList.add('flex');
+    } else {
+        alert("Receipt ledger entry not found!");
+    }
+}
+
+function closeReceiptModal() {
+    document.getElementById('receiptModal').classList.add('hidden');
+    document.getElementById('receiptModal').classList.remove('flex');
+}
+
+function openMasterEditModalFromReceipt() {
+    if(activeReceiptId) {
+        const item = ledgers.find(l => l.id === activeReceiptId);
+        if(item) {
+            closeReceiptModal();
+            openMasterEditModal(item.patientId);
         }
     }
 }
 
-// POPULATE ALL DOCTOR DROPDOWNS
+// ==========================================================================
+// 8. MASTER EDIT MODAL & CLINICAL DATA
+// ==========================================================================
 function renderDoctorOptions() {
     const opts = doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
     if(document.getElementById('bk_doctor')) document.getElementById('bk_doctor').innerHTML = opts;
@@ -455,9 +792,6 @@ function renderDoctorOptions() {
     if(document.getElementById('med_doctor')) document.getElementById('med_doctor').innerHTML = opts;
 }
 
-// ==========================================================================
-// 7. MASTER EDIT & RECORD MODIFICATION
-// ==========================================================================
 function openMasterEditModal(pid) {
     renderDoctorOptions();
 
@@ -534,6 +868,10 @@ async function handleMasterEditSubmit(e) {
     await storageEngine.setItem('ns_appointments', appointments);
     await storageEngine.setItem('ns_ledgers', ledgers);
 
+    if(currentSession && currentSession.role === 'assistant') {
+        logAssistantWorkActivity(`Modified Full Master Profile for ${p.name} (${pid})`);
+    }
+
     refreshAllUIViews();
     logAction(`Advanced modal edit applied to patient ${pid}`);
     alert("Patient Record Updated via Master Editor!");
@@ -541,182 +879,163 @@ async function handleMasterEditSubmit(e) {
 }
 
 // ==========================================================================
-// 8. RECEIPT GENERATOR & INSTALLMENT COLLECTION
+// 9. PUBLIC PATIENT TIMELINE SEARCH (DOWNLOAD RX RESTORED)
 // ==========================================================================
-function openReceiptModal(recId) {
-    activeReceiptId = recId;
-    let item = ledgers.find(l => l.id === recId);
-
-    if(!item) {
-        item = ledgers.find(l => l.patientId === recId) || ledgers[0];
-    }
-
-    if(item) {
-        document.getElementById('rc_num').innerText = item.id;
-        document.getElementById('rc_pid').innerText = item.patientId;
-        document.getElementById('rc_pname').innerText = item.patientName;
-        document.getElementById('rc_date').innerText = item.date || currentLiveDateStr;
-        document.getElementById('rc_mode').innerText = item.lastPaymentMode || "Cash";
-        document.getElementById('rc_sum_total').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
-        document.getElementById('rc_sum_paid').innerText = `₹${item.paidAmount.toLocaleString('en-IN')}`;
-        document.getElementById('rc_sum_due').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
-
-        const historyBox = document.getElementById('rc_payment_history_box');
-        if(historyBox) {
-            if(item.paymentHistory && item.paymentHistory.length > 0) {
-                historyBox.innerHTML = item.paymentHistory.map((ph, idx) => `
-                    <div class="flex justify-between border-b border-slate-200 pb-0.5">
-                        <span>${idx+1}. ${ph.timestamp} (${ph.mode})</span>
-                        <strong class="text-emerald-700">₹${ph.amount}</strong>
-                    </div>
-                `).join('');
-            } else {
-                historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode || 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
-            }
-        }
-
-        document.getElementById('receiptModal').classList.remove('hidden');
-        document.getElementById('receiptModal').classList.add('flex');
-    } else {
-        alert("Receipt ledger entry not found!");
-    }
-}
-
-function closeReceiptModal() {
-    document.getElementById('receiptModal').classList.add('hidden');
-    document.getElementById('receiptModal').classList.remove('flex');
-}
-
-function openMasterEditModalFromReceipt() {
-    if(activeReceiptId) {
-        const item = ledgers.find(l => l.id === activeReceiptId);
-        if(item) {
-            closeReceiptModal();
-            openMasterEditModal(item.patientId);
-        }
-    }
-}
-
-function openAddPaymentModal(recId) {
-    const item = ledgers.find(l => l.id === recId);
-    if(!item) return;
-
-    document.getElementById('pay_target_recid').value = item.id;
-    document.getElementById('pay_rec_badge').innerText = item.id;
-    document.getElementById('pay_pname').value = item.patientName;
-    document.getElementById('pay_total_disp').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
-    document.getElementById('pay_due_disp').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
-    document.getElementById('pay_amount_input').value = item.dueAmount;
-    document.getElementById('pay_timestamp').value = `${currentLiveDateStr} ${new Date().toLocaleTimeString()}`;
-
-    document.getElementById('addPaymentModal').classList.remove('hidden');
-    document.getElementById('addPaymentModal').classList.add('flex');
-}
-
-function closeAddPaymentModal() {
-    document.getElementById('addPaymentModal').classList.add('hidden');
-    document.getElementById('addPaymentModal').classList.remove('flex');
-}
-
-async function handleAddPaymentSubmit(e) {
+function handleVerifiedPatientSearch(e) {
     e.preventDefault();
-    const recId = document.getElementById('pay_target_recid').value;
-    const item = ledgers.find(l => l.id === recId);
+    const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
+    const inputId = document.getElementById('ver_identifier').value.trim();
 
-    if(!item) return;
+    const matchedPatient = patients.find(p => p.name.toLowerCase().includes(inputName) && (p.patientId === inputId || p.phone === inputId));
+    const container = document.getElementById('verifiedResultContainer');
+    container.classList.remove('hidden-section');
 
-    const newPaymentVal = parseFloat(document.getElementById('pay_amount_input').value) || 0;
-    const mode = document.getElementById('pay_mode_select').value;
-    const timeStr = document.getElementById('pay_timestamp').value;
+    if(matchedPatient) {
+        const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
+        const recs = medicalRecords[matchedPatient.patientId] || [];
+        const pLedgers = ledgers.filter(l => l.patientId === matchedPatient.patientId);
 
-    if(newPaymentVal <= 0) {
-        alert("Please enter a valid payment amount!");
-        return;
+        container.innerHTML = `
+            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                <div>
+                    <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
+                    <h3 class="text-base font-bold text-white">${matchedPatient.name}</h3>
+                    <p class="text-[11px] text-slate-400">Age/Gender: ${matchedPatient.ageGender || '34 / Male'}</p>
+                </div>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient Timeline</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-red-400 uppercase">Itemized Patient Visit Logs:</h4>
+                <div class="space-y-2">
+                    ${appts.map(a => {
+                        const l = pLedgers.find(x => x.apptId === a.id) || {};
+                        return `
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
+                                <div class="flex justify-between font-bold text-white">
+                                    <span>Date: ${a.date} (${a.slot})</span>
+                                    <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'}</span>
+                                </div>
+                                <p class="text-slate-300">Doctor: ${a.doctor} | Problem: ${a.reason}</p>
+                                <p class="text-slate-400 text-[11px]">BP: ${a.bp || '120/80'} | Mode: ${l.lastPaymentMode || 'Cash'} | Fee: ₹${l.totalCost || 0} (Paid: ₹${l.paidAmount || 0})</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- PUBLIC PRESCRIPTION DOWNLOAD SECTION RESTORED -->
+            <div class="space-y-2 pt-2">
+                <h4 class="text-xs font-bold text-emerald-400 uppercase">Official Prescription Downloads:</h4>
+                <div class="space-y-2">
+                    ${recs.length > 0 ? recs.map(r => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-white">Prescription Date: ${r.date} | Dr. ${r.doctor}</p>
+                                <p class="text-slate-400 text-[11px]">Reason/Diagnosis: ${r.diagnosis}</p>
+                            </div>
+                            <button onclick="publicViewReadOnlyPrescription('${matchedPatient.patientId}', '${r.id || ''}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0 shadow">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Rx
+                            </button>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-500">No prescriptions uploaded yet.</p>'}
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <h4 class="text-xs font-bold text-amber-400 uppercase">Hospital Receipt Downloads:</h4>
+                <div class="space-y-2">
+                    ${pLedgers.length > 0 ? pLedgers.map(l => `
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                                <p class="font-bold text-white">${l.id || 'REC-1001'} | Total Fee: ₹${l.totalCost}</p>
+                                <p class="text-slate-400 text-[11px]">${l.purpose} | Mode: ${l.lastPaymentMode || 'Cash'} | Paid: ₹${l.paidAmount}</p>
+                            </div>
+                            <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0 shadow">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Download Receipt
+                            </button>
+                        </div>
+                    `).join('') : '<p class="text-xs text-slate-500">No receipt ledgers found.</p>'}
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    } else {
+        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Patient Full Name and ID or Mobile Number do not match our database records.</p>`;
+    }
+}
+
+// ==========================================================================
+// 10. DEVICE DETAILS, CALENDAR, LEDGERS & OTHER ROUTINES
+// ==========================================================================
+async function fetchDeviceAndIPDetails() {
+    const ua = navigator.userAgent;
+    let deviceName = "Desktop Browser";
+    let osName = "Windows OS";
+
+    if (/Mobi|Android|iPhone|iPad/i.test(ua)) {
+        deviceName = /iPhone/i.test(ua) ? "Apple iPhone" : /iPad/i.test(ua) ? "Apple iPad" : "Android Mobile Device";
+    } else if (/Macintosh/i.test(ua)) {
+        deviceName = "Apple Mac Workstation";
     }
 
-    item.paidAmount += newPaymentVal;
-    item.dueAmount = Math.max(0, item.totalCost - item.paidAmount);
-    item.lastPaymentMode = mode;
+    if (/Windows/i.test(ua)) osName = "Windows OS";
+    else if (/Mac OS/i.test(ua)) osName = "macOS";
+    else if (/Android/i.test(ua)) osName = "Android OS";
+    else if (/iOS|iPhone|iPad/i.test(ua)) osName = "iOS";
 
-    if(!item.paymentHistory) item.paymentHistory = [];
-    item.paymentHistory.push({
-        amount: newPaymentVal,
-        mode: mode,
-        timestamp: timeStr
-    });
+    const dispDevice = document.getElementById('disp_device_name');
+    const dispOS = document.getElementById('disp_device_os');
+    const dispIP = document.getElementById('disp_device_ip');
 
-    await storageEngine.setItem('ns_ledgers', ledgers);
-    refreshAllUIViews();
+    if(dispDevice) dispDevice.innerText = deviceName;
+    if(dispOS) dispOS.innerText = osName;
 
-    logAction(`Added ₹${newPaymentVal} via ${mode} for Receipt ${recId} (${item.patientName})`);
-    alert(`Payment of ₹${newPaymentVal} recorded successfully via ${mode}!`);
-    closeAddPaymentModal();
-}
-
-function renderLedgers() {
-    const tbl = document.getElementById('tblLedger');
-    if(!tbl) return;
-
-    tbl.innerHTML = ledgers.map(l => `
-        <tr class="hover:bg-slate-800/50">
-            <td class="p-3 font-mono text-red-500">${l.id}<br><span class="text-white font-sans font-bold">${l.patientName} (${l.patientId})</span></td>
-            <td class="p-3">${l.purpose}</td>
-            <td class="p-3">
-                <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold block w-fit">${l.lastPaymentMode || 'Cash'}</span>
-                <span class="text-[10px] text-slate-400 font-mono">${l.date}</span>
-            </td>
-            <td class="p-3 font-bold text-white">₹${l.totalCost}</td>
-            <td class="p-3 text-emerald-400 font-bold">₹${l.paidAmount}</td>
-            <td class="p-3 text-amber-400 font-bold">₹${l.dueAmount}</td>
-            <td class="p-3 flex gap-1 flex-wrap">
-                <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs font-bold">Receipt</button>
-                ${l.dueAmount > 0 ? `<button onclick="openAddPaymentModal('${l.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold shadow">+ Collect Due</button>` : ''}
-                <button onclick="openMasterEditModal('${l.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs font-bold">Edit</button>
-                <button onclick="deleteLedgerRecord('${l.id}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-xs">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-async function deleteLedgerRecord(id) {
-    if(confirm("Are you sure you want to delete this receipt ledger?")) {
-        ledgers = ledgers.filter(l => l.id !== id);
-        await storageEngine.setItem('ns_ledgers', ledgers);
-        refreshAllUIViews();
-        logAction(`Deleted ledger receipt ${id}`);
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        if(dispIP) dispIP.innerText = data.ip || "127.0.0.1 (Local)";
+    } catch(err) {
+        if(dispIP) dispIP.innerText = "Active Network Client";
     }
 }
 
-function calculateAdminStats() {
-    let totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
-    let totalDue = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
+function updateMetricCards() {
+    currentLiveDateStr = new Date().toISOString().split('T')[0];
 
-    let cashRev = 0, upiRev = 0, cardRev = 0;
+    const todayAppts = appointments.filter(a => a.date === currentLiveDateStr);
+    const activeQueue = todayAppts.filter(a => a.queueStatus === 'In Waiting Room' || a.queueStatus === 'In Consultation');
+    
+    const todayLedgers = ledgers.filter(l => l.date === currentLiveDateStr);
+    let todayRev = 0;
 
-    ledgers.forEach(l => {
+    todayLedgers.forEach(l => {
         if(l.paymentHistory && l.paymentHistory.length > 0) {
             l.paymentHistory.forEach(ph => {
-                if(ph.mode.includes('Cash')) cashRev += ph.amount;
-                else if(ph.mode.includes('UPI')) upiRev += ph.amount;
-                else cardRev += ph.amount;
+                if(ph.timestamp && ph.timestamp.startsWith(currentLiveDateStr)) {
+                    todayRev += (parseFloat(ph.amount) || 0);
+                }
             });
         } else {
-            const m = l.lastPaymentMode || 'Cash';
-            if(m.includes('Cash')) cashRev += l.paidAmount;
-            else if(m.includes('UPI')) upiRev += l.paidAmount;
-            else cardRev += l.paidAmount;
+            todayRev += (parseFloat(l.paidAmount) || 0);
         }
     });
 
-    if(document.getElementById('adm_mode_cash')) document.getElementById('adm_mode_cash').innerText = `₹${cashRev.toLocaleString('en-IN')}`;
-    if(document.getElementById('adm_mode_upi')) document.getElementById('adm_mode_upi').innerText = `₹${upiRev.toLocaleString('en-IN')}`;
-    if(document.getElementById('adm_mode_card')) document.getElementById('adm_mode_card').innerText = `₹${cardRev.toLocaleString('en-IN')}`;
-    if(document.getElementById('adm_stat_due')) document.getElementById('adm_stat_due').innerText = `₹${totalDue.toLocaleString('en-IN')}`;
+    const labPending = labOrders.filter(o => o.status !== 'Delivered & Fitted');
+    const riskCount = todayAppts.filter(a => a.risk && a.risk !== 'None').length;
+
+    const lbl1 = document.getElementById('kpi_date_label_1');
+    const lbl2 = document.getElementById('kpi_date_label_2');
+    if(lbl1) lbl1.innerText = `Visits Today (${currentLiveDateStr})`;
+    if(lbl2) lbl2.innerText = `Today Collections (${currentLiveDateStr})`;
+
+    if(document.getElementById('card_stat_visits')) document.getElementById('card_stat_visits').innerText = todayAppts.length;
+    if(document.getElementById('card_stat_queue')) document.getElementById('card_stat_queue').innerText = activeQueue.length;
+    if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
+    if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
+    if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
 }
 
-// ==========================================================================
-// 9. INTERACTIVE CALENDAR WITH DIRECT MODIFICATION
-// ==========================================================================
 function renderCalendar() {
     const grid = document.getElementById('calendarMonthlyGrid');
     const title = document.getElementById('cal_month_title');
@@ -805,9 +1124,116 @@ function changeCalendarMonth(delta) {
     renderCalendar();
 }
 
-// ==========================================================================
-// 10. MANUAL PATIENT UPLOADER & RECEPTION INPUTS
-// ==========================================================================
+function openAddPaymentModal(recId) {
+    const item = ledgers.find(l => l.id === recId);
+    if(!item) return;
+
+    document.getElementById('pay_target_recid').value = item.id;
+    document.getElementById('pay_rec_badge').innerText = item.id;
+    document.getElementById('pay_pname').value = item.patientName;
+    document.getElementById('pay_total_disp').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
+    document.getElementById('pay_due_disp').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
+    document.getElementById('pay_amount_input').value = item.dueAmount;
+    document.getElementById('pay_timestamp').value = `${currentLiveDateStr} ${new Date().toLocaleTimeString()}`;
+
+    document.getElementById('addPaymentModal').classList.remove('hidden');
+    document.getElementById('addPaymentModal').classList.add('flex');
+}
+
+function closeAddPaymentModal() {
+    document.getElementById('addPaymentModal').classList.add('hidden');
+    document.getElementById('addPaymentModal').classList.remove('flex');
+}
+
+async function handleAddPaymentSubmit(e) {
+    e.preventDefault();
+    const recId = document.getElementById('pay_target_recid').value;
+    const item = ledgers.find(l => l.id === recId);
+
+    if(!item) return;
+
+    const newPaymentVal = parseFloat(document.getElementById('pay_amount_input').value) || 0;
+    const mode = document.getElementById('pay_mode_select').value;
+    const timeStr = document.getElementById('pay_timestamp').value;
+
+    if(newPaymentVal <= 0) {
+        alert("Please enter a valid payment amount!");
+        return;
+    }
+
+    item.paidAmount += newPaymentVal;
+    item.dueAmount = Math.max(0, item.totalCost - item.paidAmount);
+    item.lastPaymentMode = mode;
+
+    if(!item.paymentHistory) item.paymentHistory = [];
+    item.paymentHistory.push({
+        amount: newPaymentVal,
+        mode: mode,
+        timestamp: timeStr
+    });
+
+    await storageEngine.setItem('ns_ledgers', ledgers);
+    if(currentSession && currentSession.role === 'assistant') {
+        logAssistantWorkActivity(`Collected ₹${newPaymentVal} via ${mode} for Receipt ${recId} (${item.patientName})`);
+    }
+    refreshAllUIViews();
+
+    logAction(`Added ₹${newPaymentVal} via ${mode} for Receipt ${recId} (${item.patientName})`);
+    alert(`Payment of ₹${newPaymentVal} recorded successfully via ${mode}!`);
+    closeAddPaymentModal();
+}
+
+function renderLedgers() {
+    const tbl = document.getElementById('tblLedger');
+    if(!tbl) return;
+
+    tbl.innerHTML = ledgers.map(l => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-3 font-mono text-red-500">${l.id}<br><span class="text-white font-sans font-bold">${l.patientName} (${l.patientId})</span></td>
+            <td class="p-3">${l.purpose}</td>
+            <td class="p-3">
+                <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold block w-fit">${l.lastPaymentMode || 'Cash'}</span>
+                <span class="text-[10px] text-slate-400 font-mono">${l.date}</span>
+            </td>
+            <td class="p-3 font-bold text-white">₹${l.totalCost}</td>
+            <td class="p-3 text-emerald-400 font-bold">₹${l.paidAmount}</td>
+            <td class="p-3 text-amber-400 font-bold">₹${l.dueAmount}</td>
+            <td class="p-3 flex gap-1 flex-wrap">
+                <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs font-bold">Receipt</button>
+                ${l.dueAmount > 0 ? `<button onclick="openAddPaymentModal('${l.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-xs font-bold shadow">+ Collect Due</button>` : ''}
+                <button onclick="openMasterEditModal('${l.patientId}')" class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-xs font-bold">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function calculateAdminStats() {
+    let totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    let totalDue = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
+
+    let cashRev = 0, upiRev = 0, cardRev = 0;
+
+    ledgers.forEach(l => {
+        if(l.paymentHistory && l.paymentHistory.length > 0) {
+            l.paymentHistory.forEach(ph => {
+                if(ph.mode.includes('Cash')) cashRev += ph.amount;
+                else if(ph.mode.includes('UPI')) upiRev += ph.amount;
+                else cardRev += ph.amount;
+            });
+        } else {
+            const m = l.lastPaymentMode || 'Cash';
+            if(m.includes('Cash')) cashRev += l.paidAmount;
+            else if(m.includes('UPI')) upiRev += l.paidAmount;
+            else cardRev += l.paidAmount;
+        }
+    });
+
+    if(document.getElementById('adm_mode_cash')) document.getElementById('adm_mode_cash').innerText = `₹${cashRev.toLocaleString('en-IN')}`;
+    if(document.getElementById('adm_mode_upi')) document.getElementById('adm_mode_upi').innerText = `₹${upiRev.toLocaleString('en-IN')}`;
+    if(document.getElementById('adm_mode_card')) document.getElementById('adm_mode_card').innerText = `₹${cardRev.toLocaleString('en-IN')}`;
+    if(document.getElementById('adm_stat_due')) document.getElementById('adm_stat_due').innerText = `₹${totalDue.toLocaleString('en-IN')}`;
+}
+
 async function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -871,6 +1297,9 @@ async function handleManualPatientUpload(e) {
         await storageEngine.setItem('ns_ledgers', ledgers);
 
         logAction(`Record saved for ${name} (${patient.patientId}) with ${payMode} payment of ₹${paidAmount}`);
+        if(currentSession && currentSession.role === 'assistant') {
+            logAssistantWorkActivity(`Registered Patient & Payment Entry for ${name} (${patient.patientId})`);
+        }
         alert(`Patient Visit & Payment Logged! Patient ID: ${patient.patientId} | Token: ${token}`);
         e.target.reset();
         document.getElementById('man_existing_badge').classList.add('hidden-section');
@@ -911,74 +1340,6 @@ function handleManualTokenAssignSubmit() {
         document.getElementById('manual_token_val').value = '';
     } else {
         alert("Patient appointment record not found!");
-    }
-}
-
-// ==========================================================================
-// 11. PUBLIC SEARCH, VERIFICATION & EHR LOOKUP
-// ==========================================================================
-function handleVerifiedPatientSearch(e) {
-    e.preventDefault();
-    const inputName = document.getElementById('ver_name').value.trim().toLowerCase();
-    const inputId = document.getElementById('ver_identifier').value.trim();
-
-    const matchedPatient = patients.find(p => p.name.toLowerCase().includes(inputName) && (p.patientId === inputId || p.phone === inputId));
-    const container = document.getElementById('verifiedResultContainer');
-    container.classList.remove('hidden-section');
-
-    if(matchedPatient) {
-        const appts = appointments.filter(a => a.patientId === matchedPatient.patientId);
-        const pLedgers = ledgers.filter(l => l.patientId === matchedPatient.patientId);
-
-        container.innerHTML = `
-            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                <div>
-                    <span class="text-xs text-red-500 font-mono font-bold">${matchedPatient.patientId}</span>
-                    <h3 class="text-base font-bold text-white">${matchedPatient.name}</h3>
-                    <p class="text-[11px] text-slate-400">Age/Gender: ${matchedPatient.ageGender || '34 / Male'}</p>
-                </div>
-                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Verified Patient Timeline</span>
-            </div>
-            
-            <div class="space-y-2">
-                <h4 class="text-xs font-bold text-red-400 uppercase">Itemized Patient Visit Logs:</h4>
-                <div class="space-y-2">
-                    ${appts.map(a => {
-                        const l = pLedgers.find(x => x.apptId === a.id) || {};
-                        return `
-                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
-                                <div class="flex justify-between font-bold text-white">
-                                    <span>Date: ${a.date} (${a.slot})</span>
-                                    <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'}</span>
-                                </div>
-                                <p class="text-slate-300">Doctor: ${a.doctor} | Problem: ${a.reason}</p>
-                                <p class="text-slate-400 text-[11px]">BP: ${a.bp || '120/80'} | Mode: ${l.lastPaymentMode || 'Cash'} | Fee: ₹${l.totalCost || 0} (Paid: ₹${l.paidAmount || 0})</p>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-
-            <div class="space-y-2 pt-2">
-                <h4 class="text-xs font-bold text-amber-400 uppercase">Hospital Receipt Downloads:</h4>
-                <div class="space-y-2">
-                    ${pLedgers.length > 0 ? pLedgers.map(l => `
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-white">${l.id || 'REC-1001'} | Total Fee: ₹${l.totalCost}</p>
-                                <p class="text-slate-400 text-[11px]">${l.purpose} | Mode: ${l.lastPaymentMode || 'Cash'} | Paid: ₹${l.paidAmount}</p>
-                            </div>
-                            <button onclick="openReceiptModal('${l.id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shrink-0">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Download Receipt
-                            </button>
-                        </div>
-                    `).join('') : '<p class="text-xs text-slate-500">No receipt ledgers found.</p>'}
-                </div>
-            </div>
-        `;
-        lucide.createIcons();
-    } else {
-        container.innerHTML = `<p class="text-xs text-rose-400 font-semibold">Verification Failed: Patient Full Name and ID or Mobile Number do not match our database records.</p>`;
     }
 }
 
@@ -1064,7 +1425,6 @@ async function handlePublicBooking(e) {
     navigateTo('public-home');
 }
 
-// PUBLIC NAVIGATION & ROUTINES
 function navigateTo(id) {
     document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden-section'));
     document.getElementById(id).classList.remove('hidden-section');
@@ -1111,7 +1471,7 @@ function handlePortalLogin(e) {
         openDashboard();
         closePortalModal();
     } else {
-        alert("Invalid login credentials or account pending approval!");
+        alert("Invalid login credentials or account access revoked/disabled!");
     }
 }
 
@@ -1123,7 +1483,7 @@ async function handleStaffRegistration(e) {
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
 
-    users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending" });
+    users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending", accessTier: "limited" });
     await storageEngine.setItem('ns_users', users);
 
     logAction(`New ${role} registration request for ${name}.`);
@@ -1184,6 +1544,7 @@ function switchDashTab(tab) {
     document.getElementById('viewCalendar').classList.add('hidden-section');
     document.getElementById('viewEHR').classList.add('hidden-section');
     document.getElementById('viewLedger').classList.add('hidden-section');
+    document.getElementById('viewAsstLogs').classList.add('hidden-section');
     document.getElementById('viewApprovals').classList.add('hidden-section');
     document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
@@ -1194,13 +1555,11 @@ function switchDashTab(tab) {
     if(tab === 'calendar') { document.getElementById('viewCalendar').classList.remove('hidden-section'); document.getElementById('tabBtnCalendar').classList.add('active-tab'); }
     if(tab === 'ehr') { document.getElementById('viewEHR').classList.remove('hidden-section'); document.getElementById('tabBtnEHR').classList.add('active-tab'); }
     if(tab === 'ledger') { document.getElementById('viewLedger').classList.remove('hidden-section'); document.getElementById('tabBtnLedger').classList.add('active-tab'); }
+    if(tab === 'asstLogs') { document.getElementById('viewAsstLogs').classList.remove('hidden-section'); document.getElementById('tabBtnAsstLogs').classList.add('active-tab'); }
     if(tab === 'approvals') { document.getElementById('viewApprovals').classList.remove('hidden-section'); document.getElementById('tabBtnApprovals').classList.add('active-tab'); }
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
 }
 
-// ==========================================================================
-// 12. CLINICAL APPOINTMENTS, LAB ORDERS, PRESCRIPTION & ODONTOGRAM
-// ==========================================================================
 function renderAppointments() {
     document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
@@ -1249,102 +1608,88 @@ function renderLabOrders() {
     }
 }
 
-function openLetterhead(id) {
-    activePrescriptionApptId = id;
-    const appt = appointments.find(a => a.id === id);
-    if(appt) {
-        document.getElementById('lh_pid').innerText = appt.patientId;
-        document.getElementById('lh_pname').innerText = appt.name;
-        document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
-        document.getElementById('lh_issue').innerText = appt.reason;
-        document.getElementById('lh_date').innerText = new Date().toLocaleDateString();
-        document.getElementById('lh_doctor').innerText = appt.doctor;
-        document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+function editLabOrderDetails(orderId) {
+    const order = labOrders.find(o => o.id === orderId);
+    if(!order) return;
 
-        document.getElementById('letterheadModal').classList.remove('hidden');
-        document.getElementById('letterheadModal').classList.add('flex');
-    }
-}
+    document.getElementById('lab_edit_target_id').value = order.id;
+    document.getElementById('lab_edit_id_badge').innerText = order.id;
+    document.getElementById('lab_edit_pname').value = order.patientName;
+    document.getElementById('lab_edit_tooth').value = order.tooth;
+    document.getElementById('lab_edit_material').value = order.material;
+    document.getElementById('lab_edit_labname').value = order.labName;
+    document.getElementById('lab_edit_date').value = order.date;
+    document.getElementById('lab_edit_status').value = order.status;
+    document.getElementById('lab_edit_notes').value = order.notes || '';
 
-function closeLetterheadModal() {
-    document.getElementById('letterheadModal').classList.add('hidden');
-    document.getElementById('letterheadModal').classList.remove('flex');
-}
-
-async function savePrescriptionAndSync() {
-    const appt = appointments.find(a => a.id === activePrescriptionApptId);
-    if(appt) {
-        const notes = document.getElementById('lh_notes').value;
-        const rx = document.getElementById('lh_rx').value;
-        const nextVisit = document.getElementById('lh_next_visit').value;
-
-        if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
-        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: new Date().toLocaleDateString(), diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
-
-        await storageEngine.setItem('ns_records', medicalRecords);
-        appt.nextVisit = nextVisit;
-        appt.modifiedToday = true;
-        await storageEngine.setItem('ns_appointments', appointments);
-
-        logAction(`Prescription saved for ${appt.patientId}.`);
-        alert("Prescription saved & Next visit synced!");
-        refreshAllUIViews();
-    }
-}
-
-function sendPrescriptionWhatsApp() {
-    const appt = appointments.find(a => a.id === activePrescriptionApptId);
-    if(appt) {
-        const notes = document.getElementById('lh_notes').value;
-        const rx = document.getElementById('lh_rx').value;
-        const nextVisit = document.getElementById('lh_next_visit').value;
-
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings:* ${notes}%0A*Rx / Medications:*%0A${rx}%0A%0A*Next Follow-Up Date:* ${nextVisit}`;
-        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-    }
-}
-
-function applyRxPreset(type) {
-    const rxArea = document.getElementById('lh_rx');
-    if(!rxArea) return;
-
-    if(type === 'rct') {
-        rxArea.value = "1. Tab Amoxicillin 500mg | 1-0-1 | After Food (5 Days)\n2. Tab Zero-P (Aceclofenac + Paracetamol) | 1-0-1 | After Food (3 Days)\n3. Cap Pantoprazole 40mg | 1-0-0 | Before Breakfast (5 Days)";
-    } else if(type === 'extraction') {
-        rxArea.value = "1. Tab Augmentin 625mg | 1-0-1 | After Food (5 Days)\n2. Tab Ketorol DT | 1-0-1 | Dissolve in water (3 Days)\n3. Chlorhexidine Mouthwash | Rinse 2 times daily";
-    } else if(type === 'scaling') {
-        rxArea.value = "1. Gum Paint (Tannic Acid) | Apply on gums twice daily\n2. Chlorhexidine 0.2% Mouthwash | Rinse 10ml twice daily for 7 days";
-    }
-    logAction(`Doctor applied Rx Speed-Dial preset: ${type.toUpperCase()}`);
-}
-
-function renderOdontogram() {
-    const grid = document.getElementById('odontogramGrid');
-    if(!grid) return;
-    let html = '';
-    for(let i = 1; i <= 32; i++) {
-        html += `<button type="button" onclick="toggleToothSelection(${i})" id="toothBtn_${i}" class="border border-slate-300 bg-white text-slate-900 px-2 py-1 rounded font-bold hover:bg-red-100">#${i}</button>`;
-    }
-    grid.innerHTML = html;
-}
-
-function toggleToothSelection(toothNum) {
-    const btn = document.getElementById(`toothBtn_${toothNum}`);
-    if(selectedTeeth.includes(toothNum)) {
-        selectedTeeth = selectedTeeth.filter(t => t !== toothNum);
-        btn.classList.remove('tooth-btn-selected');
+    const fileBadge = document.getElementById('lab_edit_current_file_badge');
+    if(order.fileBase64) {
+        fileBadge.innerText = "✓ Custom Scan File Attached";
     } else {
-        selectedTeeth.push(toothNum);
-        btn.classList.add('tooth-btn-selected');
+        fileBadge.innerText = "No impression file uploaded yet.";
     }
 
-    document.getElementById('lh_notes').value = `Teeth Selected: #${selectedTeeth.join(', #')} | Procedure Planned: `;
+    document.getElementById('editLabOrderModal').classList.remove('hidden');
+    document.getElementById('editLabOrderModal').classList.add('flex');
 }
 
-// ==========================================================================
-// 13. PUBLIC QUEUE, REVIEWS, GALLERY & APPROVALS
-// ==========================================================================
+function closeEditLabOrderModal() {
+    document.getElementById('editLabOrderModal').classList.add('hidden');
+    document.getElementById('editLabOrderModal').classList.remove('flex');
+}
+
+async function handleSaveLabOrderEdit(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('lab_edit_target_id').value;
+    const order = labOrders.find(o => o.id === orderId);
+
+    if(!order) return;
+
+    order.patientName = document.getElementById('lab_edit_pname').value;
+    order.tooth = document.getElementById('lab_edit_tooth').value;
+    order.material = document.getElementById('lab_edit_material').value;
+    order.labName = document.getElementById('lab_edit_labname').value;
+    order.date = document.getElementById('lab_edit_date').value;
+    order.status = document.getElementById('lab_edit_status').value;
+    order.notes = document.getElementById('lab_edit_notes').value;
+
+    const fileInput = document.getElementById('lab_edit_file_input');
+
+    async function finishSave() {
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        refreshAllUIViews();
+        logAction(`Updated lab order details and impression file for ${order.id}`);
+        alert(`Lab Order ${order.id} Updated Successfully!`);
+        closeEditLabOrderModal();
+    }
+
+    if(fileInput && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+            order.fileBase64 = evt.target.result;
+            await finishSave();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        await finishSave();
+    }
+}
+
+async function openNewLabOrderModal() {
+    const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
+    const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
+    const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
+    const labName = prompt("Lab Partner Name:", "Apex Dental Lab");
+
+    if(pid && tooth) {
+        const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
+        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: currentLiveDateStr, status: "Impression Taken", notes: "Standard Order", fileBase64: null });
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        refreshAllUIViews();
+        logAction(`Lab order created for ${pid}`);
+    }
+}
+
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
     const todays = appointments.filter(a => a.date === currentLiveDateStr);
@@ -1493,9 +1838,77 @@ async function rejectUserRegistration(id) {
     }
 }
 
+function toggleAdminPageLayout(sectionId, isVisible) {
+    const targetEl = document.getElementById(sectionId);
+    if(targetEl) {
+        if(isVisible) targetEl.classList.remove('hidden-section');
+        else targetEl.classList.add('hidden-section');
+        logAction(`Admin toggled ${sectionId}: ${isVisible ? 'VISIBLE' : 'HIDDEN'}`);
+    }
+}
+
+function togglePerm(key) {
+    const current = localStorage.getItem(`ns_${key}`) === 'true';
+    localStorage.setItem(`ns_${key}`, (!current).toString());
+    logAction(`Updated permission flag: ${key} = ${!current}`);
+}
+
 // ==========================================================================
-// 14. EMERGENCY FIXES, RECONCILIATION & ADMIN UTILITIES
+// 11. EMERGENCY REPAIR UTILITIES & SYSTEM AUDITS
 // ==========================================================================
+async function adminFixMissingReceipts() {
+    let created = 0;
+    appointments.forEach(a => {
+        let l = ledgers.find(x => x.apptId === a.id);
+        if(!l) {
+            ledgers.push({ id: "REC-" + Math.floor(1000 + Math.random()*9000), apptId: a.id, patientId: a.patientId, patientName: a.name, purpose: a.reason || "Consultation", totalCost: 200, paidAmount: 200, dueAmount: 0, lastPaymentMode: "Cash", date: a.date });
+            created++;
+        }
+    });
+    await storageEngine.setItem('ns_ledgers', ledgers);
+    refreshAllUIViews();
+    alert(`Repaired ${created} receipts.`);
+}
+
+async function adminMergeDuplicatePatients() {
+    let uniquePatients = [];
+    let phoneMap = new Set();
+    patients.forEach(p => {
+        if(!phoneMap.has(p.phone)) {
+            phoneMap.add(p.phone);
+            uniquePatients.push(p);
+        }
+    });
+    patients = uniquePatients;
+    await storageEngine.setItem('ns_patients', patients);
+    refreshAllUIViews();
+    alert("Duplicates merged!");
+}
+
+async function adminPurgeBase64Xrays() {
+    if(confirm("Purge stored X-Ray binaries?")) {
+        Object.keys(medicalRecords).forEach(pid => {
+            medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
+        });
+        await storageEngine.setItem('ns_records', medicalRecords);
+        refreshAllUIViews();
+        alert("X-Ray binaries cleared.");
+    }
+}
+
+function adminForceLogoutAllSessions() {
+    currentSession = null;
+    logout();
+    alert("All sessions locked!");
+}
+
+function calculateRevenueSplit() {
+    const docPct = parseFloat(document.getElementById('adm_split_doc').value) || 40;
+    const totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    const docShare = (totalRev * docPct) / 100;
+    document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
+}
+
 function autoCheckExistingPatient(val) {
     const clean = val.replace(/[^0-9a-zA-Z-]/g, '').trim();
     const p = patients.find(x => x.phone === clean || x.patientId.toLowerCase() === clean.toLowerCase());
@@ -1599,7 +2012,7 @@ function downloadExcelBackup() {
 }
 
 function downloadJSONBackup() {
-    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, users, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
+    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, users, assistantPunchLogs, assistantWorkActivity, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1687,139 +2100,27 @@ async function deletePatientRecordATOZ(pid) {
     }
 }
 
-async function openNewLabOrderModal() {
-    const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
-    const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
-    const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
-    const labName = prompt("Lab Partner Name:", "Apex Dental Lab");
-
-    if(pid && tooth) {
-        const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
-        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: currentLiveDateStr, status: "Impression Taken", notes: "Standard Order", fileBase64: null });
-        await storageEngine.setItem('ns_lab_orders', labOrders);
-        refreshAllUIViews();
-        logAction(`Lab order created for ${pid}`);
+function renderOdontogram() {
+    const grid = document.getElementById('odontogramGrid');
+    if(!grid) return;
+    let html = '';
+    for(let i = 1; i <= 32; i++) {
+        html += `<button type="button" onclick="toggleToothSelection(${i})" id="toothBtn_${i}" class="border border-slate-300 bg-white text-slate-900 px-2 py-1 rounded font-bold hover:bg-red-100">#${i}</button>`;
     }
+    grid.innerHTML = html;
 }
 
-function editLabOrderDetails(orderId) {
-    const order = labOrders.find(o => o.id === orderId);
-    if(!order) return;
-
-    document.getElementById('lab_edit_target_id').value = order.id;
-    document.getElementById('lab_edit_id_badge').innerText = order.id;
-    document.getElementById('lab_edit_pname').value = order.patientName;
-    document.getElementById('lab_edit_tooth').value = order.tooth;
-    document.getElementById('lab_edit_material').value = order.material;
-    document.getElementById('lab_edit_labname').value = order.labName;
-    document.getElementById('lab_edit_date').value = order.date;
-    document.getElementById('lab_edit_status').value = order.status;
-    document.getElementById('lab_edit_notes').value = order.notes || '';
-
-    const fileBadge = document.getElementById('lab_edit_current_file_badge');
-    if(order.fileBase64) {
-        fileBadge.innerText = "✓ Custom Scan File Attached";
+function toggleToothSelection(toothNum) {
+    const btn = document.getElementById(`toothBtn_${toothNum}`);
+    if(selectedTeeth.includes(toothNum)) {
+        selectedTeeth = selectedTeeth.filter(t => t !== toothNum);
+        btn.classList.remove('tooth-btn-selected');
     } else {
-        fileBadge.innerText = "No impression file uploaded yet.";
+        selectedTeeth.push(toothNum);
+        btn.classList.add('tooth-btn-selected');
     }
 
-    document.getElementById('editLabOrderModal').classList.remove('hidden');
-    document.getElementById('editLabOrderModal').classList.add('flex');
-}
-
-function closeEditLabOrderModal() {
-    document.getElementById('editLabOrderModal').classList.add('hidden');
-    document.getElementById('editLabOrderModal').classList.remove('flex');
-}
-
-async function handleSaveLabOrderEdit(e) {
-    e.preventDefault();
-    const orderId = document.getElementById('lab_edit_target_id').value;
-    const order = labOrders.find(o => o.id === orderId);
-
-    if(!order) return;
-
-    order.patientName = document.getElementById('lab_edit_pname').value;
-    order.tooth = document.getElementById('lab_edit_tooth').value;
-    order.material = document.getElementById('lab_edit_material').value;
-    order.labName = document.getElementById('lab_edit_labname').value;
-    order.date = document.getElementById('lab_edit_date').value;
-    order.status = document.getElementById('lab_edit_status').value;
-    order.notes = document.getElementById('lab_edit_notes').value;
-
-    const fileInput = document.getElementById('lab_edit_file_input');
-
-    async function finishSave() {
-        await storageEngine.setItem('ns_lab_orders', labOrders);
-        refreshAllUIViews();
-        logAction(`Updated lab order details and impression file for ${order.id}`);
-        alert(`Lab Order ${order.id} Updated Successfully!`);
-        closeEditLabOrderModal();
-    }
-
-    if(fileInput && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
-            order.fileBase64 = evt.target.result;
-            await finishSave();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        await finishSave();
-    }
-}
-
-async function adminFixMissingReceipts() {
-    let created = 0;
-    appointments.forEach(a => {
-        let l = ledgers.find(x => x.apptId === a.id);
-        if(!l) {
-            ledgers.push({ id: "REC-" + Math.floor(1000 + Math.random()*9000), apptId: a.id, patientId: a.patientId, patientName: a.name, purpose: a.reason || "Consultation", totalCost: 200, paidAmount: 200, dueAmount: 0, lastPaymentMode: "Cash", date: a.date });
-            created++;
-        }
-    });
-    await storageEngine.setItem('ns_ledgers', ledgers);
-    refreshAllUIViews();
-    alert(`Repaired ${created} receipts.`);
-}
-
-async function adminMergeDuplicatePatients() {
-    let uniquePatients = [];
-    let phoneMap = new Set();
-    patients.forEach(p => {
-        if(!phoneMap.has(p.phone)) {
-            phoneMap.add(p.phone);
-            uniquePatients.push(p);
-        }
-    });
-    patients = uniquePatients;
-    await storageEngine.setItem('ns_patients', patients);
-    refreshAllUIViews();
-    alert("Duplicates merged!");
-}
-
-async function adminPurgeBase64Xrays() {
-    if(confirm("Purge stored X-Ray binaries?")) {
-        Object.keys(medicalRecords).forEach(pid => {
-            medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
-        });
-        await storageEngine.setItem('ns_records', medicalRecords);
-        refreshAllUIViews();
-        alert("X-Ray binaries cleared.");
-    }
-}
-
-function adminForceLogoutAllSessions() {
-    currentSession = null;
-    logout();
-    alert("All sessions locked!");
-}
-
-function calculateRevenueSplit() {
-    const docPct = parseFloat(document.getElementById('adm_split_doc').value) || 40;
-    const totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
-    const docShare = (totalRev * docPct) / 100;
-    document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
+    document.getElementById('lh_notes').value = `Teeth Selected: #${selectedTeeth.join(', #')} | Clinical Procedure Planned: `;
 }
 
 async function clearAuditLogs() {

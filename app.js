@@ -128,7 +128,7 @@ async function loadStateFromIndexedDB() {
     ];
 
     passwordResetRequests = await storageEngine.getItem('ns_pwd_resets') || [];
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with High-Capacity Storage." }];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Vertical Dashboard Layout." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
@@ -150,7 +150,7 @@ async function loadStateFromIndexedDB() {
     ];
 
     labOrders = await storageEngine.getItem('ns_lab_orders') || [
-        { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: todayStr, status: "In Lab Production" }
+        { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: todayStr, status: "In Lab Production", notes: "A2 Shade Translucent", fileBase64: null }
     ];
 
     medicalRecords = await storageEngine.getItem('ns_records') || {
@@ -174,13 +174,13 @@ async function updateStorageMeter() {
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
         const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
 
-        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Active)`;
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
         if (bar) {
             bar.style.width = `${Math.max(pct, 2)}%`;
             bar.className = "h-full rounded-full transition-all bg-emerald-500";
         }
     } else {
-        if (txt) txt.innerText = "IndexedDB Active (High-Capacity Storage Enabled)";
+        if (txt) txt.innerText = "IndexedDB Active (High-Capacity Local Storage)";
     }
 }
 
@@ -200,30 +200,110 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-function generatePatientUPIQRCode() {
-    const todayAppt = appointments.find(a => a.date === todayStr) || appointments[0];
-    if(!todayAppt) {
-        alert("No active patient appointment found for payment!");
-        return;
+// 100% ADMIN PAGE LAYOUT TOGGLER
+function toggleAdminPageLayout(sectionId, isVisible) {
+    const targetEl = document.getElementById(sectionId);
+    if(targetEl) {
+        if(isVisible) {
+            targetEl.classList.remove('hidden-section');
+        } else {
+            targetEl.classList.add('hidden-section');
+        }
+        logAction(`Admin toggled visibility for ${sectionId}: ${isVisible ? 'VISIBLE' : 'HIDDEN'}`);
     }
-
-    const ledger = ledgers.find(l => l.patientId === todayAppt.patientId) || { totalCost: 500 };
-    const name = todayAppt.name;
-    const amount = ledger.totalCost || 500;
-
-    document.getElementById('upi_pname_title').innerText = `${name} (${todayAppt.patientId})`;
-    document.getElementById('upi_amount_title').innerText = `₹${amount.toLocaleString('en-IN')}`;
-
-    const upiUri = `upi://pay?pa=8978883007@upi&pn=NSDentalCare&am=${amount}&cu=INR`;
-    document.getElementById('upi_qr_img').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}`;
-
-    document.getElementById('upiQRModal').classList.remove('hidden');
-    document.getElementById('upiQRModal').classList.add('flex');
 }
 
-function closeUPIQRModal() {
-    document.getElementById('upiQRModal').classList.add('hidden');
-    document.getElementById('upiQRModal').classList.remove('flex');
+// LAB & CROWN ORDER MODIFICATION / EDIT SYSTEM
+function editLabOrderDetails(orderId) {
+    const order = labOrders.find(o => o.id === orderId);
+    if(!order) return;
+
+    document.getElementById('lab_edit_target_id').value = order.id;
+    document.getElementById('lab_edit_id_badge').innerText = order.id;
+    document.getElementById('lab_edit_pname').value = order.patientName;
+    document.getElementById('lab_edit_tooth').value = order.tooth;
+    document.getElementById('lab_edit_material').value = order.material;
+    document.getElementById('lab_edit_labname').value = order.labName;
+    document.getElementById('lab_edit_date').value = order.date;
+    document.getElementById('lab_edit_status').value = order.status;
+    document.getElementById('lab_edit_notes').value = order.notes || '';
+
+    const fileBadge = document.getElementById('lab_edit_current_file_badge');
+    if(order.fileBase64) {
+        fileBadge.innerText = "✓ Custom Scan File Attached (Click save to keep or upload new file below)";
+    } else {
+        fileBadge.innerText = "No impression file uploaded yet.";
+    }
+
+    document.getElementById('editLabOrderModal').classList.remove('hidden');
+    document.getElementById('editLabOrderModal').classList.add('flex');
+}
+
+function closeEditLabOrderModal() {
+    document.getElementById('editLabOrderModal').classList.add('hidden');
+    document.getElementById('editLabOrderModal').classList.remove('flex');
+}
+
+async function handleSaveLabOrderEdit(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('lab_edit_target_id').value;
+    const order = labOrders.find(o => o.id === orderId);
+
+    if(!order) return;
+
+    order.patientName = document.getElementById('lab_edit_pname').value;
+    order.tooth = document.getElementById('lab_edit_tooth').value;
+    order.material = document.getElementById('lab_edit_material').value;
+    order.labName = document.getElementById('lab_edit_labname').value;
+    order.date = document.getElementById('lab_edit_date').value;
+    order.status = document.getElementById('lab_edit_status').value;
+    order.notes = document.getElementById('lab_edit_notes').value;
+
+    const fileInput = document.getElementById('lab_edit_file_input');
+
+    async function finishSave() {
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+        renderLabOrders();
+        updateMetricCards();
+        logAction(`Updated lab order details and impression file for ${order.id}`);
+        alert(`Lab Order ${order.id} Updated Successfully!`);
+        closeEditLabOrderModal();
+    }
+
+    if(fileInput && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+            order.fileBase64 = evt.target.result;
+            await finishSave();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        await finishSave();
+    }
+}
+
+function renderLabOrders() {
+    const tbl = document.getElementById('tblLabOrders');
+    if(tbl) {
+        tbl.innerHTML = labOrders.map(o => `
+            <tr class="hover:bg-slate-800/50">
+                <td class="p-2.5 font-bold text-white">${o.id}<br><span class="text-amber-400 font-normal text-[11px]">${o.patientName} (${o.patientId})</span></td>
+                <td class="p-2.5 font-mono text-amber-400 font-bold">${o.tooth}</td>
+                <td class="p-2.5 font-bold">${o.material}</td>
+                <td class="p-2.5">${o.labName}</td>
+                <td class="p-2.5">
+                    ${o.fileBase64 ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded">Scan Attached</span>` : `<span class="text-slate-500 text-[10px]">No Scan</span>`}
+                </td>
+                <td class="p-2.5"><span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold border border-sky-500/30">${o.status}</span></td>
+                <td class="p-2.5">
+                    <button onclick="editLabOrderDetails('${o.id}')" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-2.5 py-1 rounded text-[10px] flex items-center gap-1 shadow">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i> Edit Order
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        lucide.createIcons();
+    }
 }
 
 function applyRxPreset(type) {
@@ -1105,23 +1185,6 @@ async function approveAppointment(id) {
     }
 }
 
-function renderLabOrders() {
-    const tbl = document.getElementById('tblLabOrders');
-    if(tbl) {
-        tbl.innerHTML = labOrders.map(o => `
-            <tr class="hover:bg-slate-800/50">
-                <td class="p-2.5 font-bold text-white">${o.patientId}<br><span class="text-slate-400 font-normal">${o.patientName}</span></td>
-                <td class="p-2.5 font-mono text-amber-400 font-bold">${o.tooth}</td>
-                <td class="p-2.5">${o.material}</td>
-                <td class="p-2.5">${o.labName}</td>
-                <td class="p-2.5 font-mono text-[10px]">${o.date}</td>
-                <td class="p-2.5"><span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold border border-sky-500/30">${o.status}</span></td>
-                <td class="p-2.5"><button onclick="updateLabOrderStatus('${o.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[10px]">Update</button></td>
-            </tr>
-        `).join('');
-    }
-}
-
 async function openNewLabOrderModal() {
     const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
     const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
@@ -1130,26 +1193,11 @@ async function openNewLabOrderModal() {
 
     if(pid && tooth) {
         const patient = patients.find(p => p.patientId === pid) || { name: "Patient " + pid };
-        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: todayStr, status: "Impression Taken" });
+        labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: todayStr, status: "Impression Taken", notes: "Standard Order", fileBase64: null });
         await storageEngine.setItem('ns_lab_orders', labOrders);
         renderLabOrders();
         updateMetricCards();
         logAction(`Lab order created for ${pid}`);
-    }
-}
-
-async function updateLabOrderStatus(id) {
-    const order = labOrders.find(o => o.id === id);
-    if(order) {
-        const st = prompt("Lab Status (1: Impression Taken, 2: In Lab Production, 3: Delivered & Fitted):", "2");
-        if(st === "1") order.status = "Impression Taken";
-        if(st === "2") order.status = "In Lab Production";
-        if(st === "3") order.status = "Delivered & Fitted";
-
-        await storageEngine.setItem('ns_lab_orders', labOrders);
-        renderLabOrders();
-        updateMetricCards();
-        logAction(`Lab order ${id} status updated.`);
     }
 }
 
@@ -1774,6 +1822,10 @@ async function approvePasswordReset(reqId) {
 }
 
 function switchDashTab(tab) {
+    // DESELECT ALL SIDEBAR MENU BUTTONS
+    document.querySelectorAll('.sidebar-menu-btn').forEach(btn => btn.classList.remove('active-tab'));
+
+    // HIDE ALL WORKSPACE VIEWS
     document.getElementById('viewWelcome').classList.add('hidden-section');
     document.getElementById('viewAppts').classList.add('hidden-section');
     document.getElementById('viewManualPatient').classList.add('hidden-section');
@@ -1784,15 +1836,43 @@ function switchDashTab(tab) {
     document.getElementById('viewApprovals').classList.add('hidden-section');
     document.getElementById('viewAdminMaster').classList.add('hidden-section');
 
-    if(tab === 'welcome') document.getElementById('viewWelcome').classList.remove('hidden-section');
-    if(tab === 'appts') document.getElementById('viewAppts').classList.remove('hidden-section');
-    if(tab === 'manualPatient') document.getElementById('viewManualPatient').classList.remove('hidden-section');
-    if(tab === 'labTracker') document.getElementById('viewLabTracker').classList.remove('hidden-section');
-    if(tab === 'calendar') document.getElementById('viewCalendar').classList.remove('hidden-section');
-    if(tab === 'ehr') document.getElementById('viewEHR').classList.remove('hidden-section');
-    if(tab === 'ledger') document.getElementById('viewLedger').classList.remove('hidden-section');
-    if(tab === 'approvals') document.getElementById('viewApprovals').classList.remove('hidden-section');
-    if(tab === 'adminMaster') document.getElementById('viewAdminMaster').classList.remove('hidden-section');
+    // ACTIVATE TARGET TAB AND SIDEBAR HIGHLIGHT
+    if(tab === 'welcome') {
+        document.getElementById('viewWelcome').classList.remove('hidden-section');
+        document.getElementById('tabBtnWelcome').classList.add('active-tab');
+    }
+    if(tab === 'appts') {
+        document.getElementById('viewAppts').classList.remove('hidden-section');
+        document.getElementById('tabBtnAppts').classList.add('active-tab');
+    }
+    if(tab === 'manualPatient') {
+        document.getElementById('viewManualPatient').classList.remove('hidden-section');
+        document.getElementById('tabBtnManualPatient').classList.add('active-tab');
+    }
+    if(tab === 'labTracker') {
+        document.getElementById('viewLabTracker').classList.remove('hidden-section');
+        document.getElementById('tabBtnLabTracker').classList.add('active-tab');
+    }
+    if(tab === 'calendar') {
+        document.getElementById('viewCalendar').classList.remove('hidden-section');
+        document.getElementById('tabBtnCalendar').classList.add('active-tab');
+    }
+    if(tab === 'ehr') {
+        document.getElementById('viewEHR').classList.remove('hidden-section');
+        document.getElementById('tabBtnEHR').classList.add('active-tab');
+    }
+    if(tab === 'ledger') {
+        document.getElementById('viewLedger').classList.remove('hidden-section');
+        document.getElementById('tabBtnLedger').classList.add('active-tab');
+    }
+    if(tab === 'approvals') {
+        document.getElementById('viewApprovals').classList.remove('hidden-section');
+        document.getElementById('tabBtnApprovals').classList.add('active-tab');
+    }
+    if(tab === 'adminMaster') {
+        document.getElementById('viewAdminMaster').classList.remove('hidden-section');
+        document.getElementById('tabBtnAdminMaster').classList.add('active-tab');
+    }
 }
 
 initApp();

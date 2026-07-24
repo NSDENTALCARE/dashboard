@@ -98,7 +98,7 @@ window.addEventListener("storage", async (e) => {
     }
 });
 
-// GLOBAL APPLICATION STATE
+// GLOBAL STATE VARIABLES
 let hospitalEmail = "info@nsdentalcare.com";
 let doctorEmail = "ayub@nsdentalcare.com";
 let doctors = [];

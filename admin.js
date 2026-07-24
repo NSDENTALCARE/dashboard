@@ -194,3 +194,140 @@ async function deleteStaffAccount() {
         closeEditStaffModal();
     }
 }
+
+function toggleAdminPageLayout(sectionId, isVisible) {
+    const targetEl = document.getElementById(sectionId);
+    if(targetEl) {
+        if(isVisible) targetEl.classList.remove('hidden-section');
+        else targetEl.classList.add('hidden-section');
+        logAction(`Admin toggled ${sectionId}: ${isVisible ? 'VISIBLE' : 'HIDDEN'}`);
+    }
+}
+
+function togglePerm(key) {
+    const current = localStorage.getItem(`ns_${key}`) === 'true';
+    localStorage.setItem(`ns_${key}`, (!current).toString());
+    logAction(`Updated permission flag: ${key} = ${!current}`);
+}
+
+async function adminFixMissingReceipts() {
+    let created = 0;
+    appointments.forEach(a => {
+        let l = ledgers.find(x => x.apptId === a.id);
+        if(!l) {
+            ledgers.push({ id: "REC-" + Math.floor(1000 + Math.random()*9000), apptId: a.id, patientId: a.patientId, patientName: a.name, purpose: a.reason || "Consultation", totalCost: 200, paidAmount: 200, dueAmount: 0, lastPaymentMode: "Cash", date: a.date });
+            created++;
+        }
+    });
+    await storageEngine.setItem('ns_ledgers', ledgers);
+    refreshAllUIViews();
+    alert(`Repaired ${created} receipts.`);
+}
+
+async function adminMergeDuplicatePatients() {
+    let uniquePatients = [];
+    let phoneMap = new Set();
+    patients.forEach(p => {
+        if(!phoneMap.has(p.phone)) {
+            phoneMap.add(p.phone);
+            uniquePatients.push(p);
+        }
+    });
+    patients = uniquePatients;
+    await storageEngine.setItem('ns_patients', patients);
+    refreshAllUIViews();
+    alert("Duplicates merged!");
+}
+
+async function adminPurgeBase64Xrays() {
+    if(confirm("Purge stored X-Ray binaries?")) {
+        Object.keys(medicalRecords).forEach(pid => {
+            medicalRecords[pid].forEach(r => { delete r.xrayBase64; });
+        });
+        await storageEngine.setItem('ns_records', medicalRecords);
+        refreshAllUIViews();
+        alert("X-Ray binaries cleared.");
+    }
+}
+
+function adminForceLogoutAllSessions() {
+    currentSession = null;
+    logout();
+    alert("All sessions locked!");
+}
+
+function calculateRevenueSplit() {
+    const docPct = parseFloat(document.getElementById('adm_split_doc').value) || 40;
+    const totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    const docShare = (totalRev * docPct) / 100;
+    document.getElementById('adm_calc_doc_share').innerText = `₹${docShare.toLocaleString('en-IN')} (${docPct}%)`;
+}
+
+async function updateLiveTickerAdmin() {
+    const inputEl = document.getElementById('adm_ticker_input');
+    if(inputEl && inputEl.value) {
+        await storageEngine.setItem('ns_ticker_text', inputEl.value);
+        checkPublicTicker();
+        logAction(`Admin updated marquee ticker: "${inputEl.value}"`);
+        alert("Top Ticker Updated!");
+    }
+}
+
+async function clearAuditLogs() {
+    if(confirm("Clear audit logs?")) {
+        auditLogs = [];
+        await storageEngine.setItem('ns_logs', auditLogs);
+        renderAuditLogs();
+    }
+}
+
+async function resetSystemData() {
+    if(confirm("Permanently erase all stored database records?")) {
+        await storageEngine.clear();
+        location.reload();
+    }
+}
+
+function renderApprovals() {
+    const tbl = document.getElementById('tblApprovals');
+    const pending = users.filter(u => u.status === 'Pending');
+
+    if(tbl) {
+        if(pending.length === 0) {
+            tbl.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No pending staff registrations.</td></tr>`;
+        } else {
+            tbl.innerHTML = pending.map(u => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="p-3 font-bold text-white">${u.name}</td>
+                    <td class="p-3 uppercase font-bold text-amber-400">${u.role}</td>
+                    <td class="p-3 font-mono text-slate-300">${u.phone}<br><span class="text-[10px] text-slate-500">${u.email}</span></td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="approveUserRegistration(${u.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded text-xs shadow">Approve</button>
+                        <button onclick="rejectUserRegistration(${u.id})" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1 rounded text-xs">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+async function approveUserRegistration(id) {
+    const u = users.find(x => x.id === id);
+    if(u) {
+        u.status = "Approved";
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        renderAdminUsers();
+        logAction(`Approved staff registration for ${u.name}`);
+        alert(`User ${u.name} approved!`);
+    }
+}
+
+async function rejectUserRegistration(id) {
+    if(confirm("Reject this staff account request?")) {
+        users = users.filter(u => u.id !== id);
+        await storageEngine.setItem('ns_users', users);
+        renderApprovals();
+        logAction(`Rejected staff registration #${id}`);
+    }
+}

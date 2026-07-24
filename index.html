@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 11:35:00 PM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 11:47:00 PM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -109,52 +109,6 @@
                 </div>
             </div>
 
-            <!-- QUICK LINKS GRID -->
-            <div id="pub_sec_quicklinks" class="space-y-3">
-                <h3 class="text-xl font-black text-white text-center uppercase tracking-wide">Quick Links</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div onclick="navigateTo('public-booking')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="calendar-plus" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Apply For Visit</h4>
-                            <p class="text-[10px] text-slate-600">Book slot online</p>
-                        </div>
-                    </div>
-
-                    <a href="#sec_queue" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="clock" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Check Availability</h4>
-                            <p class="text-[10px] text-slate-600">Live queue tokens</p>
-                        </div>
-                    </a>
-
-                    <a href="#sec_doctors" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="stethoscope" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Attending Surgeons</h4>
-                            <p class="text-[10px] text-slate-600">Doctor profiles</p>
-                        </div>
-                    </a>
-
-                    <div onclick="navigateTo('track-appointment')" class="bg-amber-100/90 hover:bg-amber-100 text-slate-900 border border-amber-300 p-4 rounded-2xl cursor-pointer flex items-center gap-3 shadow-md transition">
-                        <div class="bg-white p-2.5 rounded-xl text-red-700 shadow-sm shrink-0">
-                            <i data-lucide="download" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900">Download Rx & Receipt</h4>
-                            <p class="text-[10px] text-slate-600">Health portal view</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- LIVE QUEUE TABLE -->
             <div id="sec_queue" class="bg-slate-900 border border-red-900/50 p-4 sm:p-6 rounded-2xl space-y-4 shadow-xl scroll-mt-20">
                 <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-3">
@@ -235,7 +189,7 @@
                         <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="star" class="text-amber-400 fill-amber-400"></i> Verified Google Maps Reviews
                         </h3>
-                        <p class="text-[11px] text-slate-400">30 Verified Patient Reviews • Auto-rotates every 10 seconds</p>
+                        <p class="text-[11px] text-slate-400">Verified Patient Reviews • Auto-rotates every 10 seconds</p>
                     </div>
                     <div class="text-right">
                         <span class="text-lg sm:text-xl font-black text-amber-400">4.9 ★</span>
@@ -388,14 +342,14 @@
         <!-- CLINICAL OPERATIONS COMMAND DASHBOARD -->
         <section id="dashboard" class="hidden-section flex-1 w-full space-y-6">
             
-            <!-- REAL-TIME OPERATIONS SUMMARY CARDS -->
+            <!-- DYNAMIC DATED REAL-TIME KPI METRIC CARDS -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center gap-3 shadow-lg">
                     <div class="bg-red-500/20 text-red-400 p-2.5 rounded-xl font-bold">
                         <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Today's Patient Visits</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block" id="kpi_date_label_1">Visits Today</span>
                         <span id="card_stat_visits" class="text-lg font-black text-white">0</span>
                     </div>
                 </div>
@@ -415,7 +369,7 @@
                         <i data-lucide="indian-rupee" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Today Collections</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block" id="kpi_date_label_2">Today Collections</span>
                         <span id="card_stat_revenue" class="text-lg font-black text-emerald-400">₹0</span>
                     </div>
                 </div>
@@ -441,45 +395,12 @@
                 </div>
             </div>
 
-            <!-- INDEXEDB HIGH-CAPACITY STORAGE METER -->
-            <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-md text-xs">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="hard-drive" class="text-emerald-400 w-4 h-4"></i>
-                    <div>
-                        <span class="font-bold text-white block">IndexedDB High-Capacity Storage Engine</span>
-                        <span id="storage_usage_text" class="text-[10px] text-slate-400">Calculating Storage...</span>
-                    </div>
-                </div>
-                <div class="w-32 bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden p-0.5">
-                    <div id="storage_usage_bar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 2%;"></div>
-                </div>
-            </div>
-
-            <!-- MANUAL PATIENT TOKEN ASSIGNER TOOLBAR -->
-            <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
-                <div class="flex items-center gap-2">
-                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl font-bold">
-                        <i data-lucide="ticket" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-white uppercase">Manual Patient Token Assigner</h4>
-                        <p class="text-[10px] text-slate-400">Assign custom sequence tokens for walk-ins or existing patients</p>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-lg">
-                    <input type="text" id="manual_token_pid" placeholder="Patient ID (e.g. PAT-1001) or Mobile #" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
-                    <input type="text" id="manual_token_val" placeholder="Token # (e.g. TK-05)" class="w-28 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
-                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow">Assign Token</button>
-                </div>
-            </div>
-
             <!-- DASHBOARD TOOLBAR HEADER -->
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-3 shadow-xl">
                 <div>
                     <div class="flex items-center gap-2">
                         <span id="dashBadge" class="bg-red-500/20 text-red-400 text-xs font-black px-3 py-1 rounded-full border border-red-500/30 uppercase">ROLE</span>
-                        <span id="dashVerifiedStatus" class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">● Authenticated Session</span>
+                        <span id="dashVerifiedStatus" class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">● Real-time Auto-Sync Active</span>
                     </div>
                     <h2 id="dashWelcome" class="text-base sm:text-lg font-bold text-white mt-1">Welcome</h2>
                     <p id="dashClockBar" class="text-xs text-amber-400 font-mono mt-0.5"></p>
@@ -489,19 +410,10 @@
                         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Daily Excel Backup
                     </button>
                     <button onclick="resetDailyTokens()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Daily Queue Tokens
-                    </button>
-                    <button onclick="sendDoctorDailyBriefingEmail()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email Briefing to Dr
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Queue Tokens
                     </button>
                     <button onclick="triggerWhatsAppDoctorBriefing()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 shadow">
                         <i data-lucide="send" class="w-3.5 h-3.5"></i> WhatsApp Briefing
-                    </button>
-                    <button onclick="openDayWiseAuditModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow">
-                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i> Staff & CA Daily Audit
-                    </button>
-                    <button onclick="downloadJSONBackup()" class="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 1-Click Backup
                     </button>
                     <button onclick="logout()" class="bg-rose-900/60 hover:bg-rose-900 text-rose-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-rose-800">Exit Session</button>
                 </div>
@@ -577,29 +489,6 @@
                                     <span id="welc_session_token" class="text-slate-400 block text-[10px]">Session Token: SEC-ACTIVE</span>
                                 </div>
                             </div>
-
-                            <div id="stf_sec_quickcards" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-                                <button onclick="switchDashTab('appts')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="users" class="text-red-500 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Patient Queue</h4>
-                                    <p class="text-[10px] text-slate-400">View live waiting queue</p>
-                                </button>
-                                <button onclick="switchDashTab('manualPatient')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="user-plus" class="text-amber-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Add/Edit Patient</h4>
-                                    <p class="text-[10px] text-slate-400">Upload profile & vitals</p>
-                                </button>
-                                <button onclick="switchDashTab('calendar')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="calendar" class="text-emerald-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Month Calendar</h4>
-                                    <p class="text-[10px] text-slate-400">Month-wise schedule</p>
-                                </button>
-                                <button onclick="switchDashTab('ledger')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="file-text" class="text-sky-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Receipt Ledger</h4>
-                                    <p class="text-[10px] text-slate-400">Financial records</p>
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -619,9 +508,8 @@
                                             <th class="p-3">Vitals / Risks</th>
                                             <th class="p-3">Doctor</th>
                                             <th class="p-3">Visit Date & Slot</th>
-                                            <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
-                                            <th class="p-3">Master Action Controls</th>
+                                            <th class="p-3">Master Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblAppointments" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -768,7 +656,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: LAB TRACKER WITH EDITABLE OPTIONS -->
+                    <!-- TAB 4: LAB TRACKER -->
                     <div id="viewLabTracker" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -863,6 +751,30 @@
                     <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
                     <div id="viewAdminMaster" class="hidden-section space-y-6">
 
+                        <!-- ACTIVE DEVICE NAME & IP DETAILS PANEL -->
+                        <div class="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-3 shadow-2xl">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                                <h3 class="text-sm font-bold text-emerald-400 uppercase flex items-center gap-2">
+                                    <i data-lucide="laptop" class="w-4 h-4"></i> Active Device & Public IP Activity Logs
+                                </h3>
+                                <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded font-mono font-bold">● Live Sync Stream</span>
+                            </div>
+                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                                    <span class="text-[10px] text-slate-400 uppercase block">Current Device / Hardware</span>
+                                    <strong id="disp_device_name" class="text-white block truncate">Detecting...</strong>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                                    <span class="text-[10px] text-slate-400 uppercase block">Operating System / Engine</span>
+                                    <strong id="disp_device_os" class="text-amber-400 block truncate">Detecting...</strong>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                                    <span class="text-[10px] text-slate-400 uppercase block">Network Public IP Address</span>
+                                    <strong id="disp_device_ip" class="text-sky-400 block font-mono">Fetching IP...</strong>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 100% ADMIN PAGE LAYOUT CUSTOMIZER SUITE -->
                         <div class="bg-slate-900 border border-red-800 p-5 rounded-2xl space-y-4 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -881,10 +793,6 @@
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Hero Welcome Banner</span>
                                         <input type="checkbox" id="layout_pub_hero" checked onchange="toggleAdminPageLayout('pub_sec_hero', this.checked)" class="accent-red-600 w-4 h-4">
-                                    </label>
-                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Quick Links Grid</span>
-                                        <input type="checkbox" id="layout_pub_quicklinks" checked onchange="toggleAdminPageLayout('pub_sec_quicklinks', this.checked)" class="accent-red-600 w-4 h-4">
                                     </label>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Live Patient Token Queue</span>
@@ -914,63 +822,6 @@
                             </div>
                         </div>
 
-                        <!-- EMERGENCY FIX & SYSTEM REPAIR MODULES -->
-                        <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="wrench" class="w-4 h-4"></i> Admin Emergency Fix & System Repair Tools
-                                </h3>
-                                <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">Admin Master Authority</span>
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <button onclick="adminFixMissingReceipts()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="file-check" class="text-emerald-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Auto-Repair Receipts</strong>
-                                    <span class="text-[10px] text-slate-400 block">Fix missing billing ledger receipts</span>
-                                </button>
-
-                                <button onclick="adminMergeDuplicatePatients()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="users" class="text-sky-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Merge Duplicate Patients</strong>
-                                    <span class="text-[10px] text-slate-400 block">Consolidate profiles by phone #</span>
-                                </button>
-
-                                <button onclick="adminPurgeBase64Xrays()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="trash-2" class="text-rose-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Storage Optimizer</strong>
-                                    <span class="text-[10px] text-slate-400 block">Clear heavy X-Ray base64 images</span>
-                                </button>
-
-                                <button onclick="adminForceLogoutAllSessions()" class="bg-slate-950 hover:bg-black border border-slate-800 p-3 rounded-xl text-left space-y-1">
-                                    <i data-lucide="lock" class="text-amber-400 w-4 h-4"></i>
-                                    <strong class="block text-white">Force Session Lock</strong>
-                                    <span class="text-[10px] text-slate-400 block">Invalidate staff logins</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- REVENUE SHARE CALCULATOR -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor Split Modeler
-                            </h3>
-                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <label class="block text-slate-400 mb-1">Clinic Share (%)</label>
-                                    <input type="number" id="adm_split_clinic" value="60" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                                    <label class="block text-slate-400 mb-1">Doctor Share (%)</label>
-                                    <input type="number" id="adm_split_doc" value="40" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
-                                    <span class="text-[10px] text-slate-400 uppercase">Estimated Doctor Share</span>
-                                    <p id="adm_calc_doc_share" class="text-base font-black text-emerald-400">₹0</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- REVENUE STATS -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
@@ -996,26 +847,29 @@
                             </div>
                         </div>
 
-                        <!-- TICKER CONTROLLER -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 text-xs">
-                            <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="megaphone" class="w-4 h-4"></i> Top Marquee Ticker Controller
-                            </h3>
-                            <textarea id="adm_ticker_input" rows="2" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-white" placeholder="Enter marquee text to slide across top header..."></textarea>
-                            <button onclick="updateLiveTickerAdmin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl">
-                                Update Top Ticker Text
-                            </button>
-                        </div>
-
-                        <!-- STAFF CREDENTIALS MANAGER -->
-                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                    <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Credentials
-                                </h3>
-                                <span class="text-[10px] text-slate-400">Plain text passwords visible to Admin</span>
+                        <!-- STAFF CREDENTIALS MANAGER WITH LIST / GRID SWITCHER -->
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                                        <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Credentials Manager
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">View, edit, or modify staff passwords and contact roles</p>
+                                </div>
+                                
+                                <!-- LIST / GRID VIEW TOGGLE BUTTONS -->
+                                <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+                                    <button onclick="setStaffViewMode('list')" id="btn_staff_view_list" class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-red-700 text-white shadow">
+                                        <i data-lucide="list" class="w-3.5 h-3.5"></i> List View
+                                    </button>
+                                    <button onclick="setStaffViewMode('grid')" id="btn_staff_view_grid" class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 text-slate-400 hover:text-white">
+                                        <i data-lucide="grid" class="w-3.5 h-3.5"></i> Grid View
+                                    </button>
+                                </div>
                             </div>
-                            <div class="overflow-x-auto">
+
+                            <!-- LIST TABLE VIEW CONTAINER -->
+                            <div id="staffListViewContainer" class="overflow-x-auto">
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
                                         <tr>
@@ -1030,6 +884,9 @@
                                     <tbody id="adminUserManagementTable" class="divide-y divide-slate-800 text-slate-300"></tbody>
                                 </table>
                             </div>
+
+                            <!-- GRID CARD VIEW CONTAINER -->
+                            <div id="staffGridViewContainer" class="hidden-section grid sm:grid-cols-2 gap-3"></div>
                         </div>
 
                         <!-- AUDIT LOGS & BACKUPS -->
@@ -1054,76 +911,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- LAB ORDER EDIT MODAL -->
-        <div id="editLabOrderModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeEditLabOrderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                    <i data-lucide="x"></i>
-                </button>
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <div>
-                        <span class="text-[10px] text-purple-400 font-mono uppercase font-bold">Lab Asset Modifier</span>
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="edit-3" class="text-purple-400 w-4 h-4"></i> Edit Lab & Crown Order File
-                        </h3>
-                    </div>
-                    <span id="lab_edit_id_badge" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">LAB-101</span>
-                </div>
-                <form onsubmit="handleSaveLabOrderEdit(event)" class="space-y-3 text-xs">
-                    <input type="hidden" id="lab_edit_target_id">
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Patient Full Name</label>
-                            <input type="text" id="lab_edit_pname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Tooth Quadrant / #</label>
-                            <input type="text" id="lab_edit_tooth" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Crown Material</label>
-                            <input type="text" id="lab_edit_material" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Lab Partner Name</label>
-                            <input type="text" id="lab_edit_labname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                    </div>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Impression Date</label>
-                            <input type="date" id="lab_edit_date" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                        </div>
-                        <div>
-                            <label class="block text-slate-400 uppercase mb-1">Production Status</label>
-                            <select id="lab_edit_status" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
-                                <option value="Impression Taken">Impression Taken</option>
-                                <option value="In Lab Production">In Lab Production</option>
-                                <option value="Delivered & Fitted">Delivered & Fitted</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 uppercase mb-1">Order Notes / Shade Details</label>
-                        <textarea id="lab_edit_notes" rows="2" placeholder="A2 Shade, Translucent Zirconia..." class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
-                    </div>
-
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                        <label class="block uppercase text-purple-400 font-bold">Replace / Upload Impression Scan (JPEG/PNG/PDF):</label>
-                        <input type="file" id="lab_edit_file_input" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl text-slate-300 text-xs">
-                        <span id="lab_edit_current_file_badge" class="text-[10px] text-emerald-400 font-mono block"></span>
-                    </div>
-
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="closeEditLabOrderModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
-                        <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-xl">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
 
         <!-- MASTER EDITING MODAL -->
         <div id="masterEditModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
@@ -1205,51 +992,6 @@
                         <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-xl">Save All Changes</button>
                     </div>
                 </form>
-            </div>
-        </div>
-
-        <!-- DAY-WISE AUDIT MODAL -->
-        <div id="dayAuditModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-2xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeDayWiseAuditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                    <i data-lucide="x"></i>
-                </button>
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <div>
-                        <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">CA & Staff Reconciliation</span>
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            <i data-lucide="file-check" class="text-purple-400 w-4 h-4"></i> Daily Accounts & Patient Summary Verification
-                        </h3>
-                    </div>
-                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-24</span>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-3 text-xs">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Total Patients Today</span>
-                        <p id="aud_pcount" class="text-lg font-black text-white">0</p>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Collected Cash/UPI</span>
-                        <p id="aud_rev" class="text-lg font-black text-emerald-400">₹0</p>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-400 uppercase">Pending Due Balance</span>
-                        <p id="aud_due" class="text-lg font-black text-amber-400">₹0</p>
-                    </div>
-                </div>
-
-                <div class="space-y-2 text-xs">
-                    <h4 class="font-bold text-slate-300 uppercase">Today's Patient Breakup Log:</h4>
-                    <div id="auditBreakupList" class="bg-slate-950 p-3 rounded-xl border border-slate-800 max-h-48 overflow-y-auto space-y-1.5 font-mono text-[11px]"></div>
-                </div>
-
-                <div class="flex justify-between items-center border-t border-slate-800 pt-3">
-                    <button onclick="markDayAuditVerified()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Lock & Verify Day Audit (Staff / CA)
-                    </button>
-                    <button onclick="closeDayWiseAuditModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Close Summary</button>
-                </div>
             </div>
         </div>
 
@@ -1347,13 +1089,6 @@
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
                 </div>
 
-                <div class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
-                    <span class="font-bold text-slate-700">Preset Rx Kits:</span>
-                    <button onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded">RCT Kit</button>
-                    <button onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded">Extraction Kit</button>
-                    <button onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">Scaling/Cleaning</button>
-                </div>
-
                 <div class="space-y-3 text-xs">
                     <div>
                         <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Diagnosis:</label>
@@ -1381,7 +1116,7 @@
             </div>
         </div>
 
-        <!-- RECEIPT MODAL -->
+        <!-- REPAIRED RECEIPT MODAL -->
         <div id="receiptModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeReceiptModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -1425,8 +1160,7 @@
                         <p class="text-amber-700 font-bold"><strong>Remaining Balance Due:</strong> <span id="rc_sum_due">₹0</span></p>
                     </div>
                 </div>
-                <div class="no-print flex justify-between items-center pt-3 border-t">
-                    <button id="rc_edit_btn" onclick="openMasterEditModalFromReceipt()" class="bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-xs">Edit Ledger Charges</button>
+                <div class="no-print flex justify-end gap-2 pt-3 border-t">
                     <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print / Download Receipt</button>
                 </div>
             </div>

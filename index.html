@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Friday, July 24, 2026 | 11:50:00 PM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 12:05:00 AM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -245,7 +245,7 @@
             </div>
         </section>
 
-        <!-- PATIENT TIMELINE TRACKER -->
+        <!-- PATIENT TIMELINE TRACKER (PUBLIC DOWNLOAD ACCESS RESTORED) -->
         <section id="track-appointment" class="hidden-section max-w-3xl mx-auto w-full space-y-4">
             <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl shadow-2xl space-y-4">
                 <button onclick="navigateTo('public-home')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
@@ -253,21 +253,21 @@
                 </button>
                 <div class="border-b border-slate-800 pb-3">
                     <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <i data-lucide="user-check" class="text-amber-400"></i> Patient Itemized History & Download Portal
+                        <i data-lucide="user-check" class="text-amber-400"></i> Patient History & Download Portal
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Enter registered Patient Full Name and Patient ID or Registered Mobile # to view visit logs, payment modes, prescriptions, and receipts.</p>
+                    <p class="text-xs text-slate-400 mt-1">Enter registered Patient Full Name and Patient ID or Mobile # to download official digital prescriptions and receipts.</p>
                 </div>
                 <form onsubmit="handleVerifiedPatientSearch(event)" class="space-y-3">
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Patient Full Name *</label>
-                        <input type="text" id="ver_name" required placeholder="Enter full name (e.g. Mohammed Ali)" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs text-white">
+                        <input type="text" id="ver_name" required placeholder="e.g. Mohammed Ali" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs text-white">
                     </div>
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Patient ID or Registered Mobile # *</label>
                         <input type="text" id="ver_identifier" required placeholder="e.g. PAT-1001 or 9876543210" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs text-white">
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5">
-                        <i data-lucide="shield-check" class="w-4 h-4"></i> Verify Identity & Unlock Timeline
+                        <i data-lucide="shield-check" class="w-4 h-4"></i> Unlock Patient Prescriptions & Receipts
                     </button>
                 </form>
             </div>
@@ -282,13 +282,13 @@
                 </button>
                 <div class="border-b border-slate-800 pb-2">
                     <h2 class="text-lg font-bold text-white">Book Appointment Request</h2>
-                    <p class="text-[11px] text-amber-400 font-semibold">Existing patients: enter your registered phone number or ID to auto-fill details!</p>
+                    <p class="text-[11px] text-amber-400 font-semibold">Existing patients: enter registered mobile or PAT-XXXX ID!</p>
                 </div>
                 <form onsubmit="handlePublicBooking(event)" class="space-y-3">
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Mobile # or Patient ID *</label>
                         <input type="text" id="bk_phone" oninput="autoCheckExistingPatient(this.value)" required placeholder="Enter 10-digit mobile or PAT-XXXX" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
-                        <span id="bk_existing_badge" class="hidden-section text-[10px] text-emerald-400 font-bold mt-1 block">✓ Existing Patient Match Found!</span>
+                        <span id="bk_existing_badge" class="hidden-section text-[10px] text-emerald-400 font-bold mt-1 block">✓ Patient Record Match Found!</span>
                     </div>
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Patient Full Name *</label>
@@ -441,7 +441,32 @@
                 </div>
             </div>
 
-            <!-- INDEXEDB HIGH-CAPACITY STORAGE METER -->
+            <!-- IMMUTABLE ASSISTANT TIMECARD PUNCH-IN / PUNCH-OUT HEADER BAR -->
+            <div id="asstTimecardHeaderBar" class="bg-slate-900 border border-amber-500/40 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xl">
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-xl font-bold">
+                        <i data-lucide="timer" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white uppercase flex items-center gap-2">
+                            <span>Assistant Shift Timecard Engine</span>
+                            <span id="punch_live_status_badge" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold">PUNCHED OUT</span>
+                        </h4>
+                        <p class="text-[11px] text-slate-400" id="punch_last_action_time">Punches are permanently locked upon submission & auto-synced to Doctor/Admin.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="btn_punch_in" onclick="executeAssistantPunch('PUNCH_IN')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg">
+                        <i data-lucide="play" class="w-4 h-4"></i> Punch In Now
+                    </button>
+                    <button id="btn_punch_out" onclick="executeAssistantPunch('PUNCH_OUT')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg hidden-section">
+                        <i data-lucide="square" class="w-4 h-4"></i> Punch Out Shift
+                    </button>
+                </div>
+            </div>
+
+            <!-- INDEXEDB STORAGE METER -->
             <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-md text-xs">
                 <div class="flex items-center gap-2">
                     <i data-lucide="hard-drive" class="text-emerald-400 w-4 h-4"></i>
@@ -489,19 +514,19 @@
                         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Daily Excel Backup
                     </button>
                     <button onclick="resetDailyTokens()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Daily Queue Tokens
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Queue Tokens
                     </button>
                     <button onclick="sendDoctorDailyBriefingEmail()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email Briefing to Dr
+                        <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email Briefing
                     </button>
                     <button onclick="triggerWhatsAppDoctorBriefing()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 shadow">
                         <i data-lucide="send" class="w-3.5 h-3.5"></i> WhatsApp Briefing
                     </button>
                     <button onclick="openDayWiseAuditModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow">
-                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i> Staff & CA Daily Audit
+                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i> CA & Staff Daily Audit
                     </button>
                     <button onclick="downloadJSONBackup()" class="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 1-Click Backup
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 1-Click JSON Backup
                     </button>
                     <button onclick="logout()" class="bg-rose-900/60 hover:bg-rose-900 text-rose-200 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-rose-800">Exit Session</button>
                 </div>
@@ -549,6 +574,11 @@
                         <span>Billing Ledger & Multi-Mode Payments</span>
                     </button>
 
+                    <button onclick="switchDashTab('asstLogs')" id="tabBtnAsstLogs" class="sidebar-menu-btn">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+                        <span>Assistant Timecards & Work Activity</span>
+                    </button>
+
                     <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="sidebar-menu-btn">
                         <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
                         <span>Registrations & Resets</span>
@@ -577,29 +607,6 @@
                                     <span id="welc_session_token" class="text-slate-400 block text-[10px]">Session Token: SEC-ACTIVE</span>
                                 </div>
                             </div>
-
-                            <div id="stf_sec_quickcards" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-                                <button onclick="switchDashTab('appts')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="users" class="text-red-500 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Patient Queue</h4>
-                                    <p class="text-[10px] text-slate-400">View live waiting queue</p>
-                                </button>
-                                <button onclick="switchDashTab('manualPatient')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="user-plus" class="text-amber-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Add/Edit Patient</h4>
-                                    <p class="text-[10px] text-slate-400">Upload profile & vitals</p>
-                                </button>
-                                <button onclick="switchDashTab('calendar')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="calendar" class="text-emerald-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Month Calendar</h4>
-                                    <p class="text-[10px] text-slate-400">Month-wise schedule</p>
-                                </button>
-                                <button onclick="switchDashTab('ledger')" class="bg-slate-950/80 hover:bg-black p-3.5 rounded-2xl border border-slate-800 text-left space-y-1 transition">
-                                    <i data-lucide="file-text" class="text-sky-400 w-5 h-5"></i>
-                                    <h4 class="font-bold text-white text-xs">Receipt Ledger</h4>
-                                    <p class="text-[10px] text-slate-400">Financial records</p>
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -621,7 +628,7 @@
                                             <th class="p-3">Visit Date & Slot</th>
                                             <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
-                                            <th class="p-3">Master Action Controls</th>
+                                            <th class="p-3">Master Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblAppointments" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -840,7 +847,61 @@
                         </div>
                     </div>
 
-                    <!-- TAB 7: APPROVALS & RESETS -->
+                    <!-- TAB 7: ASSISTANT TIMECARDS & WORK ACTIVITY RECORD LOG -->
+                    <div id="viewAsstLogs" class="space-y-6 hidden-section">
+                        
+                        <!-- ASSISTANT TIMECARD PUNCH RECORDS -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-4 h-4"></i> Immutable Assistant Shift Timecard Records
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Full punch-in, punch-out, and total shift duration log</p>
+                                </div>
+                                <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono px-2.5 py-0.5 rounded font-bold">Immutable Audit Vault</span>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5">Staff Name</th>
+                                            <th class="p-2.5">Punch Date</th>
+                                            <th class="p-2.5">Punch-In Time</th>
+                                            <th class="p-2.5">Punch-Out Time</th>
+                                            <th class="p-2.5">Hours Worked</th>
+                                            <th class="p-2.5">Device Specs</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblAssistantPunchLogs" class="divide-y divide-slate-800 text-slate-300 font-mono"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- ASSISTANT WORK ACTIVITY LOG WITH DAY/WEEK/MONTH FILTER -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i> Assistant Clinical Work Activity Log
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Detailed records of actions completed by assistant staff</p>
+                                </div>
+
+                                <!-- FILTER TOGGLES -->
+                                <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                                    <button onclick="setAsstActivityFilter('day')" id="btn_asst_filter_day" class="px-3 py-1 rounded-lg font-bold bg-red-700 text-white shadow">Day</button>
+                                    <button onclick="setAsstActivityFilter('week')" id="btn_asst_filter_week" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Week</button>
+                                    <button onclick="setAsstActivityFilter('month')" id="btn_asst_filter_month" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Month</button>
+                                </div>
+                            </div>
+
+                            <div id="asstActivityContainer" class="space-y-2 text-xs font-mono max-h-80 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 8: APPROVALS & RESETS -->
                     <div id="viewApprovals" class="space-y-6 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div class="p-3 border-b border-slate-800 font-bold text-xs text-white">Pending Account Registrations</div>
@@ -860,7 +921,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 8: ADMIN MASTER CONTROL SUITE -->
+                    <!-- TAB 9: ADMIN MASTER CONTROL SUITE -->
                     <div id="viewAdminMaster" class="hidden-section space-y-6">
 
                         <!-- ACTIVE DEVICE NAME & IP DETAILS PANEL -->
@@ -1038,7 +1099,7 @@
                                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                                         <i data-lucide="key" class="w-4 h-4"></i> Staff Profiles & Credentials Manager
                                     </h3>
-                                    <p class="text-[11px] text-slate-400">View, edit, or modify staff passwords and contact roles</p>
+                                    <p class="text-[11px] text-slate-400">View, edit, or modify staff passwords, roles, and system access levels</p>
                                 </div>
                                 
                                 <!-- LIST / GRID VIEW TOGGLE BUTTONS -->
@@ -1060,7 +1121,7 @@
                                             <th class="p-2.5">Name</th>
                                             <th class="p-2.5">Role</th>
                                             <th class="p-2.5">Phone</th>
-                                            <th class="p-2.5">Password</th>
+                                            <th class="p-2.5">Access Rights</th>
                                             <th class="p-2.5">Status</th>
                                             <th class="p-2.5">Actions</th>
                                         </tr>
@@ -1262,7 +1323,7 @@
                             <i data-lucide="file-check" class="text-purple-400 w-4 h-4"></i> Daily Accounts & Patient Summary Verification
                         </h3>
                     </div>
-                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-24</span>
+                    <span id="audit_date_display" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono px-2.5 py-0.5 rounded font-bold">2026-07-25</span>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3 text-xs">
@@ -1350,7 +1411,81 @@
             </div>
         </div>
 
-        <!-- PRESCRIPTION MODAL -->
+        <!-- EDIT STAFF CREDENTIALS & PERMISSIONS MODAL -->
+        <div id="editStaffModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeEditStaffModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Admin Governance Control</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="shield-check" class="text-red-500 w-4 h-4"></i> Edit Staff Credentials & Access Rights
+                    </h3>
+                </div>
+                <form onsubmit="handleStaffEditSubmit(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="edit_staff_target_id">
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Staff Member Full Name *</label>
+                        <input type="text" id="edit_staff_name" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Mobile Phone Number *</label>
+                            <input type="tel" id="edit_staff_phone" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Email Address</label>
+                            <input type="email" id="edit_staff_email" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                        </div>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Staff System Role *</label>
+                            <select id="edit_staff_role" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-amber-400 font-bold">
+                                <option value="doctor">Doctor</option>
+                                <option value="assistant">Assistant</option>
+                                <option value="admin">Developer / Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Account Access Status *</label>
+                            <select id="edit_staff_status" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                                <option value="Approved">Active / Approved</option>
+                                <option value="Disabled">Disabled Access</option>
+                                <option value="Revoked">Revoked Security Clearance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Update Account Password</label>
+                        <input type="text" id="edit_staff_password" required placeholder="Enter new password" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-mono font-bold">
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <span class="text-xs font-bold text-amber-400 uppercase block">Access Tier Configuration</span>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="access_tier" id="tier_full" value="full" class="accent-red-600">
+                            <span>Full Master Access (Edit / Delete / Financials)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="access_tier" id="tier_limited" value="limited" checked class="accent-red-600">
+                            <span>Limited Access (Queue / Standard Entries Only)</span>
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+                        <button type="button" onclick="deleteStaffAccount()" class="bg-rose-900/40 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold px-3 py-2 rounded-xl">
+                            Delete Profile
+                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="closeEditStaffModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Profile Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- PRESCRIPTION MODAL WITH COMPLETE RX, TIMETABLE & DOSE -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -1364,7 +1499,7 @@
                     </div>
                     <div class="text-right text-xs">
                         <p id="lh_doctor" class="font-bold text-slate-900">Dr. Md Salahuddin Ayub</p>
-                        <p id="lh_reg" class="text-[10px] text-slate-600">Regd No: A-6705</p>
+                        <p id="lh_reg" class="text-[10px] text-slate-600">Regd No: A-6705 | A-7133</p>
                     </div>
                 </div>
                 
@@ -1375,10 +1510,10 @@
                     </div>
                     <div>
                         <p><strong>Age / Gender:</strong> <span id="lh_age_gender">34 / Male</span></p>
-                        <p><strong>Chief Issue:</strong> <span id="lh_issue">Root Canal Treatment</span></p>
+                        <p><strong>Chief Complaint:</strong> <span id="lh_issue">Root Canal Treatment</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Date:</strong> <span id="lh_date">2026-07-24</span></p>
+                        <p><strong>Prescription Date:</strong> <span id="lh_date">2026-07-25</span></p>
                     </div>
                 </div>
 
@@ -1388,21 +1523,21 @@
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
                 </div>
 
-                <div class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
-                    <span class="font-bold text-slate-700">Preset Rx Kits:</span>
-                    <button onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded">RCT Kit</button>
-                    <button onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded">Extraction Kit</button>
-                    <button onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded">Scaling/Cleaning</button>
+                <div id="rxPresetsBar" class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
+                    <span class="font-bold text-slate-700">Clinical Speed-Dial Rx Kits:</span>
+                    <button type="button" onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded shadow">RCT Kit</button>
+                    <button type="button" onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded shadow">Extraction Kit</button>
+                    <button type="button" onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded shadow">Scaling / Polishing</button>
                 </div>
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Diagnosis:</label>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Clinical Findings & Reason for Visit:</label>
                         <textarea id="lh_notes" rows="2" class="w-full border rounded p-2 text-xs"></textarea>
                     </div>
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Prescribed Medication & Dosage Instructions:</label>
-                        <textarea id="lh_rx" rows="4" class="w-full border rounded p-2 text-xs" placeholder="e.g. Tab Amoxicillin 500mg | 1-0-1 | After Food (5 Days)"></textarea>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Complete Prescribed Medication (Drug Name | Timetable / Dose | Food Instructions | Duration):</label>
+                        <textarea id="lh_rx" rows="5" class="w-full border rounded p-2 text-xs font-mono" placeholder="1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days"></textarea>
                     </div>
                     <div class="bg-red-50 border border-red-200 p-2.5 rounded flex items-center justify-between">
                         <label class="font-bold text-red-900">Next Follow-Up Visit Date:</label>
@@ -1415,14 +1550,14 @@
                         <i data-lucide="send" class="w-3.5 h-3.5"></i> Send WhatsApp Rx
                     </button>
                     <div class="flex gap-2">
-                        <button id="lh_save_btn" onclick="savePrescriptionAndSync()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR & Next Visit</button>
+                        <button id="lh_save_btn" onclick="savePrescriptionAndSync()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR & Sync Visit</button>
                         <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print / Download PDF</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RECEIPT MODAL -->
+        <!-- RECEIPT MODAL (PUBLIC EDIT SUPPRESSED) -->
         <div id="receiptModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeReceiptModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -1445,7 +1580,7 @@
                         <p><strong>Patient Name:</strong> <span id="rc_pname">Mohammed Ali</span></p>
                     </div>
                     <div class="text-right">
-                        <p><strong>Receipt Date:</strong> <span id="rc_date">2026-07-24</span></p>
+                        <p><strong>Receipt Date:</strong> <span id="rc_date">2026-07-25</span></p>
                         <p><strong>Latest Mode:</strong> <span id="rc_mode" class="font-bold text-emerald-700">UPI / Cash</span></p>
                     </div>
                 </div>
@@ -1466,9 +1601,11 @@
                         <p class="text-amber-700 font-bold"><strong>Remaining Balance Due:</strong> <span id="rc_sum_due">₹0</span></p>
                     </div>
                 </div>
+                
+                <!-- PUBLIC EDIT STRICTLY HIDDEN FOR NON-STAFF -->
                 <div class="no-print flex justify-between items-center pt-3 border-t">
-                    <button id="rc_edit_btn" onclick="openMasterEditModalFromReceipt()" class="bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-xs">Edit Ledger Charges</button>
-                    <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print / Download Receipt</button>
+                    <button id="rc_edit_btn" onclick="openMasterEditModalFromReceipt()" class="hidden-section bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-xs">Edit Ledger Charges</button>
+                    <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs ml-auto">Print / Download Receipt</button>
                 </div>
             </div>
         </div>

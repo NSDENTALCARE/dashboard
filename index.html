@@ -15,7 +15,7 @@
     <!-- TOP PORTAL UTILITY BAR -->
     <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
         <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 12:35:00 AM</span>
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 09:37:00 AM</span>
         </div>
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
             <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
@@ -245,7 +245,7 @@
             </div>
         </section>
 
-        <!-- PATIENT TIMELINE TRACKER (PUBLIC DOWNLOAD ACCESS RESTORED) -->
+        <!-- PATIENT TIMELINE TRACKER -->
         <section id="track-appointment" class="hidden-section max-w-3xl mx-auto w-full space-y-4">
             <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl shadow-2xl space-y-4">
                 <button onclick="navigateTo('public-home')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
@@ -642,7 +642,7 @@
                                             <th class="p-3">Visit Date & Slot</th>
                                             <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
-                                            <th class="p-3">Master Controls</th>
+                                            <th class="p-3">Confirm / Postpone / Decline Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblAppointments" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -1578,7 +1578,7 @@
             </div>
         </div>
 
-        <!-- RECEIPT MODAL (PUBLIC EDIT SUPPRESSED) -->
+        <!-- RECEIPT MODAL -->
         <div id="receiptModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeReceiptModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -1623,7 +1623,6 @@
                     </div>
                 </div>
                 
-                <!-- PUBLIC EDIT STRICTLY HIDDEN FOR NON-STAFF -->
                 <div class="no-print flex justify-between items-center pt-3 border-t">
                     <button id="rc_edit_btn" onclick="openMasterEditModalFromReceipt()" class="hidden-section bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-xs">Edit Ledger Charges</button>
                     <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs ml-auto">Print / Download Receipt</button>

@@ -5,6 +5,8 @@ lucide.createIcons();
 // ==========================================================================
 
 let apptSortCriterion = 'token'; // Global sort state: 'token', 'pending', 'status', 'name', 'date', 'id'
+let isVoiceDictating = false;
+let speechRecognitionObj = null;
 
 async function initApp() {
     await storageEngine.init();
@@ -25,7 +27,7 @@ async function initApp() {
     updateStorageMeter();
     checkSaved24hSession();
 
-    // AUTO-POLLING HEARTBEAT (3 SECONDS) FOR INSTANT DESKTOP <-> MOBILE REFLECTION
+    // AUTO-POLLING HEARTBEAT (3 SECONDS)
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -44,6 +46,10 @@ function refreshAllUIViews() {
     renderLedgers();
     renderLabOrders();
     renderCalendar();
+    renderTreatmentPlans();
+    renderInventoryTable();
+    renderExpensesTable();
+    renderCampaignTargetList();
     updateMetricCards();
     calculateAdminStats();
     renderAssistantPunchStatusUI();
@@ -72,7 +78,6 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-// 24-HOUR PASSWORD SAVE CHECKER
 function checkSaved24hSession() {
     const savedToken = localStorage.getItem("ns_saved_session_24h");
     if (savedToken) {
@@ -92,14 +97,12 @@ function checkSaved24hSession() {
     }
 }
 
-// DYNAMIC SORTING HANDLER FOR DAILY ROSTER
 function changeApptSorting(criterion) {
     apptSortCriterion = criterion;
     renderAppointments();
     logAction(`Appointment roster sorted by: ${criterion.toUpperCase()}`);
 }
 
-// STRICT CURRENT-DAY KPI CALCULATOR
 function updateMetricCards() {
     currentLiveDateStr = new Date().toISOString().split('T')[0];
 
@@ -121,7 +124,11 @@ function updateMetricCards() {
         }
     });
 
-    const labPending = labOrders.filter(o => o.status !== 'Delivered & Fitted');
+    const todayExp = clinicExpenses.filter(e => e.date === currentLiveDateStr).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    const estProfit = todayRev - todayExp;
+
+    const lowStockItems = inventoryItems.filter(i => i.stock <= i.minThreshold).length;
+    const labPending = labOrders.filter(o => o.status !== 'Delivered & Fitted').length;
     const riskCount = todayAppts.filter(a => a.risk && a.risk !== 'None').length;
 
     const lbl1 = document.getElementById('kpi_date_label_1');
@@ -132,11 +139,11 @@ function updateMetricCards() {
     if(document.getElementById('card_stat_visits')) document.getElementById('card_stat_visits').innerText = todayAppts.length;
     if(document.getElementById('card_stat_queue')) document.getElementById('card_stat_queue').innerText = activeQueue.length;
     if(document.getElementById('card_stat_revenue')) document.getElementById('card_stat_revenue').innerText = `₹${todayRev.toLocaleString('en-IN')}`;
-    if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = labPending.length;
+    if(document.getElementById('card_stat_profit')) document.getElementById('card_stat_profit').innerText = `₹${estProfit.toLocaleString('en-IN')}`;
+    if(document.getElementById('card_stat_lab')) document.getElementById('card_stat_lab').innerText = `${labPending} Lab / ${lowStockItems} Stock`;
     if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
 }
 
-// UNIVERSAL STAFF PATIENT SEARCH
 function handleUniversalStaffSearch() {
     const input = document.getElementById('staffUniversalSearchInput').value.trim().toLowerCase();
     const container = document.getElementById('staffUniversalSearchResult');
@@ -167,8 +174,10 @@ function handleUniversalStaffSearch() {
                     <span class="text-slate-400 ml-2 font-mono">📞 ${p.phone}</span>
                     <p class="text-[11px] text-slate-400">Doctor: ${appt.doctor || 'Unassigned'} | Reason: ${appt.reason || 'N/A'} | Slot: ${appt.slot || 'N/A'}</p>
                 </div>
-                <div class="flex gap-1.5">
+                <div class="flex gap-1.5 flex-wrap">
                     <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg font-bold">Edit Record</button>
+                    <button onclick="openDigitalConsentModal('${p.patientId}')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-2 py-1 rounded-lg">Consent Sign</button>
+                    <button onclick="openPhotoComparisonModal('${p.patientId}')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded-lg">Before/After</button>
                     ${appt.id ? `<button onclick="openLetterhead('${appt.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded-lg">Rx</button>` : ''}
                     ${ledger.id ? `<button onclick="openReceiptModal('${ledger.id}')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-2 py-1 rounded-lg">Receipt</button>` : ''}
                 </div>
@@ -422,7 +431,6 @@ async function handleAddPaymentSubmit(e) {
     closeAddPaymentModal();
 }
 
-// RENDER BILLING LEDGER WITH SERIAL NUMBERS (S.NO.)
 function renderLedgers() {
     const tbl = document.getElementById('tblLedger');
     if(!tbl) return;
@@ -579,7 +587,6 @@ function changeCalendarMonth(delta) {
     renderCalendar();
 }
 
-// STAFF MANUAL PATIENT ENTRY (AUTO-CONFIRMS DIRECTLY WITHOUT MANDATORY APPROVAL)
 async function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -618,8 +625,7 @@ async function handleManualPatientUpload(e) {
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
         const token = getNextTokenForDate(date);
 
-        // Staff booked appointment -> Auto confirmed directly
-        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, email: patient.email || '', ageGender, doctor, date, slot, status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
+        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, email: patient.email || '', ageGender, doctor, chair: "Chair 1 (Main Operatory)", date, slot, status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
         await storageEngine.setItem('ns_appointments', appointments);
 
         if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
@@ -667,11 +673,11 @@ async function handleManualPatientUpload(e) {
     }
 }
 
-// TOKEN ASSIGNER WITH SLOT SELECTOR
 function handleManualTokenAssignSubmit() {
     const pid = document.getElementById('manual_token_pid').value.trim();
     const tokenVal = document.getElementById('manual_token_val').value.trim();
     const slotVal = document.getElementById('manual_token_slot') ? document.getElementById('manual_token_slot').value : "10:00 AM - 02:00 PM";
+    const chairVal = document.getElementById('manual_token_chair') ? document.getElementById('manual_token_chair').value : "Chair 1 (Main Operatory)";
 
     if(!pid || !tokenVal) {
         alert("Please enter Patient ID/Phone and Token Number!");
@@ -684,11 +690,12 @@ function handleManualTokenAssignSubmit() {
     if(appt) {
         appt.token = tokenVal;
         appt.slot = slotVal;
+        appt.chair = chairVal;
         appt.modifiedToday = true;
         storageEngine.setItem('ns_appointments', appointments);
         refreshAllUIViews();
-        logAction(`Assigned token ${tokenVal} and slot ${slotVal} to Patient ${appt.patientId}`);
-        alert(`Token ${tokenVal} & Slot ${slotVal} assigned to ${appt.name} (${appt.patientId})!`);
+        logAction(`Assigned token ${tokenVal}, slot ${slotVal}, and ${chairVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal}, Slot ${slotVal} & ${chairVal} assigned to ${appt.name} (${appt.patientId})!`);
         document.getElementById('manual_token_pid').value = '';
         document.getElementById('manual_token_val').value = '';
     } else {
@@ -731,7 +738,7 @@ function handleVerifiedPatientSearch(e) {
                                     <span>Date: ${a.date} (${a.slot})</span>
                                     <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'} | ${a.status}</span>
                                 </div>
-                                <p class="text-slate-300">Doctor: ${a.doctor} | Problem: ${a.reason}</p>
+                                <p class="text-slate-300">Doctor: ${a.doctor} | Purpose: ${a.reason}</p>
                                 <p class="text-slate-400 text-[11px]">BP: ${a.bp || '120/80'} | Mode: ${l.lastPaymentMode || 'Cash'} | Fee: ₹${l.totalCost || 0} (Paid: ₹${l.paidAmount || 0})</p>
                             </div>
                         `;
@@ -827,7 +834,6 @@ function searchEHR() {
     }).join('');
 }
 
-// PUBLIC ONLINE BOOKING SUBMISSION (STRICTLY MARKS STATUS AS PENDING)
 async function handlePublicBooking(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -851,7 +857,6 @@ async function handlePublicBooking(e) {
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = getNextTokenForDate(date);
 
-    // Public online booking -> Default to PENDING until approved by staff
     appointments.push({ 
         id: apptId, 
         patientId: patient.patientId, 
@@ -861,6 +866,7 @@ async function handlePublicBooking(e) {
         email: patient.email || '', 
         ageGender: patient.ageGender, 
         doctor, 
+        chair: "Chair 1 (Main Operatory)",
         date, 
         slot, 
         status: "PENDING", 
@@ -964,15 +970,16 @@ function openDashboard() {
     const hdrName = document.getElementById('hdr_user_name');
     const loginBtn = document.getElementById('btn_staff_login');
     const activeTimerContainer = document.getElementById('hdr_active_timer_container');
+    const chairsideBtn = document.getElementById('hdr_chairside_btn');
 
     if(hdrBadge && currentSession) {
         hdrRole.innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
         hdrName.innerText = currentSession.name;
         hdrBadge.classList.remove('hidden-section');
         if(loginBtn) loginBtn.classList.add('hidden-section');
+        if(chairsideBtn && (currentSession.role === 'doctor' || currentSession.role === 'admin')) chairsideBtn.classList.remove('hidden-section');
     }
 
-    // START LIVE ACTIVE SESSION TIMER ON TOP BAR
     if(activeTimerContainer) {
         activeTimerContainer.classList.remove('hidden-section');
         sessionStartTime = Date.now();
@@ -1029,22 +1036,18 @@ function logout() {
 function switchDashTab(tab) {
     document.querySelectorAll('.sidebar-menu-btn').forEach(btn => btn.classList.remove('active-tab'));
 
-    document.getElementById('viewWelcome').classList.add('hidden-section');
-    document.getElementById('viewAppts').classList.add('hidden-section');
-    document.getElementById('viewManualPatient').classList.add('hidden-section');
-    document.getElementById('viewLabTracker').classList.add('hidden-section');
-    document.getElementById('viewCalendar').classList.add('hidden-section');
-    document.getElementById('viewEHR').classList.add('hidden-section');
-    document.getElementById('viewLedger').classList.add('hidden-section');
-    document.getElementById('viewAsstLogs').classList.add('hidden-section');
-    document.getElementById('viewApprovals').classList.add('hidden-section');
-    document.getElementById('viewAdminMaster').classList.add('hidden-section');
+    const views = ['viewWelcome', 'viewAppts', 'viewManualPatient', 'viewTreatmentPlan', 'viewCalendar', 'viewInventory', 'viewExpenses', 'viewCampaigns', 'viewLabTracker', 'viewEHR', 'viewLedger', 'viewAsstLogs', 'viewApprovals', 'viewAdminMaster'];
+    views.forEach(v => { if(document.getElementById(v)) document.getElementById(v).classList.add('hidden-section'); });
 
     if(tab === 'welcome') { document.getElementById('viewWelcome').classList.remove('hidden-section'); document.getElementById('tabBtnWelcome').classList.add('active-tab'); }
     if(tab === 'appts') { document.getElementById('viewAppts').classList.remove('hidden-section'); document.getElementById('tabBtnAppts').classList.add('active-tab'); }
     if(tab === 'manualPatient') { document.getElementById('viewManualPatient').classList.remove('hidden-section'); document.getElementById('tabBtnManualPatient').classList.add('active-tab'); }
-    if(tab === 'labTracker') { document.getElementById('viewLabTracker').classList.remove('hidden-section'); document.getElementById('tabBtnLabTracker').classList.add('active-tab'); }
+    if(tab === 'treatmentPlan') { document.getElementById('viewTreatmentPlan').classList.remove('hidden-section'); document.getElementById('tabBtnTreatmentPlan').classList.add('active-tab'); }
     if(tab === 'calendar') { document.getElementById('viewCalendar').classList.remove('hidden-section'); document.getElementById('tabBtnCalendar').classList.add('active-tab'); }
+    if(tab === 'inventory') { document.getElementById('viewInventory').classList.remove('hidden-section'); document.getElementById('tabBtnInventory').classList.add('active-tab'); }
+    if(tab === 'expenses') { document.getElementById('viewExpenses').classList.remove('hidden-section'); document.getElementById('tabBtnExpenses').classList.add('active-tab'); }
+    if(tab === 'campaigns') { document.getElementById('viewCampaigns').classList.remove('hidden-section'); document.getElementById('tabBtnCampaigns').classList.add('active-tab'); }
+    if(tab === 'labTracker') { document.getElementById('viewLabTracker').classList.remove('hidden-section'); document.getElementById('tabBtnLabTracker').classList.add('active-tab'); }
     if(tab === 'ehr') { document.getElementById('viewEHR').classList.remove('hidden-section'); document.getElementById('tabBtnEHR').classList.add('active-tab'); }
     if(tab === 'ledger') { document.getElementById('viewLedger').classList.remove('hidden-section'); document.getElementById('tabBtnLedger').classList.add('active-tab'); }
     if(tab === 'asstLogs') { document.getElementById('viewAsstLogs').classList.remove('hidden-section'); document.getElementById('tabBtnAsstLogs').classList.add('active-tab'); }
@@ -1052,7 +1055,6 @@ function switchDashTab(tab) {
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
 }
 
-// RENDER APPOINTMENTS TABLE WITH SERIAL NUMBERS (S.NO.) & DYNAMIC SORTING
 function renderAppointments() {
     const tbl = document.getElementById('tblAppointments');
     if(!tbl) return;
@@ -1073,7 +1075,6 @@ function renderAppointments() {
         } else if (apptSortCriterion === 'id') {
             return (a.patientId || '').localeCompare(b.patientId || '');
         } else {
-            // Default: Token sort
             const tA = parseInt((a.token || '0').replace(/[^0-9]/g, '')) || 999;
             const tB = parseInt((b.token || '0').replace(/[^0-9]/g, '')) || 999;
             return tA - tB;
@@ -1094,7 +1095,10 @@ function renderAppointments() {
                 <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
                 <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
             </td>
-            <td class="p-3">${a.doctor}</td>
+            <td class="p-3 text-[11px]">
+                <strong class="text-white block">${a.doctor}</strong>
+                <span class="text-amber-400 font-bold block">${a.chair || 'Chair 1'}</span>
+            </td>
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400 font-bold">${a.slot}</span></td>
             <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
             <td class="p-3">
@@ -1114,14 +1118,12 @@ function renderAppointments() {
                 ` : ''}
                 
                 <button onclick="openPostponeModal('${a.id}')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-2 py-1 rounded text-[10px] shadow">Postpone</button>
-                
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
                 
                 <div class="flex gap-1">
                     <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" title="WhatsApp Notice" class="bg-emerald-600 text-white px-1.5 py-1 rounded text-[10px] font-bold">WA</button>
                     <button onclick="sendAppointmentEmailNotification('${a.id}')" title="Email Notice" class="bg-sky-600 text-white px-1.5 py-1 rounded text-[10px] font-bold">Email</button>
-                    <button onclick="sendAppointmentSMSNotification('${a.id}')" title="SMS Notice" class="bg-amber-500 text-slate-950 px-1.5 py-1 rounded text-[10px] font-bold">SMS</button>
                 </div>
 
                 ${(currentSession && (currentSession.role === 'admin' || currentSession.role === 'doctor')) ? `<button onclick="deletePatientRecordATOZ('${a.patientId}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>` : ''}
@@ -1130,7 +1132,6 @@ function renderAppointments() {
     `).join('');
 }
 
-// APPROVE PENDING APPOINTMENT & AUTO-SEND MULTI-CHANNEL NOTIFICATIONS
 async function approveAppointment(apptId) {
     const appt = appointments.find(a => a.id === apptId);
     if (!appt) return;
@@ -1140,18 +1141,12 @@ async function approveAppointment(apptId) {
     await storageEngine.setItem('ns_appointments', appointments);
 
     logAction(`Staff approved appointment #${apptId} for ${appt.name}`);
-    if (currentSession && currentSession.role === 'assistant') {
-        logAssistantWorkActivity(`Approved Appointment for ${appt.name} (${appt.patientId})`);
-    }
-
     refreshAllUIViews();
     
-    // Automatically trigger notification options to Patient & Doctor
     triggerMultiChannelNotifications(appt, "CONFIRMED", `Your appointment at N.S. Dental Care on ${appt.date} (${appt.slot}) with ${appt.doctor} has been CONFIRMED! Token #: ${appt.token}`);
-    alert(`Appointment CONFIRMED for ${appt.name}! Automatic notification options dispatched.`);
+    alert(`Appointment CONFIRMED for ${appt.name}!`);
 }
 
-// DECLINE APPOINTMENT & AUTO-SEND MULTI-CHANNEL NOTIFICATIONS
 async function declineAppointment(apptId) {
     const appt = appointments.find(a => a.id === apptId);
     if (!appt) return;
@@ -1164,12 +1159,11 @@ async function declineAppointment(apptId) {
         logAction(`Staff declined appointment #${apptId} for ${appt.name}`);
         refreshAllUIViews();
 
-        triggerMultiChannelNotifications(appt, "DECLINED", `Regretfully, your appointment request at N.S. Dental Care for ${appt.date} could not be scheduled. Please contact clinic to rebook.`);
-        alert(`Appointment DECLINED for ${appt.name}. Notification links triggered.`);
+        triggerMultiChannelNotifications(appt, "DECLINED", `Regretfully, your appointment request at N.S. Dental Care for ${appt.date} could not be scheduled.`);
+        alert(`Appointment DECLINED for ${appt.name}.`);
     }
 }
 
-// POSTPONE APPOINTMENT MODAL CONTROLS
 function openPostponeModal(apptId) {
     const appt = appointments.find(a => a.id === apptId);
     if (!appt) return;
@@ -1189,7 +1183,6 @@ function closePostponeModal() {
     document.getElementById('postponeModal').classList.remove('flex');
 }
 
-// HANDLE POSTPONE SUBMISSION & IMMEDIATE WHATSAPP/EMAIL/SMS DISPATCH
 async function handlePostponeSubmit(e) {
     e.preventDefault();
     const apptId = document.getElementById('postpone_target_id').value;
@@ -1209,36 +1202,20 @@ async function handlePostponeSubmit(e) {
 
     await storageEngine.setItem('ns_appointments', appointments);
 
-    logAction(`Postponed appointment #${apptId} for ${appt.name} from ${prevDate} to ${nextDate} (${nextSlot})`);
-    if (currentSession && currentSession.role === 'assistant') {
-        logAssistantWorkActivity(`Postponed Appointment for ${appt.name} to ${nextDate}`);
-    }
-
+    logAction(`Postponed appointment #${apptId} for ${appt.name} to ${nextDate}`);
     refreshAllUIViews();
     closePostponeModal();
 
     const notifMsg = `NOTICE: Your appointment at N.S. Dental Care has been POSTPONED to ${nextDate} (${nextSlot}). Reason: ${reasonNote || 'Schedule adjustment'}. Token: ${appt.token}`;
-    
-    // Immediate multi-channel notification trigger to Patient and Doctor
     triggerMultiChannelNotifications(appt, "POSTPONED", notifMsg);
-    alert(`Appointment Postponed to ${nextDate} (${nextSlot})! Notification links generated for Patient & Doctor.`);
+    alert(`Appointment Postponed to ${nextDate}!`);
 }
 
-// MULTI-CHANNEL NOTIFICATION ENGINE (WHATSAPP, EMAIL, SMS) FOR PATIENT & DOCTOR
 function triggerMultiChannelNotifications(appt, statusType, messageText) {
     const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
     const encodedMsg = encodeURIComponent(`*N.S. DENTAL CARE - APPOINTMENT UPDATE (${statusType})*%0A%0ADear *${appt.name}*,%0A${messageText}%0A%0A*Doctor:* ${appt.doctor}%0A*Patient ID:* ${appt.patientId}`);
     
-    // 1. WhatsApp Link
     window.open(`https://wa.me/91${cleanPhone}?text=${encodedMsg}`, '_blank');
-
-    // 2. Doctor Email Notice
-    const docSubject = encodeURIComponent(`Appointment ${statusType}: ${appt.name} (${appt.date})`);
-    const docBody = encodeURIComponent(`N.S. DENTAL CARE CLINICAL ALERT\n\nPatient Name: ${appt.name}\nPatient ID: ${appt.patientId}\nStatus: ${statusType}\nScheduled Date: ${appt.date} (${appt.slot})\nDoctor Assigned: ${appt.doctor}`);
-    
-    setTimeout(() => {
-        window.location.href = `mailto:${doctorEmail}?subject=${docSubject}&body=${docBody}`;
-    }, 1000);
 }
 
 function sendAppointmentWhatsAppLinks(apptId) {
@@ -1256,17 +1233,8 @@ function sendAppointmentEmailNotification(apptId) {
     if(appt) {
         const targetEmail = appt.email || doctorEmail;
         const subject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${appt.status}`);
-        const body = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment at N.S. Dental Care details:\n\nStatus: ${appt.status}\nToken #: ${appt.token}\nDate: ${appt.date}\nTime Slot: ${appt.slot}\nDoctor: ${appt.doctor}\n\nThank you,\nN.S. Dental Care`);
+        const body = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment at N.S. Dental Care status: ${appt.status}.\n\nThank you.`);
         window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
-    }
-}
-
-function sendAppointmentSMSNotification(apptId) {
-    const appt = appointments.find(a => a.id === apptId);
-    if(appt) {
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const body = encodeURIComponent(`NS Dental Care: Hello ${appt.name}, your appointment on ${appt.date} (${appt.slot}) is ${appt.status}. Token: ${appt.token}`);
-        window.location.href = `sms:+91${cleanPhone}?body=${body}`;
     }
 }
 
@@ -1305,13 +1273,6 @@ function editLabOrderDetails(orderId) {
     document.getElementById('lab_edit_status').value = order.status;
     document.getElementById('lab_edit_notes').value = order.notes || '';
 
-    const fileBadge = document.getElementById('lab_edit_current_file_badge');
-    if(order.fileBase64) {
-        fileBadge.innerText = "✓ Custom Scan File Attached";
-    } else {
-        fileBadge.innerText = "No impression file uploaded yet.";
-    }
-
     document.getElementById('editLabOrderModal').classList.remove('hidden');
     document.getElementById('editLabOrderModal').classList.add('flex');
 }
@@ -1336,32 +1297,15 @@ async function handleSaveLabOrderEdit(e) {
     order.status = document.getElementById('lab_edit_status').value;
     order.notes = document.getElementById('lab_edit_notes').value;
 
-    const fileInput = document.getElementById('lab_edit_file_input');
-
-    async function finishSave() {
-        await storageEngine.setItem('ns_lab_orders', labOrders);
-        refreshAllUIViews();
-        logAction(`Updated lab order details and impression file for ${order.id}`);
-        alert(`Lab Order ${order.id} Updated Successfully!`);
-        closeEditLabOrderModal();
-    }
-
-    if(fileInput && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
-            order.fileBase64 = evt.target.result;
-            await finishSave();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        await finishSave();
-    }
+    await storageEngine.setItem('ns_lab_orders', labOrders);
+    refreshAllUIViews();
+    closeEditLabOrderModal();
 }
 
 async function openNewLabOrderModal() {
     const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
-    const tooth = prompt("Enter Tooth # / Quadrant (e.g. #14 Upper Molar):", "#14 Upper Molar");
-    const material = prompt("Enter Material (Zirconia, Ceramic, PFM):", "Zirconia Crown");
+    const tooth = prompt("Enter Tooth # / Quadrant:", "#14 Upper Molar");
+    const material = prompt("Enter Material:", "Zirconia Crown");
     const labName = prompt("Lab Partner Name:", "Apex Dental Lab");
 
     if(pid && tooth) {
@@ -1369,11 +1313,9 @@ async function openNewLabOrderModal() {
         labOrders.push({ id: "LAB-" + Date.now(), patientId: pid, patientName: patient.name, tooth, material, labName, date: currentLiveDateStr, status: "Impression Taken", notes: "Standard Order", fileBase64: null });
         await storageEngine.setItem('ns_lab_orders', labOrders);
         refreshAllUIViews();
-        logAction(`Lab order created for ${pid}`);
     }
 }
 
-// RENDER PUBLIC TOKEN QUEUE WITH SERIAL NUMBERS (S.NO.)
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
     const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
@@ -1389,9 +1331,9 @@ function renderPublicTokenQueue() {
                     <td class="p-2.5 font-bold text-white">${a.patientId}<br><span class="text-[11px] text-slate-300">${a.name}</span></td>
                     <td class="p-2.5 font-mono text-[11px] text-slate-300">${a.slot}</td>
                     <td class="p-2.5 text-[11px] text-slate-300">${a.reason}</td>
-                    <td class="p-2.5">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.queueStatus === 'In Consultation' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'}">
-                            ${a.queueStatus || 'In Waiting Room'}
+                    <td class="p-2.5 text-[11px]">
+                        <span class="px-2 py-0.5 rounded font-bold ${a.queueStatus === 'In Consultation' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'}">
+                            ${a.chair || 'Chair 1'} - ${a.queueStatus || 'In Waiting Room'}
                         </span>
                     </td>
                 </tr>
@@ -1442,7 +1384,6 @@ async function uploadClinicPhotoFile(e) {
         galleryPhotos.unshift(evt.target.result);
         await storageEngine.setItem('ns_gallery', galleryPhotos);
         renderGallery();
-        logAction("Staff uploaded photo into gallery.");
         alert("Photo Uploaded!");
     };
     reader.readAsDataURL(file);
@@ -1540,7 +1481,7 @@ function triggerWhatsAppDoctorBriefing() {
     const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
     let msg = `*N.S. DENTAL CARE - DAILY MORNING BRIEFING (${currentLiveDateStr})*%0A%0ATotal Scheduled Patients: ${todays.length}%0A%0A`;
     todays.forEach((a, i) => {
-        msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Slot: ${a.slot} | Status: ${a.status}%0A   BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'}%0A%0A`;
+        msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Chair: ${a.chair || 'Chair 1'} | Status: ${a.status}%0A%0A`;
     });
     window.open(`https://wa.me/918978883007?text=${msg}`, '_blank');
 }
@@ -1551,11 +1492,10 @@ function sendDoctorDailyBriefingEmail() {
     let body = `N.S. DENTAL CARE DAILY CLINICAL SUMMARY (${currentLiveDateStr})\n\nTotal Patients Scheduled: ${todays.length}\n\n`;
 
     todays.forEach((a, i) => {
-        body += `${i+1}. Token ${a.token || 'TK-01'} | ${a.name} (${a.patientId})\n   Slot: ${a.slot} | Status: ${a.status} | Doctor: ${a.doctor}\n   Issue: ${a.reason}\n\n`;
+        body += `${i+1}. Token ${a.token || 'TK-01'} | ${a.name} (${a.patientId})\n   Slot: ${a.slot} | Doctor: ${a.doctor}\n\n`;
     });
 
     window.location.href = `mailto:${doctorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    logAction(`Daily briefing email sent to ${doctorEmail}`);
 }
 
 function downloadExcelBackup() {
@@ -1574,7 +1514,7 @@ function downloadExcelBackup() {
 }
 
 function downloadJSONBackup() {
-    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, users, assistantPunchLogs, assistantWorkActivity, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
+    const backupData = { patients, appointments, medicalRecords, ledgers, labOrders, treatmentPlans, inventoryItems, clinicExpenses, patientConsents, users, assistantPunchLogs, assistantWorkActivity, galleryPhotos, allReviews, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1615,7 +1555,7 @@ function openDayWiseAuditModal() {
     } else {
         listContainer.innerHTML = todaysAppts.map((a, i) => {
             const l = todaysLedgers.find(x => x.patientId === a.patientId) || {};
-            return `<div class="border-b border-slate-800 pb-1">${i+1}. <strong>${a.name}</strong> (${a.patientId}) - ${a.reason} | Fee: ₹${l.totalCost || 0} | Paid: ₹${l.paidAmount || 0} | Status: ${a.status}</div>`;
+            return `<div class="border-b border-slate-800 pb-1">${i+1}. <strong>${a.name}</strong> (${a.patientId}) - ${a.reason} | Fee: ₹${l.totalCost || 0} | Paid: ₹${l.paidAmount || 0}</div>`;
         }).join('');
     }
 
@@ -1647,10 +1587,382 @@ async function deletePatientRecordATOZ(pid) {
         await storageEngine.setItem('ns_records', medicalRecords);
 
         refreshAllUIViews();
-        logAction(`Deleted patient ${pid}`);
         alert("Patient purged permanently!");
     }
 }
 
-// INITIALIZE APPLICATION ON SCRIPT LOAD
+// ==========================================================================
+// NEW FEATURE LOGIC IMPLEMENTATIONS (22+ ADVANCED ADMIN & DOCTOR FEATURES)
+// ==========================================================================
+
+// 1. TREATMENT PLAN BUILDER
+function renderTreatmentPlans() {
+    const container = document.getElementById('treatmentPlanListContainer');
+    if(!container) return;
+
+    if(treatmentPlans.length === 0) {
+        container.innerHTML = `<p class="text-slate-500 italic text-xs">No active treatment plans created yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = treatmentPlans.map((tp, idx) => `
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <span class="text-purple-400 font-mono font-bold">${tp.id}</span>
+                    <strong class="text-white ml-2">${tp.patientName} (${tp.patientId})</strong>
+                </div>
+                <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] font-bold">${tp.status}</span>
+            </div>
+            <p class="text-slate-300">Phase 1: ${tp.phase1}</p>
+            <p class="text-slate-300">Phase 2: ${tp.phase2}</p>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800 font-bold">
+                <span class="text-amber-400">Total Estimated Fee: ₹${tp.totalEstimate}</span>
+                <button onclick="convertPlanToLedger('${tp.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs shadow">Convert to Ledger</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function openNewTreatmentPlanModal() {
+    const pid = prompt("Enter Patient ID (e.g. PAT-1001):", "PAT-1001");
+    if(!pid) return;
+    const p = patients.find(x => x.patientId === pid) || { name: "Patient " + pid };
+    
+    const p1 = prompt("Phase 1 Treatment & Estimate:", "Scaling & RCT (₹4,000)");
+    const p2 = prompt("Phase 2 Treatment & Estimate:", "Zirconia Crown Fitting (₹3,000)");
+    const est = parseFloat(prompt("Total Estimated Cost (₹):", "7000")) || 0;
+
+    const newPlan = { id: "TP-" + Date.now().toString().slice(-4), patientId: pid, patientName: p.name, phase1: p1, phase2: p2, totalEstimate: est, status: "Proposed" };
+    treatmentPlans.unshift(newPlan);
+    await storageEngine.setItem('ns_treatment_plans', treatmentPlans);
+    refreshAllUIViews();
+}
+
+async function convertPlanToLedger(planId) {
+    const plan = treatmentPlans.find(t => t.id === planId);
+    if(!plan) return;
+
+    const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
+    ledgers.unshift({ id: recId, apptId: "TP-LINK", patientId: plan.patientId, patientName: plan.patientName, purpose: `${plan.phase1} + ${plan.phase2}`, totalCost: plan.totalEstimate, paidAmount: 0, dueAmount: plan.totalEstimate, lastPaymentMode: "Cash", date: currentLiveDateStr });
+    plan.status = "Approved & Billed";
+
+    await storageEngine.setItem('ns_ledgers', ledgers);
+    await storageEngine.setItem('ns_treatment_plans', treatmentPlans);
+    refreshAllUIViews();
+    alert(`Treatment Plan ${plan.id} converted into Receipt Ledger ${recId}!`);
+}
+
+// 2. DENTAL INVENTORY & STOCK CONTROL
+function renderInventoryTable() {
+    const tbl = document.getElementById('tblInventory');
+    if(!tbl) return;
+
+    tbl.innerHTML = inventoryItems.map((inv, i) => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-2.5 font-mono text-amber-400 font-bold">${i+1}</td>
+            <td class="p-2.5 font-bold text-white">${inv.name}</td>
+            <td class="p-2.5">${inv.category}</td>
+            <td class="p-2.5 font-mono font-bold ${inv.stock <= inv.minThreshold ? 'text-rose-400' : 'text-emerald-400'}">${inv.stock} units</td>
+            <td class="p-2.5 font-mono text-slate-400">${inv.minThreshold} units</td>
+            <td class="p-2.5">
+                ${inv.stock <= inv.minThreshold ? `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">Low Stock Alert</span>` : `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">In Stock</span>`}
+            </td>
+            <td class="p-2.5">
+                <button onclick="restockItem('${inv.id}')" class="bg-amber-500 text-slate-950 font-bold px-2 py-1 rounded text-[10px] shadow">+ Restock</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function openNewInventoryModal() {
+    const name = prompt("Enter Material Item Name:", "Composite Cartridge A2");
+    if(!name) return;
+    const category = prompt("Category (Restorative/Surgical/Prostho):", "Restorative");
+    const stock = parseInt(prompt("Current Quantity in Stock:", "10")) || 0;
+    const min = parseInt(prompt("Minimum Alert Threshold:", "3")) || 3;
+
+    inventoryItems.push({ id: "INV-" + Date.now().toString().slice(-4), name, category, stock, minThreshold: min });
+    await storageEngine.setItem('ns_inventory', inventoryItems);
+    refreshAllUIViews();
+}
+
+async function restockItem(id) {
+    const item = inventoryItems.find(i => i.id === id);
+    if(!item) return;
+    const addQty = parseInt(prompt(`Add restock quantity for ${item.name}:`, "5")) || 0;
+    item.stock += addQty;
+    await storageEngine.setItem('ns_inventory', inventoryItems);
+    refreshAllUIViews();
+}
+
+// 3. EXPENSES & P&L LEDGER
+function renderExpensesTable() {
+    const tbl = document.getElementById('tblExpenses');
+    const revEl = document.getElementById('pnl_total_revenue');
+    const expEl = document.getElementById('pnl_total_expenses');
+    const netEl = document.getElementById('pnl_net_profit');
+
+    const totRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
+    const totExp = clinicExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    const net = totRev - totExp;
+
+    if(revEl) revEl.innerText = `₹${totRev.toLocaleString('en-IN')}`;
+    if(expEl) expEl.innerText = `₹${totExp.toLocaleString('en-IN')}`;
+    if(netEl) netEl.innerText = `₹${net.toLocaleString('en-IN')}`;
+
+    if(!tbl) return;
+
+    tbl.innerHTML = clinicExpenses.map((exp, i) => `
+        <tr class="hover:bg-slate-800/50">
+            <td class="p-2.5 font-bold text-amber-400">${i+1}</td>
+            <td class="p-2.5 text-slate-400">${exp.date}</td>
+            <td class="p-2.5 text-white font-sans font-bold">${exp.desc}</td>
+            <td class="p-2.5">${exp.category}</td>
+            <td class="p-2.5 text-rose-400 font-bold">₹${exp.amount}</td>
+            <td class="p-2.5 text-slate-300">${exp.paidVia}</td>
+        </tr>
+    `).join('');
+}
+
+async function openAddExpenseModal() {
+    const desc = prompt("Expense Description:", "Dental Materials / Rent / Salary");
+    if(!desc) return;
+    const category = prompt("Category (Materials/Rent/Utility/Salary):", "Materials");
+    const amount = parseFloat(prompt("Expense Amount (₹):", "1000")) || 0;
+    const paidVia = prompt("Payment Mode (Cash/UPI/NetBanking):", "UPI");
+
+    clinicExpenses.unshift({ id: "EXP-" + Date.now().toString().slice(-4), date: currentLiveDateStr, desc, category, amount, paidVia });
+    await storageEngine.setItem('ns_expenses', clinicExpenses);
+    refreshAllUIViews();
+}
+
+// 4. WHATSAPP BULK CAMPAIGN RECALL
+function renderCampaignTargetList() {
+    const container = document.getElementById('campaignTargetList');
+    if(!container) return;
+
+    const segment = document.getElementById('camp_segment_select') ? document.getElementById('camp_segment_select').value : 'all';
+    let targets = patients;
+
+    if(segment === 'pending') {
+        const pendingPids = appointments.filter(a => a.status === 'PENDING').map(a => a.patientId);
+        targets = patients.filter(p => pendingPids.includes(p.patientId));
+    }
+
+    container.innerHTML = targets.map((p, i) => `
+        <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center text-xs">
+            <div>
+                <strong class="text-white font-sans">${i+1}. ${p.name}</strong>
+                <span class="text-slate-400 ml-2">📞 ${p.phone}</span>
+            </div>
+            <button onclick="triggerWhatsAppCampaignSingle('${p.phone}', '${p.name}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg text-xs shadow flex items-center gap-1">
+                <i data-lucide="send" class="w-3 h-3"></i> Send WA Recall
+            </button>
+        </div>
+    `).join('');
+    lucide.createIcons();
+}
+
+function triggerWhatsAppCampaignSingle(phone, name) {
+    const tmpl = document.getElementById('camp_msg_template').value;
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const msg = tmpl.replace('{NAME}', name);
+    window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// 5. DIGITAL CONSENT & CANVAS SIGNATURE
+function openDigitalConsentModal(pid) {
+    const p = patients.find(x => x.patientId === pid);
+    if(!p) return;
+
+    document.getElementById('consent_target_pid').value = pid;
+    document.getElementById('consent_pname').value = `${p.name} (${pid})`;
+
+    document.getElementById('digitalConsentModal').classList.remove('hidden');
+    document.getElementById('digitalConsentModal').classList.add('flex');
+    initConsentSignatureCanvas();
+}
+
+function closeDigitalConsentModal() {
+    document.getElementById('digitalConsentModal').classList.add('hidden');
+    document.getElementById('digitalConsentModal').classList.remove('flex');
+}
+
+function initConsentSignatureCanvas() {
+    const cvs = document.getElementById('consentSignatureCanvas');
+    if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+
+    let drawing = false;
+    cvs.onmousedown = cvs.ontouchstart = (e) => { drawing = true; ctx.beginPath(); };
+    cvs.onmouseup = cvs.ontouchend = () => { drawing = false; };
+    cvs.onmousemove = cvs.ontouchmove = (e) => {
+        if(!drawing) return;
+        const rect = cvs.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    };
+}
+
+function clearConsentSignatureCanvas() {
+    const cvs = document.getElementById('consentSignatureCanvas');
+    if(cvs) {
+        const ctx = cvs.getContext('2d');
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+    }
+}
+
+async function handleDigitalConsentSave(e) {
+    e.preventDefault();
+    const pid = document.getElementById('consent_target_pid').value;
+    const proc = document.getElementById('consent_procedure_type').value;
+    const cvs = document.getElementById('consentSignatureCanvas');
+
+    const sigData = cvs ? cvs.toDataURL() : null;
+
+    patientConsents.unshift({ id: "CNS-" + Date.now(), patientId: pid, procedure: proc, date: currentLiveDateStr, sigData });
+    await storageEngine.setItem('ns_consents', patientConsents);
+    alert(`Informed Digital Consent Form Locked & Signed for ${pid}!`);
+    closeDigitalConsentModal();
+}
+
+// 6. BEFORE & AFTER PHOTO COMPARISON VIEWER
+function openPhotoComparisonModal(pid) {
+    document.getElementById('comp_pid_badge').innerText = pid;
+    document.getElementById('photoComparisonModal').classList.remove('hidden');
+    document.getElementById('photoComparisonModal').classList.add('flex');
+}
+
+function closePhotoComparisonModal() {
+    document.getElementById('photoComparisonModal').classList.add('hidden');
+    document.getElementById('photoComparisonModal').classList.remove('flex');
+}
+
+function handleComparisonPhotoUpload(evt) {
+    const files = evt.target.files;
+    if(files.length >= 2) {
+        const reader1 = new FileReader();
+        const reader2 = new FileReader();
+        reader1.onload = (e1) => {
+            document.getElementById('comp_before_box').innerHTML = `<img src="${e1.target.result}" class="h-full w-full object-cover">`;
+        };
+        reader2.onload = (e2) => {
+            document.getElementById('comp_after_box').innerHTML = `<img src="${e2.target.result}" class="h-full w-full object-cover">`;
+        };
+        reader1.readAsDataURL(files[0]);
+        reader2.readAsDataURL(files[1]);
+    } else {
+        alert("Please select at least 2 image files for Before & After comparison!");
+    }
+}
+
+// 7. AI VOICE DICTATION FOR PRESCRIPTIONS
+function toggleVoiceDictation(targetInputId) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Voice speech recognition is not supported in this browser.");
+        return;
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const btn = document.getElementById('btn_voice_rx');
+
+    if (isVoiceDictating) {
+        if(speechRecognitionObj) speechRecognitionObj.stop();
+        isVoiceDictating = false;
+        if(btn) btn.innerHTML = `<i data-lucide="mic" class="w-3 h-3"></i> AI Voice Dictate`;
+    } else {
+        speechRecognitionObj = new SpeechRec();
+        speechRecognitionObj.continuous = true;
+        speechRecognitionObj.interimResults = true;
+        speechRecognitionObj.lang = 'en-US';
+
+        speechRecognitionObj.onstart = () => {
+            isVoiceDictating = true;
+            if(btn) btn.innerHTML = `<i data-lucide="mic-off" class="w-3 h-3 text-rose-400 animate-pulse"></i> Listening...`;
+        };
+
+        speechRecognitionObj.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                transcript += event.results[i][0].transcript;
+            }
+            const inputEl = document.getElementById(targetInputId);
+            if(inputEl) inputEl.value += " " + transcript;
+        };
+
+        speechRecognitionObj.start();
+    }
+    lucide.createIcons();
+}
+
+// 8. TABLET CHAIRSIDE MODE
+function openChairsideViewMode() {
+    const activeAppt = appointments.find(a => a.date === currentLiveDateStr && a.queueStatus === 'In Waiting Room') || appointments[0];
+    if(activeAppt) {
+        document.getElementById('cs_pname').innerText = `${activeAppt.name} (${activeAppt.patientId})`;
+        document.getElementById('cs_bp').innerText = activeAppt.bp || '120/80';
+        document.getElementById('cs_sugar').innerText = activeAppt.sugar || '140 mg/dL';
+        document.getElementById('cs_risk_badge').innerText = activeAppt.risk || 'No Allergies Recorded';
+        document.getElementById('cs_reason').innerText = activeAppt.reason || 'Consultation';
+
+        activePrescriptionApptId = activeAppt.id;
+
+        const grid = document.getElementById('cs_odontogram_grid');
+        if(grid) {
+            let html = '';
+            for(let i = 1; i <= 32; i++) {
+                html += `<button type="button" class="border border-slate-700 bg-slate-900 text-white px-2 py-1 rounded hover:bg-red-700">#${i}</button>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        document.getElementById('chairsideModal').classList.remove('hidden');
+        document.getElementById('chairsideModal').classList.add('flex');
+    }
+}
+
+function closeChairsideViewMode() {
+    document.getElementById('chairsideModal').classList.add('hidden');
+    document.getElementById('chairsideModal').classList.remove('flex');
+}
+
+function openLetterheadFromChairside() {
+    closeChairsideViewMode();
+    if(activePrescriptionApptId) openLetterhead(activePrescriptionApptId);
+}
+
+async function saveChairsideRx() {
+    const rxVal = document.getElementById('cs_rx_input').value;
+    const appt = appointments.find(a => a.id === activePrescriptionApptId);
+
+    if(appt && rxVal) {
+        if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
+        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: currentLiveDateStr, diagnosis: appt.reason, rx: rxVal, doctor: appt.doctor, nextVisit: currentLiveDateStr });
+        await storageEngine.setItem('ns_records', medicalRecords);
+        alert(`Chairside Prescription Saved for ${appt.name}!`);
+        closeChairsideViewMode();
+        refreshAllUIViews();
+    }
+}
+
+function toggleCashbookLock(isLocked) {
+    const badge = document.getElementById('cashbook_lock_status_badge');
+    if(badge) {
+        if(isLocked) {
+            badge.innerText = "🔒 Daily Cashbook Locked (CA Approved)";
+            badge.className = "bg-rose-500/20 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded border border-rose-500/30";
+        } else {
+            badge.innerText = "Payment Audit Active";
+            badge.className = "bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30";
+        }
+    }
+    logAction(`Cashbook lock set to: ${isLocked}`);
+}
+
+// INITIALIZE APPLICATION
 initApp();

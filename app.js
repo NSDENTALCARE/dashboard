@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
+// CORE UI ROUTING, APPOINTMENT ACTIONS & CLOUD REAL-TIME ENGINE
 // ==========================================================================
 
 async function initApp() {

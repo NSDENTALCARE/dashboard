@@ -1,16 +1,13 @@
 lucide.createIcons();
 
 // ==========================================================================
-// CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
+// CORE UI ROUTING, STRICT KPIS & REAL-TIME AUTO-UPDATE APPLICATION CONTROLLER
 // ==========================================================================
-
-let sessionTimerInterval = null;
 
 async function initApp() {
     await storageEngine.init();
     await loadStateFromIndexedDB();
 
-    checkAutoSavedLogin();
     startRealtimeClock();
     checkPublicTicker();
     renderHeroAndFees();
@@ -24,8 +21,9 @@ async function initApp() {
     renderCalendar();
     fetchDeviceAndIPDetails();
     updateStorageMeter();
+    checkSaved24hSession();
 
-    // AUTO-POLLING HEARTBEAT (3 SECONDS) FOR REAL-TIME MULTI-DEVICE SYNC
+    // AUTO-POLLING HEARTBEAT (3 SECONDS) FOR INSTANT DESKTOP <-> MOBILE REFLECTION
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -36,21 +34,6 @@ async function initApp() {
         await loadStateFromIndexedDB();
         refreshAllUIViews();
     }, 3000);
-}
-
-function checkAutoSavedLogin() {
-    const savedSession = localStorage.getItem('ns_saved_session');
-    const expiry = localStorage.getItem('ns_session_expiry');
-
-    if (savedSession && expiry) {
-        if (Date.now() < parseInt(expiry)) {
-            currentSession = JSON.parse(savedSession);
-            openDashboard();
-        } else {
-            localStorage.removeItem('ns_saved_session');
-            localStorage.removeItem('ns_session_expiry');
-        }
-    }
 }
 
 function refreshAllUIViews() {
@@ -87,26 +70,31 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-function startSessionTimer() {
-    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-    const sessionStartTime = Date.now();
-    const timerEl = document.getElementById('hdr_session_timer');
-    if (timerEl) timerEl.classList.remove('hidden-section');
-
-    sessionTimerInterval = setInterval(() => {
-        const diff = Math.floor((Date.now() - sessionStartTime) / 1000);
-        const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
-        const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-        const secs = String(diff % 60).padStart(2, '0');
-        if (timerEl) timerEl.innerText = `Active Session: ${hrs}:${mins}:${secs}`;
-    }, 1000);
+// 24-HOUR PASSWORD SAVE CHECKER
+function checkSaved24hSession() {
+    const savedToken = localStorage.getItem("ns_saved_session_24h");
+    if (savedToken) {
+        try {
+            const data = JSON.parse(savedToken);
+            const now = Date.now();
+            if (data.expiry && now < data.expiry && data.user) {
+                currentSession = data.user;
+                logAction(`Restored 24-hour saved session for ${currentSession.name}`);
+                openDashboard();
+            } else {
+                localStorage.removeItem("ns_saved_session_24h");
+            }
+        } catch (e) {
+            localStorage.removeItem("ns_saved_session_24h");
+        }
+    }
 }
 
 // STRICT CURRENT-DAY KPI CALCULATOR
 function updateMetricCards() {
     currentLiveDateStr = new Date().toISOString().split('T')[0];
 
-    const todayAppts = appointments.filter(a => a.date === currentLiveDateStr);
+    const todayAppts = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
     const activeQueue = todayAppts.filter(a => a.queueStatus === 'In Waiting Room' || a.queueStatus === 'In Consultation');
     
     const todayLedgers = ledgers.filter(l => l.date === currentLiveDateStr);
@@ -168,7 +156,7 @@ function handleUniversalStaffSearch() {
                     <span class="text-amber-400 font-mono font-bold">${p.patientId}</span>
                     <strong class="text-white ml-2">${p.name}</strong>
                     <span class="text-slate-400 ml-2 font-mono">📞 ${p.phone}</span>
-                    <p class="text-[11px] text-slate-400">Doctor: ${appt.doctor || 'Unassigned'} | Reason: ${appt.reason || 'N/A'}</p>
+                    <p class="text-[11px] text-slate-400">Doctor: ${appt.doctor || 'Unassigned'} | Reason: ${appt.reason || 'N/A'} | Slot: ${appt.slot || 'N/A'}</p>
                 </div>
                 <div class="flex gap-1.5">
                     <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg font-bold">Edit Record</button>
@@ -506,7 +494,7 @@ function renderCalendar() {
         const dStr = d < 10 ? '0' + d : '' + d;
         const fullDateStr = `${currentCalYear}-${mStr}-${dStr}`;
 
-        const dayAppts = appointments.filter(a => a.date === fullDateStr);
+        const dayAppts = appointments.filter(a => a.date === fullDateStr && a.status !== 'DECLINED');
         const isToday = fullDateStr === currentLiveDateStr;
         const isSelected = fullDateStr === selectedCalendarDateStr;
 
@@ -538,7 +526,7 @@ function renderSelectedCalendarAgenda() {
 
     if(heading) heading.innerText = `Visits Scheduled for ${selectedCalendarDateStr}`;
 
-    const dayAppts = appointments.filter(a => a.date === selectedCalendarDateStr);
+    const dayAppts = appointments.filter(a => a.date === selectedCalendarDateStr && a.status !== 'DECLINED');
     if(badge) badge.innerText = `${dayAppts.length} Appointments`;
 
     if(dayAppts.length === 0) {
@@ -550,6 +538,7 @@ function renderSelectedCalendarAgenda() {
                     <div class="flex items-center gap-2">
                         <span class="text-amber-400 font-mono font-bold">${a.token || 'TK-01'}</span>
                         <strong class="text-white">${a.name} (${a.patientId})</strong>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">${a.status}</span>
                     </div>
                     <p class="text-slate-400 text-[11px]">Doctor: ${a.doctor} | Purpose: ${a.reason} | Slot: ${a.slot}</p>
                 </div>
@@ -574,12 +563,15 @@ function changeCalendarMonth(delta) {
     renderCalendar();
 }
 
+// STAFF MANUAL PATIENT ENTRY (AUTO-CONFIRMS DIRECTLY WITHOUT MANDATORY APPROVAL)
 async function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('man_pname').value;
+    const email = document.getElementById('man_pemail') ? document.getElementById('man_pemail').value : '';
     const ageGender = document.getElementById('man_page_gender').value;
     const doctor = document.getElementById('man_pdoctor').value;
+    const slot = document.getElementById('man_pslot') ? document.getElementById('man_pslot').value : "10:00 AM - 02:00 PM";
     const reason = document.getElementById('man_preason').value;
     const rx = document.getElementById('man_prx').value;
     const date = document.getElementById('man_pdate').value;
@@ -598,18 +590,20 @@ async function handleManualPatientUpload(e) {
     async function saveRecordWithXray(xrayBase64) {
         let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
         if(!patient) {
-            patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender };
+            patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, email, ageGender };
             patients.push(patient);
         } else {
             patient.name = name;
             patient.ageGender = ageGender;
+            if(email) patient.email = email;
         }
         await storageEngine.setItem('ns_patients', patients);
 
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
         const token = getNextTokenForDate(date);
 
-        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk, source: "staff" });
+        // Staff booked appointment -> Auto confirmed directly
+        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, email: patient.email || '', ageGender, doctor, date, slot, status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
         await storageEngine.setItem('ns_appointments', appointments);
 
         if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
@@ -636,11 +630,11 @@ async function handleManualPatientUpload(e) {
         });
         await storageEngine.setItem('ns_ledgers', ledgers);
 
-        logAction(`Record saved for ${name} (${patient.patientId}) with ${payMode} payment of ₹${paidAmount}`);
+        logAction(`Staff registered patient ${name} (${patient.patientId}) - Auto Confirmed.`);
         if(currentSession && currentSession.role === 'assistant') {
             logAssistantWorkActivity(`Registered Patient & Payment Entry for ${name} (${patient.patientId})`);
         }
-        alert(`Patient Visit & Payment Logged! Patient ID: ${patient.patientId} | Token: ${token}`);
+        alert(`Patient Visit & Payment Logged! Patient ID: ${patient.patientId} | Token: ${token} | Slot: ${slot}`);
         e.target.reset();
         document.getElementById('man_existing_badge').classList.add('hidden-section');
         refreshAllUIViews();
@@ -657,10 +651,11 @@ async function handleManualPatientUpload(e) {
     }
 }
 
+// TOKEN ASSIGNER WITH SLOT SELECTOR
 function handleManualTokenAssignSubmit() {
     const pid = document.getElementById('manual_token_pid').value.trim();
     const tokenVal = document.getElementById('manual_token_val').value.trim();
-    const slotVal = document.getElementById('manual_token_slot').value;
+    const slotVal = document.getElementById('manual_token_slot') ? document.getElementById('manual_token_slot').value : "10:00 AM - 02:00 PM";
 
     if(!pid || !tokenVal) {
         alert("Please enter Patient ID/Phone and Token Number!");
@@ -676,8 +671,8 @@ function handleManualTokenAssignSubmit() {
         appt.modifiedToday = true;
         storageEngine.setItem('ns_appointments', appointments);
         refreshAllUIViews();
-        logAction(`Assigned token ${tokenVal} & slot ${slotVal} to Patient ${appt.patientId}`);
-        alert(`Token ${tokenVal} (${slotVal}) assigned to ${appt.name} (${appt.patientId})!`);
+        logAction(`Assigned token ${tokenVal} and slot ${slotVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal} & Slot ${slotVal} assigned to ${appt.name} (${appt.patientId})!`);
         document.getElementById('manual_token_pid').value = '';
         document.getElementById('manual_token_val').value = '';
     } else {
@@ -718,7 +713,7 @@ function handleVerifiedPatientSearch(e) {
                             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
                                 <div class="flex justify-between font-bold text-white">
                                     <span>Date: ${a.date} (${a.slot})</span>
-                                    <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'}</span>
+                                    <span class="text-amber-400 font-mono">Token: ${a.token || 'TK-01'} | ${a.status}</span>
                                 </div>
                                 <p class="text-slate-300">Doctor: ${a.doctor} | Problem: ${a.reason}</p>
                                 <p class="text-slate-400 text-[11px]">BP: ${a.bp || '120/80'} | Mode: ${l.lastPaymentMode || 'Cash'} | Fee: ₹${l.totalCost || 0} (Paid: ₹${l.paidAmount || 0})</p>
@@ -791,7 +786,7 @@ function searchEHR() {
                     <div>
                         <span class="text-xs text-red-500 font-mono font-bold">${p.patientId}</span>
                         <h4 class="text-sm font-bold text-white">${p.name} (${p.ageGender || '34 / Male'})</h4>
-                        <p class="text-[11px] text-slate-400">Mobile: ${p.phone}</p>
+                        <p class="text-[11px] text-slate-400">Mobile: ${p.phone} | Email: ${p.email || 'N/A'}</p>
                     </div>
                     <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-3 py-1 rounded-xl text-xs font-bold">Edit Full Profile</button>
                 </div>
@@ -803,8 +798,8 @@ function searchEHR() {
                         return `
                             <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-0.5">
                                 <div class="flex justify-between font-bold text-slate-200">
-                                    <span>${a.date} - ${a.reason}</span>
-                                    <span class="text-emerald-400">Total Fee: ₹${l.totalCost || 0}</span>
+                                    <span>${a.date} (${a.slot}) - ${a.reason}</span>
+                                    <span class="text-emerald-400">Total Fee: ₹${l.totalCost || 0} | Status: ${a.status}</span>
                                 </div>
                                 <p class="text-[11px] text-slate-400">Doctor: ${a.doctor} | Token: ${a.token || 'TK-01'} | Vitals: BP ${a.bp || '120/80'}</p>
                             </div>
@@ -816,10 +811,12 @@ function searchEHR() {
     }).join('');
 }
 
+// PUBLIC ONLINE BOOKING SUBMISSION (STRICTLY MARKS STATUS AS PENDING)
 async function handlePublicBooking(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
     const name = document.getElementById('bk_name').value;
+    const email = document.getElementById('bk_email') ? document.getElementById('bk_email').value : '';
     const doctor = document.getElementById('bk_doctor').value;
     const date = document.getElementById('bk_date').value;
     const slot = document.getElementById('bk_slot').value;
@@ -827,24 +824,42 @@ async function handlePublicBooking(e) {
 
     let patient = patients.find(p => p.phone === phoneInput || p.patientId.toLowerCase() === phoneInput.toLowerCase());
     if(!patient) {
-        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, ageGender: "34 / Male" };
+        patient = { patientId: "PAT-" + Math.floor(1000 + Math.random()*9000), name, phone: phoneInput, email, ageGender: "34 / Male" };
         patients.push(patient);
     } else {
         patient.name = name;
+        if(email) patient.email = email;
     }
     await storageEngine.setItem('ns_patients', patients);
 
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = getNextTokenForDate(date);
 
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room", source: "dashboard" });
+    // Public online booking -> Default to PENDING until approved by staff
+    appointments.push({ 
+        id: apptId, 
+        patientId: patient.patientId, 
+        token, 
+        name, 
+        phone: patient.phone, 
+        email: patient.email || '', 
+        ageGender: patient.ageGender, 
+        doctor, 
+        date, 
+        slot, 
+        status: "PENDING", 
+        reason, 
+        nextVisit: date, 
+        modifiedToday: true, 
+        queueStatus: "In Waiting Room" 
+    });
     await storageEngine.setItem('ns_appointments', appointments);
 
     const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
     ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, lastPaymentMode: "Cash", date });
     await storageEngine.setItem('ns_ledgers', ledgers);
 
-    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Mandatory Approval.`);
+    alert(`Booking Request Submitted Successfully!\nPatient ID: ${patient.patientId} | Token: ${token}\n\nStatus: PENDING STAFF APPROVAL. You will receive notifications via WhatsApp, Email, and SMS once approved.`);
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
     refreshAllUIViews();
     navigateTo('public-home');
@@ -880,27 +895,28 @@ function handlePortalLogin(e) {
     const role = document.getElementById('portalRole').value;
     const identifier = document.getElementById('portalIdentifier').value;
     const pwd = document.getElementById('portalPassword').value;
-    const save24h = document.getElementById('savePassword24h').checked;
-
-    let authenticatedUser = null;
+    const remember24h = document.getElementById('remember24h') ? document.getElementById('remember24h').checked : false;
 
     if (role === 'admin' && identifier === 'admin' && pwd === '9290') {
-        authenticatedUser = { role: 'admin', name: 'Developer Admin', phone: '+91 8978883007' };
-    } else {
-        const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
-        if (u && u.status === 'Approved') {
-            authenticatedUser = u;
+        currentSession = { role: 'admin', name: 'Developer Admin', phone: '+91 8978883007' };
+        if (remember24h) {
+            const expiry = Date.now() + (24 * 60 * 60 * 1000);
+            localStorage.setItem("ns_saved_session_24h", JSON.stringify({ user: currentSession, expiry }));
         }
+        logAction("Admin session started.");
+        openDashboard();
+        closePortalModal();
+        return;
     }
 
-    if (authenticatedUser) {
-        currentSession = authenticatedUser;
-        if (save24h) {
+    const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
+    if (u && u.status === 'Approved') {
+        currentSession = u;
+        if (remember24h) {
             const expiry = Date.now() + (24 * 60 * 60 * 1000);
-            localStorage.setItem('ns_saved_session', JSON.stringify(authenticatedUser));
-            localStorage.setItem('ns_session_expiry', expiry.toString());
+            localStorage.setItem("ns_saved_session_24h", JSON.stringify({ user: currentSession, expiry }));
         }
-        logAction(`${authenticatedUser.role.toUpperCase()} logged in: ${authenticatedUser.name}`);
+        logAction(`${u.role.toUpperCase()} logged in: ${u.name}`);
         openDashboard();
         closePortalModal();
     } else {
@@ -931,14 +947,21 @@ function openDashboard() {
     const hdrRole = document.getElementById('hdr_user_role');
     const hdrName = document.getElementById('hdr_user_name');
     const loginBtn = document.getElementById('btn_staff_login');
-    const logoutBtn = document.getElementById('btn_hdr_logout');
+    const activeTimerContainer = document.getElementById('hdr_active_timer_container');
 
     if(hdrBadge && currentSession) {
         hdrRole.innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
         hdrName.innerText = currentSession.name;
         hdrBadge.classList.remove('hidden-section');
         if(loginBtn) loginBtn.classList.add('hidden-section');
-        if(logoutBtn) logoutBtn.classList.remove('hidden-section');
+    }
+
+    // START LIVE ACTIVE SESSION TIMER ON TOP BAR
+    if(activeTimerContainer) {
+        activeTimerContainer.classList.remove('hidden-section');
+        sessionStartTime = Date.now();
+        if(sessionTimerInterval) clearInterval(sessionTimerInterval);
+        sessionTimerInterval = setInterval(updateActiveSessionTimer, 1000);
     }
 
     document.getElementById('dashBadge').innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
@@ -958,20 +981,31 @@ function openDashboard() {
         document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
     }
 
-    startSessionTimer();
     switchDashTab('welcome');
     refreshAllUIViews();
 }
 
+function updateActiveSessionTimer() {
+    if(!sessionStartTime) return;
+    const diffSec = Math.floor((Date.now() - sessionStartTime) / 1000);
+    const hrs = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+    const secs = String(diffSec % 60).padStart(2, '0');
+    
+    const timerDisplay = document.getElementById('hdr_session_timer');
+    if(timerDisplay) timerDisplay.innerText = `${hrs}:${mins}:${secs}`;
+}
+
 function logout() {
     currentSession = null;
-    localStorage.removeItem('ns_saved_session');
-    localStorage.removeItem('ns_session_expiry');
-    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-    if(document.getElementById('hdr_session_timer')) document.getElementById('hdr_session_timer').classList.add('hidden-section');
+    sessionStartTime = null;
+    if(sessionTimerInterval) clearInterval(sessionTimerInterval);
+    localStorage.removeItem("ns_saved_session_24h");
+
+    const activeTimerContainer = document.getElementById('hdr_active_timer_container');
+    if(activeTimerContainer) activeTimerContainer.classList.add('hidden-section');
 
     document.getElementById('hdr_user_badge').classList.add('hidden-section');
-    document.getElementById('btn_hdr_logout').classList.add('hidden-section');
     document.getElementById('btn_staff_login').classList.remove('hidden-section');
     navigateTo('public-home');
 }
@@ -1002,8 +1036,12 @@ function switchDashTab(tab) {
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
 }
 
+// RENDER APPOINTMENTS TABLE WITH FULL APPROVAL, DECLINE, POSTPONE & MULTI-CHANNEL NOTIFICATION CONTROLS
 function renderAppointments() {
-    document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
+    const tbl = document.getElementById('tblAppointments');
+    if(!tbl) return;
+
+    tbl.innerHTML = appointments.map(a => `
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
             <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
             <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
@@ -1012,99 +1050,179 @@ function renderAppointments() {
                 <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
             </td>
             <td class="p-3">${a.doctor}</td>
-            <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
+            <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400 font-bold">${a.slot}</span></td>
             <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
             <td class="p-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' || a.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : a.status === 'POSTPONED' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : a.status === 'DECLINED' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                    a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 
+                    a.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse' :
+                    a.status === 'POSTPONED' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' :
+                    'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                }">
                     ${a.status}
                 </span>
             </td>
             <td class="p-3 flex gap-1 flex-wrap">
-                ${a.status === 'PENDING' ? `<button onclick="approveAppointmentStatus('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Approve</button>` : ''}
-                <button onclick="confirmAppointmentStatus('${a.id}')" class="bg-sky-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Confirm</button>
-                <button onclick="postponeAppointmentStatus('${a.id}')" class="bg-purple-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Postpone</button>
-                <button onclick="declineAppointmentStatus('${a.id}')" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Decline</button>
+                ${a.status === 'PENDING' ? `
+                    <button onclick="approveAppointment('${a.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 rounded text-[10px] shadow">Approve</button>
+                    <button onclick="declineAppointment('${a.id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-2 py-1 rounded text-[10px] shadow">Decline</button>
+                ` : ''}
+                
+                <button onclick="openPostponeModal('${a.id}')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-2 py-1 rounded text-[10px] shadow">Postpone</button>
+                
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
-                <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">WhatsApp</button>
+                
+                <div class="flex gap-1">
+                    <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" title="WhatsApp Notice" class="bg-emerald-600 text-white px-1.5 py-1 rounded text-[10px] font-bold">WA</button>
+                    <button onclick="sendAppointmentEmailNotification('${a.id}')" title="Email Notice" class="bg-sky-600 text-white px-1.5 py-1 rounded text-[10px] font-bold">Email</button>
+                    <button onclick="sendAppointmentSMSNotification('${a.id}')" title="SMS Notice" class="bg-amber-500 text-slate-950 px-1.5 py-1 rounded text-[10px] font-bold">SMS</button>
+                </div>
+
                 ${(currentSession && (currentSession.role === 'admin' || currentSession.role === 'doctor')) ? `<button onclick="deletePatientRecordATOZ('${a.patientId}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>` : ''}
             </td>
         </tr>
     `).join('');
 }
 
-async function approveAppointmentStatus(apptId) {
+// APPROVE PENDING APPOINTMENT & AUTO-SEND MULTI-CHANNEL NOTIFICATIONS
+async function approveAppointment(apptId) {
     const appt = appointments.find(a => a.id === apptId);
-    if (appt) {
-        appt.status = "APPROVED";
-        appt.modifiedToday = true;
-        await storageEngine.setItem('ns_appointments', appointments);
-        triggerAppointmentNotifications(appt, "Approved");
-        refreshAllUIViews();
-        logAction(`Approved appointment #${appt.id} for ${appt.name}`);
-        alert(`Appointment Approved for ${appt.name}! Multi-channel notifications dispatched.`);
+    if (!appt) return;
+
+    appt.status = "CONFIRMED";
+    appt.modifiedToday = true;
+    await storageEngine.setItem('ns_appointments', appointments);
+
+    logAction(`Staff approved appointment #${apptId} for ${appt.name}`);
+    if (currentSession && currentSession.role === 'assistant') {
+        logAssistantWorkActivity(`Approved Appointment for ${appt.name} (${appt.patientId})`);
     }
+
+    refreshAllUIViews();
+    
+    // Automatically trigger notification options to Patient & Doctor
+    triggerMultiChannelNotifications(appt, "CONFIRMED", `Your appointment at N.S. Dental Care on ${appt.date} (${appt.slot}) with ${appt.doctor} has been CONFIRMED! Token #: ${appt.token}`);
+    alert(`Appointment CONFIRMED for ${appt.name}! Automatic notification options dispatched.`);
 }
 
-async function confirmAppointmentStatus(apptId) {
+// DECLINE APPOINTMENT & AUTO-SEND MULTI-CHANNEL NOTIFICATIONS
+async function declineAppointment(apptId) {
     const appt = appointments.find(a => a.id === apptId);
-    if (appt) {
-        appt.status = "CONFIRMED";
-        appt.modifiedToday = true;
-        await storageEngine.setItem('ns_appointments', appointments);
-        triggerAppointmentNotifications(appt, "Confirmed");
-        refreshAllUIViews();
-        logAction(`Confirmed appointment #${appt.id} for ${appt.name}`);
-        alert(`Appointment Confirmed for ${appt.name}! Multi-channel notifications dispatched.`);
-    }
-}
+    if (!appt) return;
 
-async function declineAppointmentStatus(apptId) {
-    const appt = appointments.find(a => a.id === apptId);
-    if (appt) {
+    if (confirm(`Decline appointment request for ${appt.name}?`)) {
         appt.status = "DECLINED";
         appt.modifiedToday = true;
         await storageEngine.setItem('ns_appointments', appointments);
-        triggerAppointmentNotifications(appt, "Declined");
+
+        logAction(`Staff declined appointment #${apptId} for ${appt.name}`);
         refreshAllUIViews();
-        logAction(`Declined appointment #${appt.id} for ${appt.name}`);
-        alert(`Appointment Declined for ${appt.name}! Notifications dispatched.`);
+
+        triggerMultiChannelNotifications(appt, "DECLINED", `Regretfully, your appointment request at N.S. Dental Care for ${appt.date} could not be scheduled. Please contact clinic to rebook.`);
+        alert(`Appointment DECLINED for ${appt.name}. Notification links triggered.`);
     }
 }
 
-async function postponeAppointmentStatus(apptId) {
+// POSTPONE APPOINTMENT MODAL CONTROLS
+function openPostponeModal(apptId) {
     const appt = appointments.find(a => a.id === apptId);
-    if (appt) {
-        const nextDate = prompt("Select Next Postponed Visit Date (YYYY-MM-DD):", appt.date);
-        if (nextDate) {
-            appt.date = nextDate;
-            appt.nextVisit = nextDate;
-            appt.status = "POSTPONED";
-            appt.modifiedToday = true;
-            await storageEngine.setItem('ns_appointments', appointments);
-            triggerAppointmentNotifications(appt, `Postponed to ${nextDate}`);
-            refreshAllUIViews();
-            logAction(`Postponed appointment #${appt.id} to ${nextDate}`);
-            alert(`Appointment Postponed to ${nextDate}! Multi-channel notifications dispatched.`);
-        }
+    if (!appt) return;
+
+    document.getElementById('postpone_target_id').value = appt.id;
+    document.getElementById('postpone_pname').value = `${appt.name} (${appt.patientId})`;
+    document.getElementById('postpone_next_date').value = appt.date;
+    document.getElementById('postpone_next_slot').value = appt.slot || "10:00 AM - 02:00 PM";
+    document.getElementById('postpone_reason').value = "";
+
+    document.getElementById('postponeModal').classList.remove('hidden');
+    document.getElementById('postponeModal').classList.add('flex');
+}
+
+function closePostponeModal() {
+    document.getElementById('postponeModal').classList.add('hidden');
+    document.getElementById('postponeModal').classList.remove('flex');
+}
+
+// HANDLE POSTPONE SUBMISSION & IMMEDIATE WHATSAPP/EMAIL/SMS DISPATCH
+async function handlePostponeSubmit(e) {
+    e.preventDefault();
+    const apptId = document.getElementById('postpone_target_id').value;
+    const nextDate = document.getElementById('postpone_next_date').value;
+    const nextSlot = document.getElementById('postpone_next_slot').value;
+    const reasonNote = document.getElementById('postpone_reason').value;
+
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt) return;
+
+    const prevDate = appt.date;
+    appt.date = nextDate;
+    appt.slot = nextSlot;
+    appt.nextVisit = nextDate;
+    appt.status = "POSTPONED";
+    appt.modifiedToday = true;
+
+    await storageEngine.setItem('ns_appointments', appointments);
+
+    logAction(`Postponed appointment #${apptId} for ${appt.name} from ${prevDate} to ${nextDate} (${nextSlot})`);
+    if (currentSession && currentSession.role === 'assistant') {
+        logAssistantWorkActivity(`Postponed Appointment for ${appt.name} to ${nextDate}`);
+    }
+
+    refreshAllUIViews();
+    closePostponeModal();
+
+    const notifMsg = `NOTICE: Your appointment at N.S. Dental Care has been POSTPONED to ${nextDate} (${nextSlot}). Reason: ${reasonNote || 'Schedule adjustment'}. Token: ${appt.token}`;
+    
+    // Immediate multi-channel notification trigger to Patient and Doctor
+    triggerMultiChannelNotifications(appt, "POSTPONED", notifMsg);
+    alert(`Appointment Postponed to ${nextDate} (${nextSlot})! Notification links generated for Patient & Doctor.`);
+}
+
+// MULTI-CHANNEL NOTIFICATION ENGINE (WHATSAPP, EMAIL, SMS) FOR PATIENT & DOCTOR
+function triggerMultiChannelNotifications(appt, statusType, messageText) {
+    const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+    const encodedMsg = encodeURIComponent(`*N.S. DENTAL CARE - APPOINTMENT UPDATE (${statusType})*%0A%0ADear *${appt.name}*,%0A${messageText}%0A%0A*Doctor:* ${appt.doctor}%0A*Patient ID:* ${appt.patientId}`);
+    
+    // 1. WhatsApp Link
+    window.open(`https://wa.me/91${cleanPhone}?text=${encodedMsg}`, '_blank');
+
+    // 2. Doctor Email Notice
+    const docSubject = encodeURIComponent(`Appointment ${statusType}: ${appt.name} (${appt.date})`);
+    const docBody = encodeURIComponent(`N.S. DENTAL CARE CLINICAL ALERT\n\nPatient Name: ${appt.name}\nPatient ID: ${appt.patientId}\nStatus: ${statusType}\nScheduled Date: ${appt.date} (${appt.slot})\nDoctor Assigned: ${appt.doctor}`);
+    
+    setTimeout(() => {
+        window.location.href = `mailto:${doctorEmail}?subject=${docSubject}&body=${docBody}`;
+    }, 1000);
+}
+
+function sendAppointmentWhatsAppLinks(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const pageUrl = window.location.href.split('#')[0];
+        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment status is: *${appt.status}*%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Date & Slot:* ${appt.date} (${appt.slot})%0A*Doctor:* ${appt.doctor}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}`;
+        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
     }
 }
 
-function triggerAppointmentNotifications(appt, statusText) {
-    const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-    const pageUrl = window.location.href.split('#')[0];
-    const msg = `*N.S. DENTAL CARE - APPOINTMENT STATUS UPDATE*%0A%0ADear *${appt.name}*,%0AYour appointment status is now: *${statusText}*%0A%0A*Date:* ${appt.date}%0A*Slot:* ${appt.slot}%0A*Doctor:* ${appt.doctor}%0A*Token #:* ${appt.token || 'TK-01'}%0A%0A*Portal Link:* ${pageUrl}`;
+function sendAppointmentEmailNotification(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const targetEmail = appt.email || doctorEmail;
+        const subject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${appt.status}`);
+        const body = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment at N.S. Dental Care details:\n\nStatus: ${appt.status}\nToken #: ${appt.token}\nDate: ${a.date}\nTime Slot: ${appt.slot}\nDoctor: ${appt.doctor}\n\nThank you,\nN.S. Dental Care`);
+        window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+    }
+}
 
-    // 1. WHATSAPP
-    window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-
-    // 2. EMAIL
-    const emailSubject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${statusText}`);
-    const emailBody = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment status at N.S. Dental Care has been updated to: ${statusText}.\n\nDate: ${appt.date}\nSlot: ${appt.slot}\nDoctor: ${appt.doctor}\nToken: ${appt.token || 'TK-01'}\n\nThank you,\nN.S. Dental Care Team`);
-    window.open(`mailto:${hospitalEmail}?subject=${emailSubject}&body=${emailBody}`, '_self');
-
-    // 3. SMS PROTOCOL
-    window.open(`sms:+91${cleanPhone}?body=${encodeURIComponent(`N.S. Dental Care: Appointment ${statusText} for ${appt.date} (${appt.slot}). Token: ${appt.token || 'TK-01'}`)}`, '_self');
+function sendAppointmentSMSNotification(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if(appt) {
+        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+        const body = encodeURIComponent(`NS Dental Care: Hello ${appt.name}, your appointment on ${appt.date} (${appt.slot}) is ${appt.status}. Token: ${appt.token}`);
+        window.location.href = `sms:+91${cleanPhone}?body=${body}`;
+    }
 }
 
 function renderLabOrders() {
@@ -1212,7 +1330,7 @@ async function openNewLabOrderModal() {
 
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
-    const todays = appointments.filter(a => a.date === currentLiveDateStr);
+    const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
 
     if(tbl) {
         if(todays.length === 0) {
@@ -1321,6 +1439,7 @@ function autoCheckExistingPatient(val) {
     
     if(p) {
         document.getElementById('bk_name').value = p.name;
+        if(p.email && document.getElementById('bk_email')) document.getElementById('bk_email').value = p.email;
         if(badge) badge.classList.remove('hidden-section');
     } else {
         if(badge) badge.classList.add('hidden-section');
@@ -1335,6 +1454,7 @@ function autoCheckExistingPatientUpload(val) {
     if(p) {
         document.getElementById('man_pname').value = p.name;
         document.getElementById('man_page_gender').value = p.ageGender || "34 / Male";
+        if(p.email && document.getElementById('man_pemail')) document.getElementById('man_pemail').value = p.email;
         if(badge) badge.classList.remove('hidden-section');
     } else {
         if(badge) badge.classList.add('hidden-section');
@@ -1370,21 +1490,21 @@ function syncAdminEmailInputs() {
 }
 
 function triggerWhatsAppDoctorBriefing() {
-    const todays = appointments.filter(a => a.date === currentLiveDateStr);
+    const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
     let msg = `*N.S. DENTAL CARE - DAILY MORNING BRIEFING (${currentLiveDateStr})*%0A%0ATotal Scheduled Patients: ${todays.length}%0A%0A`;
     todays.forEach((a, i) => {
-        msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Slot: ${a.slot}%0A   BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'}%0A%0A`;
+        msg += `*${i+1}. Token ${a.token || 'TK-01'}* - ${a.name} (${a.patientId})%0A   Purpose: ${a.reason} | Slot: ${a.slot} | Status: ${a.status}%0A   BP: ${a.bp || '120/80'} | Risk: ${a.risk || 'None'}%0A%0A`;
     });
     window.open(`https://wa.me/918978883007?text=${msg}`, '_blank');
 }
 
 function sendDoctorDailyBriefingEmail() {
-    const todays = appointments.filter(a => a.date === currentLiveDateStr);
+    const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
     let subject = `N.S. DENTAL CARE - Daily Schedule Briefing (${currentLiveDateStr})`;
     let body = `N.S. DENTAL CARE DAILY CLINICAL SUMMARY (${currentLiveDateStr})\n\nTotal Patients Scheduled: ${todays.length}\n\n`;
 
     todays.forEach((a, i) => {
-        body += `${i+1}. Token ${a.token || 'TK-01'} | ${a.name} (${a.patientId})\n   Slot: ${a.slot} | Doctor: ${a.doctor}\n   Issue: ${a.reason}\n\n`;
+        body += `${i+1}. Token ${a.token || 'TK-01'} | ${a.name} (${a.patientId})\n   Slot: ${a.slot} | Status: ${a.status} | Doctor: ${a.doctor}\n   Issue: ${a.reason}\n\n`;
     });
 
     window.location.href = `mailto:${doctorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -1392,10 +1512,10 @@ function sendDoctorDailyBriefingEmail() {
 }
 
 function downloadExcelBackup() {
-    let csv = "Visit Date,Patient ID,Patient Full Name,Mobile Phone,Doctor,Purpose,Total Fee (INR),Paid (INR),Due (INR)\n";
+    let csv = "Visit Date,Patient ID,Patient Full Name,Mobile Phone,Doctor,Purpose,Status,Total Fee (INR),Paid (INR),Due (INR)\n";
     appointments.forEach(a => {
         const l = ledgers.find(x => x.apptId === a.id) || {};
-        csv += `"${a.date}","${a.patientId}","${a.name}","${a.phone}","${a.doctor}","${a.reason}",${l.totalCost || 0},${l.paidAmount || 0},${l.dueAmount || 0}\n`;
+        csv += `"${a.date}","${a.patientId}","${a.name}","${a.phone}","${a.doctor}","${a.reason}","${a.status}",${l.totalCost || 0},${l.paidAmount || 0},${l.dueAmount || 0}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -1431,7 +1551,7 @@ async function resetDailyTokens() {
 }
 
 function openDayWiseAuditModal() {
-    const todaysAppts = appointments.filter(a => a.date === currentLiveDateStr);
+    const todaysAppts = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
     const todaysLedgers = ledgers.filter(l => l.date === currentLiveDateStr || l.date === undefined);
 
     let totRev = todaysLedgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
@@ -1465,16 +1585,6 @@ function markDayAuditVerified() {
     logAction(`Verified day-wise audit summary for ${currentLiveDateStr}`);
     alert(`Day Summary Locked & Verified!`);
     closeDayWiseAuditModal();
-}
-
-function sendAppointmentWhatsAppLinks(apptId) {
-    const appt = appointments.find(a => a.id === apptId);
-    if(appt) {
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const pageUrl = window.location.href.split('#')[0];
-        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment/record has been updated!%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Doctor:* ${appt.doctor}%0A*Next Visit:* ${appt.nextVisit || appt.date}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}`;
-        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-    }
 }
 
 async function deletePatientRecordATOZ(pid) {

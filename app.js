@@ -4,10 +4,13 @@ lucide.createIcons();
 // CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
 // ==========================================================================
 
+let sessionTimerInterval = null;
+
 async function initApp() {
     await storageEngine.init();
     await loadStateFromIndexedDB();
 
+    checkAutoSavedLogin();
     startRealtimeClock();
     checkPublicTicker();
     renderHeroAndFees();
@@ -33,6 +36,21 @@ async function initApp() {
         await loadStateFromIndexedDB();
         refreshAllUIViews();
     }, 3000);
+}
+
+function checkAutoSavedLogin() {
+    const savedSession = localStorage.getItem('ns_saved_session');
+    const expiry = localStorage.getItem('ns_session_expiry');
+
+    if (savedSession && expiry) {
+        if (Date.now() < parseInt(expiry)) {
+            currentSession = JSON.parse(savedSession);
+            openDashboard();
+        } else {
+            localStorage.removeItem('ns_saved_session');
+            localStorage.removeItem('ns_session_expiry');
+        }
+    }
 }
 
 function refreshAllUIViews() {
@@ -67,6 +85,21 @@ function startRealtimeClock() {
     }
     updateClock();
     setInterval(updateClock, 1000);
+}
+
+function startSessionTimer() {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    const sessionStartTime = Date.now();
+    const timerEl = document.getElementById('hdr_session_timer');
+    if (timerEl) timerEl.classList.remove('hidden-section');
+
+    sessionTimerInterval = setInterval(() => {
+        const diff = Math.floor((Date.now() - sessionStartTime) / 1000);
+        const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const secs = String(diff % 60).padStart(2, '0');
+        if (timerEl) timerEl.innerText = `Active Session: ${hrs}:${mins}:${secs}`;
+    }, 1000);
 }
 
 // STRICT CURRENT-DAY KPI CALCULATOR
@@ -576,7 +609,7 @@ async function handleManualPatientUpload(e) {
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
         const token = getNextTokenForDate(date);
 
-        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk });
+        appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender, doctor, date, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason, nextVisit, modifiedToday: true, queueStatus: "In Waiting Room", bp, sugar, risk, source: "staff" });
         await storageEngine.setItem('ns_appointments', appointments);
 
         if(!medicalRecords[patient.patientId]) medicalRecords[patient.patientId] = [];
@@ -627,6 +660,7 @@ async function handleManualPatientUpload(e) {
 function handleManualTokenAssignSubmit() {
     const pid = document.getElementById('manual_token_pid').value.trim();
     const tokenVal = document.getElementById('manual_token_val').value.trim();
+    const slotVal = document.getElementById('manual_token_slot').value;
 
     if(!pid || !tokenVal) {
         alert("Please enter Patient ID/Phone and Token Number!");
@@ -638,11 +672,12 @@ function handleManualTokenAssignSubmit() {
 
     if(appt) {
         appt.token = tokenVal;
+        appt.slot = slotVal;
         appt.modifiedToday = true;
         storageEngine.setItem('ns_appointments', appointments);
         refreshAllUIViews();
-        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
-        alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
+        logAction(`Assigned token ${tokenVal} & slot ${slotVal} to Patient ${appt.patientId}`);
+        alert(`Token ${tokenVal} (${slotVal}) assigned to ${appt.name} (${appt.patientId})!`);
         document.getElementById('manual_token_pid').value = '';
         document.getElementById('manual_token_val').value = '';
     } else {
@@ -802,14 +837,14 @@ async function handlePublicBooking(e) {
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = getNextTokenForDate(date);
 
-    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room" });
+    appointments.push({ id: apptId, patientId: patient.patientId, token, name, phone: patient.phone, ageGender: patient.ageGender, doctor, date, slot, status: "PENDING", reason, nextVisit: date, modifiedToday: true, queueStatus: "In Waiting Room", source: "dashboard" });
     await storageEngine.setItem('ns_appointments', appointments);
 
     const recId = "REC-" + Math.floor(1000 + Math.random()*9000);
     ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, lastPaymentMode: "Cash", date });
     await storageEngine.setItem('ns_ledgers', ledgers);
 
-    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
+    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Mandatory Approval.`);
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
     refreshAllUIViews();
     navigateTo('public-home');
@@ -845,19 +880,27 @@ function handlePortalLogin(e) {
     const role = document.getElementById('portalRole').value;
     const identifier = document.getElementById('portalIdentifier').value;
     const pwd = document.getElementById('portalPassword').value;
+    const save24h = document.getElementById('savePassword24h').checked;
+
+    let authenticatedUser = null;
 
     if (role === 'admin' && identifier === 'admin' && pwd === '9290') {
-        currentSession = { role: 'admin', name: 'Developer Admin', phone: '+91 8978883007' };
-        logAction("Admin session started.");
-        openDashboard();
-        closePortalModal();
-        return;
+        authenticatedUser = { role: 'admin', name: 'Developer Admin', phone: '+91 8978883007' };
+    } else {
+        const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
+        if (u && u.status === 'Approved') {
+            authenticatedUser = u;
+        }
     }
 
-    const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
-    if (u && u.status === 'Approved') {
-        currentSession = u;
-        logAction(`${u.role.toUpperCase()} logged in: ${u.name}`);
+    if (authenticatedUser) {
+        currentSession = authenticatedUser;
+        if (save24h) {
+            const expiry = Date.now() + (24 * 60 * 60 * 1000);
+            localStorage.setItem('ns_saved_session', JSON.stringify(authenticatedUser));
+            localStorage.setItem('ns_session_expiry', expiry.toString());
+        }
+        logAction(`${authenticatedUser.role.toUpperCase()} logged in: ${authenticatedUser.name}`);
         openDashboard();
         closePortalModal();
     } else {
@@ -888,12 +931,14 @@ function openDashboard() {
     const hdrRole = document.getElementById('hdr_user_role');
     const hdrName = document.getElementById('hdr_user_name');
     const loginBtn = document.getElementById('btn_staff_login');
+    const logoutBtn = document.getElementById('btn_hdr_logout');
 
     if(hdrBadge && currentSession) {
         hdrRole.innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
         hdrName.innerText = currentSession.name;
         hdrBadge.classList.remove('hidden-section');
         if(loginBtn) loginBtn.classList.add('hidden-section');
+        if(logoutBtn) logoutBtn.classList.remove('hidden-section');
     }
 
     document.getElementById('dashBadge').innerText = `ROLE: ${currentSession.role.toUpperCase()}`;
@@ -913,13 +958,20 @@ function openDashboard() {
         document.getElementById('tabBtnAdminMaster').classList.add('hidden-section');
     }
 
+    startSessionTimer();
     switchDashTab('welcome');
     refreshAllUIViews();
 }
 
 function logout() {
     currentSession = null;
+    localStorage.removeItem('ns_saved_session');
+    localStorage.removeItem('ns_session_expiry');
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    if(document.getElementById('hdr_session_timer')) document.getElementById('hdr_session_timer').classList.add('hidden-section');
+
     document.getElementById('hdr_user_badge').classList.add('hidden-section');
+    document.getElementById('btn_hdr_logout').classList.add('hidden-section');
     document.getElementById('btn_staff_login').classList.remove('hidden-section');
     navigateTo('public-home');
 }
@@ -963,11 +1015,15 @@ function renderAppointments() {
             <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
             <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
             <td class="p-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' || a.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : a.status === 'POSTPONED' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : a.status === 'DECLINED' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
                     ${a.status}
                 </span>
             </td>
             <td class="p-3 flex gap-1 flex-wrap">
+                ${a.status === 'PENDING' ? `<button onclick="approveAppointmentStatus('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Approve</button>` : ''}
+                <button onclick="confirmAppointmentStatus('${a.id}')" class="bg-sky-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Confirm</button>
+                <button onclick="postponeAppointmentStatus('${a.id}')" class="bg-purple-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Postpone</button>
+                <button onclick="declineAppointmentStatus('${a.id}')" class="bg-rose-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow">Decline</button>
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit</button>
                 <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
                 <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">WhatsApp</button>
@@ -975,6 +1031,80 @@ function renderAppointments() {
             </td>
         </tr>
     `).join('');
+}
+
+async function approveAppointmentStatus(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (appt) {
+        appt.status = "APPROVED";
+        appt.modifiedToday = true;
+        await storageEngine.setItem('ns_appointments', appointments);
+        triggerAppointmentNotifications(appt, "Approved");
+        refreshAllUIViews();
+        logAction(`Approved appointment #${appt.id} for ${appt.name}`);
+        alert(`Appointment Approved for ${appt.name}! Multi-channel notifications dispatched.`);
+    }
+}
+
+async function confirmAppointmentStatus(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (appt) {
+        appt.status = "CONFIRMED";
+        appt.modifiedToday = true;
+        await storageEngine.setItem('ns_appointments', appointments);
+        triggerAppointmentNotifications(appt, "Confirmed");
+        refreshAllUIViews();
+        logAction(`Confirmed appointment #${appt.id} for ${appt.name}`);
+        alert(`Appointment Confirmed for ${appt.name}! Multi-channel notifications dispatched.`);
+    }
+}
+
+async function declineAppointmentStatus(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (appt) {
+        appt.status = "DECLINED";
+        appt.modifiedToday = true;
+        await storageEngine.setItem('ns_appointments', appointments);
+        triggerAppointmentNotifications(appt, "Declined");
+        refreshAllUIViews();
+        logAction(`Declined appointment #${appt.id} for ${appt.name}`);
+        alert(`Appointment Declined for ${appt.name}! Notifications dispatched.`);
+    }
+}
+
+async function postponeAppointmentStatus(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (appt) {
+        const nextDate = prompt("Select Next Postponed Visit Date (YYYY-MM-DD):", appt.date);
+        if (nextDate) {
+            appt.date = nextDate;
+            appt.nextVisit = nextDate;
+            appt.status = "POSTPONED";
+            appt.modifiedToday = true;
+            await storageEngine.setItem('ns_appointments', appointments);
+            triggerAppointmentNotifications(appt, `Postponed to ${nextDate}`);
+            refreshAllUIViews();
+            logAction(`Postponed appointment #${appt.id} to ${nextDate}`);
+            alert(`Appointment Postponed to ${nextDate}! Multi-channel notifications dispatched.`);
+        }
+    }
+}
+
+function triggerAppointmentNotifications(appt, statusText) {
+    const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
+    const pageUrl = window.location.href.split('#')[0];
+    const msg = `*N.S. DENTAL CARE - APPOINTMENT STATUS UPDATE*%0A%0ADear *${appt.name}*,%0AYour appointment status is now: *${statusText}*%0A%0A*Date:* ${appt.date}%0A*Slot:* ${appt.slot}%0A*Doctor:* ${appt.doctor}%0A*Token #:* ${appt.token || 'TK-01'}%0A%0A*Portal Link:* ${pageUrl}`;
+
+    // 1. WHATSAPP
+    window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
+
+    // 2. EMAIL
+    const emailSubject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${statusText}`);
+    const emailBody = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment status at N.S. Dental Care has been updated to: ${statusText}.\n\nDate: ${appt.date}\nSlot: ${appt.slot}\nDoctor: ${appt.doctor}\nToken: ${appt.token || 'TK-01'}\n\nThank you,\nN.S. Dental Care Team`);
+    window.open(`mailto:${hospitalEmail}?subject=${emailSubject}&body=${emailBody}`, '_self');
+
+    // 3. SMS PROTOCOL
+    window.open(`sms:+91${cleanPhone}?body=${encodeURIComponent(`N.S. Dental Care: Appointment ${statusText} for ${appt.date} (${appt.slot}). Token: ${appt.token || 'TK-01'}`)}`, '_self');
 }
 
 function renderLabOrders() {

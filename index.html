@@ -96,9 +96,7 @@
     <!-- CONTENT WRAPPER -->
     <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-6">
 
-        <!-- ========================================================================== -->
         <!-- PUBLIC PORTAL SECTION -->
-        <!-- ========================================================================== -->
         <section id="public-home" class="space-y-6">
             <!-- HERO & BOOKING BANNER -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -121,9 +119,7 @@
                     <div class="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                         <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl space-y-2">
                             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">Standard Consultation Fee</span>
-                            <div id="pub_consultation_fees" class="text-xs text-slate-300 space-y-1">
-                                <!-- Populated dynamically -->
-                            </div>
+                            <div id="pub_consultation_fees" class="text-xs text-slate-300 space-y-1"></div>
                         </div>
                         <div class="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl space-y-1 text-xs">
                             <span class="font-bold text-emerald-400 uppercase tracking-wider block">Clinic Hours</span>
@@ -159,9 +155,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Preferred Doctor</label>
-                                <select id="bk_doctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
-                                    <!-- Populated dynamically -->
-                                </select>
+                                <select id="bk_doctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"></select>
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Preferred Date</label>
@@ -210,9 +204,7 @@
                                 <th class="p-2.5">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="publicQueueTable" class="divide-y divide-slate-800/60">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="publicQueueTable" class="divide-y divide-slate-800/60"></tbody>
                     </table>
                 </div>
             </div>
@@ -220,31 +212,23 @@
             <!-- DOCTORS ROSTER -->
             <div class="space-y-3">
                 <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Our Chief Dental Surgeons</h3>
-                <div id="doctorsRoster" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Populated dynamically -->
-                </div>
+                <div id="doctorsRoster" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
             </div>
 
             <!-- CLINIC GALLERY -->
             <div class="space-y-3">
                 <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Clinic Infrastructure & Facilities</h3>
-                <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <!-- Populated dynamically -->
-                </div>
+                <div id="publicGalleryGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
             </div>
 
             <!-- SHUFFLING REVIEWS -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-3">
                 <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Verified Patient Reviews</h3>
-                <div id="shufflingReviewsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3 transition-opacity duration-300">
-                    <!-- Populated dynamically every 10 sec -->
-                </div>
+                <div id="shufflingReviewsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3 transition-opacity duration-300"></div>
             </div>
         </section>
 
-        <!-- ========================================================================== -->
         <!-- STAFF DASHBOARD (AUTHENTICATED VIEW) -->
-        <!-- ========================================================================== -->
         <section id="dashboard" class="hidden-section space-y-6">
             <!-- DASHBOARD TOP HEADER & METRICS -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4">
@@ -258,9 +242,7 @@
                 <div class="relative w-full sm:w-72">
                     <input type="text" id="staffUniversalSearchInput" onkeyup="handleUniversalStaffSearch()" placeholder="Search Patient ID, Name, Phone..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-red-500">
                     <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-2.5 top-2"></i>
-                    <div id="staffUniversalSearchResult" class="hidden-section absolute left-0 right-0 top-10 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 z-50 max-h-60 overflow-y-auto space-y-1">
-                        <!-- Search results -->
-                    </div>
+                    <div id="staffUniversalSearchResult" class="hidden-section absolute left-0 right-0 top-10 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 z-50 max-h-60 overflow-y-auto space-y-1"></div>
                 </div>
             </div>
 
@@ -303,8 +285,6 @@
             </div>
 
             <!-- DASHBOARD TAB VIEWS -->
-
-            <!-- 1. WELCOME TAB -->
             <div id="viewWelcome" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <div>
@@ -364,18 +344,15 @@
                 </div>
             </div>
 
-            <!-- 2. APPOINTMENTS TAB -->
+            <!-- APPOINTMENTS TAB -->
             <div id="viewAppts" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <i data-lucide="calendar" class="w-4 h-4 text-red-500"></i> Scheduled Appointments & Approvals
                     </h3>
-                    <div class="flex gap-2">
-                        <button onclick="resetDailyTokens()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg text-xs font-mono">Reset Tokens</button>
-                    </div>
+                    <button onclick="resetDailyTokens()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg text-xs font-mono">Reset Tokens</button>
                 </div>
 
-                <!-- MANUAL TOKEN & TIME SLOT ASSIGNER -->
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-wrap gap-2 items-center text-xs">
                     <span class="font-bold text-amber-400">Manual Slot & Token Override:</span>
                     <input type="text" id="manual_token_pid" placeholder="Patient ID / Mobile" class="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white font-mono w-36">
@@ -384,9 +361,7 @@
                         <option value="10:00 AM - 02:00 PM">Morning (10:00 AM - 02:00 PM)</option>
                         <option value="05:00 PM - 10:00 PM">Evening (05:00 PM - 10:00 PM)</option>
                     </select>
-                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded shadow">
-                        Assign Token
-                    </button>
+                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded shadow">Assign Token</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -403,14 +378,12 @@
                                 <th class="p-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="tblAppointments" class="divide-y divide-slate-800/60">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="tblAppointments" class="divide-y divide-slate-800/60"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 3. MANUAL PATIENT UPLOAD TAB -->
+            <!-- MANUAL PATIENT TAB -->
             <div id="viewManualPatient" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -439,9 +412,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Assigned Doctor</label>
-                            <select id="man_pdoctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
-                                <!-- Populated dynamically -->
-                            </select>
+                            <select id="man_pdoctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"></select>
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Visit Date</label>
@@ -515,15 +486,13 @@
                 </form>
             </div>
 
-            <!-- 4. LAB ORDERS TRACKER TAB -->
+            <!-- LAB ORDERS TRACKER TAB -->
             <div id="viewLabTracker" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <i data-lucide="flask-conical" class="w-4 h-4 text-sky-400"></i> Dental Lab Order Tracking
                     </h3>
-                    <button onclick="openNewLabOrderModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                        + New Lab Order
-                    </button>
+                    <button onclick="openNewLabOrderModal()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow">+ New Lab Order</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -539,14 +508,12 @@
                                 <th class="p-2.5">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="tblLabOrders" class="divide-y divide-slate-800/60">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="tblLabOrders" class="divide-y divide-slate-800/60"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 5. CALENDAR SCHEDULE TAB -->
+            <!-- CALENDAR SCHEDULE TAB -->
             <div id="viewCalendar" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div class="flex items-center gap-3">
@@ -556,30 +523,24 @@
                             <button onclick="changeCalendarMonth(1)" class="bg-slate-800 hover:bg-slate-700 p-1 rounded text-xs">▶</button>
                         </div>
                     </div>
-                    <button onclick="openCalendarQuickAddModal()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                        + Add/Link Visit on Selected Date
-                    </button>
+                    <button onclick="openCalendarQuickAddModal()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">+ Add/Link Visit on Selected Date</button>
                 </div>
 
                 <div class="grid grid-cols-7 gap-1 text-center font-mono text-[10px] text-slate-400 font-bold uppercase mb-1">
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                 </div>
-                <div id="calendarMonthlyGrid" class="grid grid-cols-7 gap-1">
-                    <!-- Populated dynamically -->
-                </div>
+                <div id="calendarMonthlyGrid" class="grid grid-cols-7 gap-1"></div>
 
                 <div id="calendarAgendaContainer" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 mt-4">
                     <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                         <h4 id="cal_selected_date_heading" class="text-xs font-bold text-amber-400">Scheduled Visits for Selected Date</h4>
                         <span id="cal_selected_count" class="text-[10px] font-mono bg-slate-900 text-slate-300 px-2 py-0.5 rounded">0 Appointments</span>
                     </div>
-                    <div id="calendarAgendaList" class="space-y-2">
-                        <!-- Agenda items -->
-                    </div>
+                    <div id="calendarAgendaList" class="space-y-2"></div>
                 </div>
             </div>
 
-            <!-- 6. EHR & PATIENT HISTORY TAB -->
+            <!-- EHR & PATIENT HISTORY TAB -->
             <div id="viewEHR" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -591,20 +552,16 @@
                     <input type="text" id="ehrSearchInput" onkeyup="searchEHR()" placeholder="Enter Patient ID, Phone, or Name..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500 font-mono">
                 </div>
 
-                <div id="ehrHistoryContainer" class="space-y-3">
-                    <!-- EHR Results populated dynamically -->
-                </div>
+                <div id="ehrHistoryContainer" class="space-y-3"></div>
             </div>
 
-            <!-- 7. LEDGER & BILLING TAB -->
+            <!-- LEDGER & BILLING TAB -->
             <div id="viewLedger" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i> Master Billing Ledgers & Payments
                     </h3>
-                    <button onclick="openDayWiseAuditModal()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                        📊 Daily Audit Summary
-                    </button>
+                    <button onclick="openDayWiseAuditModal()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs shadow">📊 Daily Audit Summary</button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -620,14 +577,12 @@
                                 <th class="p-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="tblLedger" class="divide-y divide-slate-800/60">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="tblLedger" class="divide-y divide-slate-800/60"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 8. TIMECARD & ASSISTANT LOGS TAB -->
+            <!-- TIMECARD & ASSISTANT LOGS TAB -->
             <div id="viewAsstLogs" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
@@ -636,21 +591,14 @@
                         </h3>
                         <p id="punch_last_action_time" class="text-xs text-slate-400">Track shifts and recorded activities</p>
                     </div>
-                    <span id="punch_live_status_badge" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold">
-                        PUNCHED OUT
-                    </span>
+                    <span id="punch_live_status_badge" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold">PUNCHED OUT</span>
                 </div>
 
                 <div class="flex gap-2">
-                    <button id="btn_punch_in" onclick="executeAssistantPunch('PUNCH_IN')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg">
-                        ▶ PUNCH IN (Start Shift)
-                    </button>
-                    <button id="btn_punch_out" onclick="executeAssistantPunch('PUNCH_OUT')" class="hidden-section bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg">
-                        ⏹ PUNCH OUT (End Shift)
-                    </button>
+                    <button id="btn_punch_in" onclick="executeAssistantPunch('PUNCH_IN')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg">▶ PUNCH IN (Start Shift)</button>
+                    <button id="btn_punch_out" onclick="executeAssistantPunch('PUNCH_OUT')" class="hidden-section bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg">⏹ PUNCH OUT (End Shift)</button>
                 </div>
 
-                <!-- ASSISTANT WORK ACTIVITY AUDIT LOG -->
                 <div class="space-y-2 pt-2">
                     <div class="flex justify-between items-center">
                         <h4 class="text-xs font-bold text-slate-300 uppercase">Logged Staff Work Activities:</h4>
@@ -660,9 +608,7 @@
                             <button id="btn_asst_filter_month" onclick="setAsstActivityFilter('month')" class="px-2.5 py-0.5 rounded text-slate-400 hover:text-white">This Month</button>
                         </div>
                     </div>
-                    <div id="asstActivityContainer" class="space-y-1.5 max-h-48 overflow-y-auto">
-                        <!-- Activity logs -->
-                    </div>
+                    <div id="asstActivityContainer" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
                 </div>
 
                 <div class="space-y-2 pt-2">
@@ -679,15 +625,13 @@
                                     <th class="p-2.5">Device Info</th>
                                 </tr>
                             </thead>
-                            <tbody id="tblAssistantPunchLogs" class="divide-y divide-slate-800/60">
-                                <!-- Populated dynamically -->
-                            </tbody>
+                            <tbody id="tblAssistantPunchLogs" class="divide-y divide-slate-800/60"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- 9. STAFF APPROVALS TAB -->
+            <!-- STAFF APPROVALS TAB -->
             <div id="viewApprovals" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -705,26 +649,21 @@
                                 <th class="p-3">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="tblApprovals" class="divide-y divide-slate-800/60">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="tblApprovals" class="divide-y divide-slate-800/60"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 10. ADMIN MASTER SUITE TAB -->
+            <!-- ADMIN MASTER SUITE TAB -->
             <div id="viewAdminMaster" class="hidden-section bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <div>
                         <span class="text-[10px] font-mono text-red-400 font-bold uppercase bg-red-950 border border-red-800/60 px-2 py-0.5 rounded">ADMINISTRATOR LEVEL 1</span>
                         <h3 class="text-base font-bold text-white mt-1">Master Governance & System Control Suite</h3>
                     </div>
-                    <button onclick="openCreateStaffModal()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow">
-                        + Create Staff Account
-                    </button>
+                    <button onclick="openCreateStaffModal()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow">+ Create Staff Account</button>
                 </div>
 
-                <!-- USER MANAGEMENT CONTROLS -->
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <h4 class="text-xs font-bold text-slate-300 uppercase">System User Accounts & Credentials</h4>
@@ -746,18 +685,13 @@
                                     <th class="p-2.5">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="adminUserManagementTable" class="divide-y divide-slate-800/60">
-                                <!-- Populated dynamically -->
-                            </tbody>
+                            <tbody id="adminUserManagementTable" class="divide-y divide-slate-800/60"></tbody>
                         </table>
                     </div>
 
-                    <div id="staffGridViewContainer" class="hidden-section grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="staffGridViewContainer" class="hidden-section grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                 </div>
 
-                <!-- REVENUE SPLIT CALCULATOR -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h4 class="text-xs font-bold text-amber-400 uppercase">Clinic / Doctor Revenue Split Calculator</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -776,26 +710,16 @@
                     </div>
                 </div>
 
-                <!-- SYSTEM REPAIR & MAINTENANCE SUITE -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h4 class="text-xs font-bold text-rose-400 uppercase">Emergency Data Repair & Maintenance Tools</h4>
                     <div class="flex flex-wrap gap-2 text-xs">
-                        <button onclick="adminFixMissingReceipts()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">
-                            🔧 Auto-Fix Missing Receipts
-                        </button>
-                        <button onclick="adminMergeDuplicatePatients()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">
-                            🔀 Merge Duplicate Patients
-                        </button>
-                        <button onclick="adminPurgeBase64Xrays()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">
-                            🧹 Purge Heavy X-Ray Images
-                        </button>
-                        <button onclick="adminForceLogoutAllSessions()" class="bg-rose-950 text-rose-300 border border-rose-800 px-3 py-1.5 rounded-lg font-bold">
-                            🔒 Lock All Active Sessions
-                        </button>
+                        <button onclick="adminFixMissingReceipts()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">🔧 Auto-Fix Missing Receipts</button>
+                        <button onclick="adminMergeDuplicatePatients()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">🔀 Merge Duplicate Patients</button>
+                        <button onclick="adminPurgeBase64Xrays()" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg font-bold">🧹 Purge Heavy X-Ray Images</button>
+                        <button onclick="adminForceLogoutAllSessions()" class="bg-rose-950 text-rose-300 border border-rose-800 px-3 py-1.5 rounded-lg font-bold">🔒 Lock All Active Sessions</button>
                     </div>
                 </div>
 
-                <!-- STORAGE METER -->
                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex justify-between items-center text-xs">
                         <span class="font-bold text-slate-300">IndexedDB Capacity Usage</span>
@@ -806,15 +730,12 @@
                     </div>
                 </div>
 
-                <!-- AUDIT LOGS -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center">
                         <h4 class="text-xs font-bold text-slate-300 uppercase">System Audit Event Log</h4>
                         <button onclick="clearAuditLogs()" class="text-[10px] text-rose-400 hover:underline">Clear Logs</button>
                     </div>
-                    <div id="adminAuditLogs" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[10px] text-slate-400 max-h-40 overflow-y-auto space-y-1">
-                        <!-- Logs -->
-                    </div>
+                    <div id="adminAuditLogs" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[10px] text-slate-400 max-h-40 overflow-y-auto space-y-1"></div>
                 </div>
             </div>
 
@@ -824,13 +745,11 @@
                     <span class="font-bold text-slate-400">N.S. Dental Care System</span>
                     <span class="text-amber-400/90 font-mono ml-2 font-semibold">v2.4.0 (Enterprise Gold Build)</span>
                 </div>
-                <div class="font-mono text-[11px] text-slate-500">
-                    Santosh Nagar, Hyderabad | 📞 +91 8978883007
-                </div>
+                <div class="font-mono text-[11px] text-slate-500">Santosh Nagar, Hyderabad | 📞 +91 8978883007</div>
             </footer>
         </section>
 
-        <!-- VERIFIED PATIENT SEARCH MODAL / SECTION -->
+        <!-- VERIFIED PATIENT SEARCH SECTION -->
         <section id="verified-search" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
             <h3 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
                 <i data-lucide="search" class="w-4 h-4 text-emerald-400"></i> Verified Patient Timeline & Digital Prescriptions
@@ -838,20 +757,13 @@
             <form onsubmit="handleVerifiedPatientSearch(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="text" id="ver_name" required placeholder="Full Patient Name" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
                 <input type="text" id="ver_identifier" required placeholder="Patient ID or Mobile Number" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs shadow">
-                    Verify Patient & Access Records
-                </button>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs shadow">Verify Patient & Access Records</button>
             </form>
-
-            <div id="verifiedResultContainer" class="hidden-section bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-4">
-                <!-- Verified search results -->
-            </div>
+            <div id="verifiedResultContainer" class="hidden-section bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-4"></div>
         </section>
     </main>
 
-    <!-- ========================================================================== -->
     <!-- MODAL DIALOG WINDOWS -->
-    <!-- ========================================================================== -->
 
     <!-- PORTAL LOGIN / REGISTRATION MODAL -->
     <div id="portalModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
@@ -927,7 +839,6 @@
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-4 shadow-2xl relative my-8">
             <button onclick="closeLetterheadModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">✕</button>
 
-            <!-- CLINIC LETTERHEAD HEADER -->
             <div class="border-b-2 border-red-600 pb-3 flex justify-between items-start">
                 <div>
                     <h2 class="text-xl font-black text-white tracking-tight">N.S. DENTAL CARE</h2>
@@ -940,7 +851,6 @@
                 </div>
             </div>
 
-            <!-- PATIENT INFORMATION STRIP -->
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
                 <div><span class="text-slate-500 block text-[10px]">PATIENT ID:</span><strong id="lh_pid" class="text-red-400">PAT-1001</strong></div>
                 <div><span class="text-slate-500 block text-[10px]">FULL NAME:</span><strong id="lh_pname" class="text-white">Mohammed Ali</strong></div>
@@ -948,15 +858,11 @@
                 <div><span class="text-slate-500 block text-[10px]">DATE:</span><strong id="lh_date" class="text-amber-400">2026-07-25</strong></div>
             </div>
 
-            <!-- ODONTOGRAM 32-TOOTH DENTAL CHARTING GRID -->
             <div class="space-y-1">
                 <label class="block text-xs font-bold text-amber-400 uppercase">32-Tooth Odontogram Interactive Charting:</label>
-                <div id="odontogramGrid" class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <!-- Populated dynamically -->
-                </div>
+                <div id="odontogramGrid" class="bg-slate-950 p-2.5 rounded-xl border border-slate-800"></div>
             </div>
 
-            <!-- DIAGNOSIS & PRESCRIPTION PRESETS -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <label class="block text-xs font-bold text-slate-300 uppercase">Diagnosis / Notes:</label>
@@ -984,7 +890,6 @@
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
             <div class="flex gap-2 pt-2">
                 <button onclick="savePrescriptionAndSync()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow">
                     Save Prescription to EHR
@@ -996,7 +901,7 @@
         </div>
     </div>
 
-    <!-- MASTER PATIENT & BILLING EDIT MODAL -->
+    <!-- MASTER EDIT MODAL -->
     <div id="masterEditModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl w-full space-y-4 shadow-2xl relative my-8">
             <button onclick="closeMasterEditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">✕</button>
@@ -1030,9 +935,7 @@
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Doctor</label>
-                        <select id="med_doctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                            <!-- Populated dynamically -->
-                        </select>
+                        <select id="med_doctor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"></select>
                     </div>
                 </div>
 
@@ -1105,9 +1008,7 @@
                 <div class="flex justify-between"><span>Payment Mode:</span><strong id="rc_mode">Cash</strong></div>
             </div>
 
-            <div id="rc_payment_history_box" class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs space-y-1 font-mono">
-                <!-- Payment history -->
-            </div>
+            <div id="rc_payment_history_box" class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs space-y-1 font-mono"></div>
 
             <div class="border-t border-slate-200 pt-2 space-y-1 text-xs font-mono">
                 <div class="flex justify-between"><span>Total Fee:</span><strong id="rc_sum_total">₹4,500</strong></div>
@@ -1122,7 +1023,7 @@
         </div>
     </div>
 
-    <!-- COLLECT DUE PAYMENT MODAL -->
+    <!-- COLLECT PAYMENT MODAL -->
     <div id="addPaymentModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-3 shadow-2xl relative">
             <button onclick="closeAddPaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">✕</button>
@@ -1165,7 +1066,7 @@
         </div>
     </div>
 
-    <!-- EDIT EDITABLE STAFF CREDENTIALS MODAL -->
+    <!-- EDIT STAFF CREDENTIALS MODAL -->
     <div id="editStaffModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-3 shadow-2xl relative">
             <button onclick="closeEditStaffModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">✕</button>
@@ -1256,9 +1157,7 @@
 
             <div class="space-y-1">
                 <h4 class="text-xs font-bold text-slate-300 uppercase">Today's Patient Breakup:</h4>
-                <div id="auditBreakupList" class="bg-slate-950 p-3 rounded-xl border border-slate-800 max-h-40 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono">
-                    <!-- Breakup -->
-                </div>
+                <div id="auditBreakupList" class="bg-slate-950 p-3 rounded-xl border border-slate-800 max-h-40 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono"></div>
             </div>
 
             <button onclick="markDayAuditVerified()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow">

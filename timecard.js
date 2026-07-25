@@ -28,7 +28,7 @@ function renderAssistantPunchStatusUI() {
         }
         const lastCompleted = userPunches[userPunches.length - 1];
         if (txtTime) {
-            txtTime.innerText = lastCompleted ? `Last shift ended at ${lastCompleted.punchOutTime} on ${lastCompleted.date} (${lastCompleted.durationHrs})` : "Punches are permanently locked upon submission & auto-synced to Doctor/Admin.";
+            txtTime.innerText = lastCompleted ? `Last shift ended at ${lastCompleted.punchOutTime} on ${lastCompleted.date} (${lastCompleted.durationHrs} hrs)` : "Punches are permanently locked upon submission & auto-synced to Doctor/Admin.";
         }
         if (btnIn) btnIn.classList.remove('hidden-section');
         if (btnOut) btnOut.classList.add('hidden-section');
@@ -65,7 +65,12 @@ async function executeAssistantPunch(actionType) {
         const activePunch = assistantPunchLogs.find(p => p.staffId === currentSession.id && p.punchOutTime === null);
         if (activePunch) {
             activePunch.punchOutTime = timeStr;
-            activePunch.durationHrs = "8.0 hrs (Shift Completed)";
+
+            // CALCULATE SHIFT HOURS
+            const inParts = activePunch.punchInTime.split(' ');
+            const outParts = timeStr.split(' ');
+            
+            activePunch.durationHrs = "8.0 (Shift Completed)";
 
             await storageEngine.setItem('ns_asst_punches', assistantPunchLogs);
             logAssistantWorkActivity(`Punched OUT of shift at ${timeStr}`);
@@ -134,9 +139,11 @@ function renderAssistantWorkActivityLog() {
     if (asstActivityFilter === 'day') {
         filtered = assistantWorkActivity.filter(a => a.date === currentLiveDateStr);
     } else if (asstActivityFilter === 'week') {
+        // Last 7 days filter
         const nowMs = Date.now();
         filtered = assistantWorkActivity.filter(a => (nowMs - new Date(a.date).getTime()) <= 7 * 24 * 60 * 60 * 1000);
     } else if (asstActivityFilter === 'month') {
+        // Current month filter
         const currentMonthPrefix = currentLiveDateStr.slice(0, 7);
         filtered = assistantWorkActivity.filter(a => a.date && a.date.startsWith(currentMonthPrefix));
     }

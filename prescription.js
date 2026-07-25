@@ -1,58 +1,79 @@
 // ==========================================================================
-// CLINICAL PRESCRIPTION BUILDER, LETTERHEAD & ODONTOGRAM
+// ODONTOGRAM CHARTING, PRESCRIPTION PRESETS & LETTERHEAD DISPATCHER
 // ==========================================================================
 
-function openLetterhead(id) {
-    activePrescriptionApptId = id;
-    const appt = appointments.find(a => a.id === id);
-    if(appt) {
-        document.getElementById('lh_pid').innerText = appt.patientId;
-        document.getElementById('lh_pname').innerText = appt.name;
-        document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
-        document.getElementById('lh_issue').innerText = appt.reason;
-        document.getElementById('lh_date').innerText = currentLiveDateStr;
-        document.getElementById('lh_doctor').innerText = appt.doctor;
-        document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+function renderOdontogram() {
+    const grid = document.getElementById('odontogramGrid');
+    if (!grid) return;
 
-        document.getElementById('odontogramWrapper').classList.remove('hidden-section');
-        document.getElementById('rxPresetsBar').classList.remove('hidden-section');
-        document.getElementById('lh_notes').readOnly = false;
-        document.getElementById('lh_rx').readOnly = false;
-        document.getElementById('lh_next_visit').readOnly = false;
-        document.getElementById('lh_save_btn').classList.remove('hidden-section');
-        document.getElementById('lh_wa_btn').classList.remove('hidden-section');
+    // 32-TOOTH ADULT DENTAL CHARTING
+    const upperTeeth = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+    const lowerTeeth = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
 
-        document.getElementById('letterheadModal').classList.remove('hidden');
-        document.getElementById('letterheadModal').classList.add('flex');
+    let html = '<div class="w-full flex flex-wrap gap-1 mb-2"><span class="text-[10px] font-bold text-amber-400 uppercase w-full">Upper Arch:</span>';
+    
+    upperTeeth.forEach(t => {
+        const isSelected = selectedTeethList.includes(t);
+        html += `<button type="button" onclick="toggleToothSelection(${t})" class="px-2 py-1 rounded border text-[10px] font-mono font-bold ${isSelected ? 'tooth-btn-selected' : 'bg-slate-900 border-slate-700 text-slate-300'}">#${t}</button>`;
+    });
+
+    html += '</div><div class="w-full flex flex-wrap gap-1"><span class="text-[10px] font-bold text-amber-400 uppercase w-full">Lower Arch:</span>';
+
+    lowerTeeth.forEach(t => {
+        const isSelected = selectedTeethList.includes(t);
+        html += `<button type="button" onclick="toggleToothSelection(${t})" class="px-2 py-1 rounded border text-[10px] font-mono font-bold ${isSelected ? 'tooth-btn-selected' : 'bg-slate-900 border-slate-700 text-slate-300'}">#${t}</button>`;
+    });
+
+    html += '</div>';
+    grid.innerHTML = html;
+}
+
+function toggleToothSelection(toothNum) {
+    if (selectedTeethList.includes(toothNum)) {
+        selectedTeethList = selectedTeethList.filter(t => t !== toothNum);
+    } else {
+        selectedTeethList.push(toothNum);
+    }
+    renderOdontogram();
+}
+
+function applyRxPreset(presetType) {
+    const rxBox = document.getElementById('lh_rx');
+    if (!rxBox) return;
+
+    if (presetType === 'rct') {
+        rxBox.value = "1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Zero-P (Aceclofenac + Paracetamol) | Morning-Evening (1-0-1) | After Food | 3 Days\n3. Cap Pantoprazole 40mg | Morning (1-0-0) | Before Food | 5 Days\n4. Chlorhexidine Mouthwash 0.2% | Rinse twice daily";
+    } else if (presetType === 'extraction') {
+        rxBox.value = "1. Tab Augmentin 625mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Ketorolac DT 10mg | Dissolve in water as needed for pain\n3. Cap Omeprazole 20mg | Morning (1-0-0) | Before Food | 5 Days\n* Soft diet, avoid hot food/smoking for 24 hours.";
+    } else if (presetType === 'scaling') {
+        rxBox.value = "1. Chlorhexidine Mouthwash 0.2% | Rinse with 10ml for 1 minute twice daily for 7 days\n2. Potassium Nitrate Sensodyne Paste | Apply on teeth gently twice daily";
     }
 }
 
-function publicViewReadOnlyPrescription(patientId, rxId) {
-    const recs = medicalRecords[patientId] || [];
-    const r = recs.find(x => x.id === rxId) || recs[0];
-    const patient = patients.find(p => p.patientId === patientId) || { name: "Patient", ageGender: "34 / Male" };
+function openLetterhead(apptId) {
+    activeRxApptId = apptId;
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt) return;
 
-    if(r) {
-        document.getElementById('lh_pid').innerText = patientId;
-        document.getElementById('lh_pname').innerText = patient.name;
-        document.getElementById('lh_age_gender').innerText = patient.ageGender || "34 / Male";
-        document.getElementById('lh_date').innerText = r.date;
-        document.getElementById('lh_doctor').innerText = r.doctor;
-        document.getElementById('lh_notes').value = r.diagnosis;
-        document.getElementById('lh_rx').value = r.rx;
-        document.getElementById('lh_next_visit').value = r.nextVisit || r.date;
+    const p = patients.find(x => x.patientId === appt.patientId) || {};
+    const recs = medicalRecords[appt.patientId] || [];
+    const latestRx = recs[recs.length - 1] || {};
 
-        document.getElementById('odontogramWrapper').classList.add('hidden-section');
-        document.getElementById('rxPresetsBar').classList.add('hidden-section');
-        document.getElementById('lh_notes').readOnly = true;
-        document.getElementById('lh_rx').readOnly = true;
-        document.getElementById('lh_next_visit').readOnly = true;
-        document.getElementById('lh_save_btn').classList.add('hidden-section');
-        document.getElementById('lh_wa_btn').classList.add('hidden-section');
+    selectedTeethList = [];
+    renderOdontogram();
 
-        document.getElementById('letterheadModal').classList.remove('hidden');
-        document.getElementById('letterheadModal').classList.add('flex');
-    }
+    document.getElementById('lh_pid').innerText = appt.patientId;
+    document.getElementById('lh_pname').innerText = appt.name;
+    document.getElementById('lh_age_gender').innerText = appt.ageGender || "34 / Male";
+    document.getElementById('lh_issue').innerText = appt.reason;
+    document.getElementById('lh_date').innerText = appt.date;
+    document.getElementById('lh_doctor').innerText = appt.doctor;
+    document.getElementById('lh_notes').value = latestRx.diagnosis || appt.reason;
+    document.getElementById('lh_rx').value = latestRx.rx || "1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Paracetamol 650mg | As needed for pain";
+    document.getElementById('lh_next_visit').value = appt.nextVisit || appt.date;
+
+    document.getElementById('letterheadModal').classList.remove('hidden');
+    document.getElementById('letterheadModal').classList.add('flex');
 }
 
 function closeLetterheadModal() {
@@ -61,75 +82,70 @@ function closeLetterheadModal() {
 }
 
 async function savePrescriptionAndSync() {
-    const appt = appointments.find(a => a.id === activePrescriptionApptId);
-    if(appt) {
-        const notes = document.getElementById('lh_notes').value;
-        const rx = document.getElementById('lh_rx').value;
-        const nextVisit = document.getElementById('lh_next_visit').value;
+    const pid = document.getElementById('lh_pid').innerText;
+    const doctor = document.getElementById('lh_doctor').innerText;
+    const diagnosis = document.getElementById('lh_notes').value;
+    const rx = document.getElementById('lh_rx').value;
+    const nextVisit = document.getElementById('lh_next_visit').value;
 
-        if(!medicalRecords[appt.patientId]) medicalRecords[appt.patientId] = [];
-        medicalRecords[appt.patientId].push({ id: "RX-" + Date.now(), date: currentLiveDateStr, diagnosis: notes, rx: rx, doctor: appt.doctor, nextVisit: nextVisit });
+    if (!medicalRecords[pid]) medicalRecords[pid] = [];
 
-        await storageEngine.setItem('ns_records', medicalRecords);
+    const teethStr = selectedTeethList.length > 0 ? ` [Teeth: #${selectedTeethList.join(', #')}]` : '';
+
+    medicalRecords[pid].push({
+        id: "RX-" + Date.now(),
+        date: currentLiveDateStr,
+        diagnosis: diagnosis + teethStr,
+        rx: rx,
+        doctor: doctor,
+        nextVisit: nextVisit
+    });
+
+    await storageEngine.setItem('ns_records', medicalRecords);
+
+    // Update appointment follow-up date
+    const appt = appointments.find(a => a.id === activeRxApptId);
+    if (appt) {
         appt.nextVisit = nextVisit;
         appt.modifiedToday = true;
         await storageEngine.setItem('ns_appointments', appointments);
-
-        logAction(`Prescription saved for ${appt.patientId}.`);
-        if(currentSession && currentSession.role === 'assistant') {
-            logAssistantWorkActivity(`Updated Prescription & Next Visit Date for ${appt.name} (${appt.patientId})`);
-        }
-        alert("Prescription saved & Next visit synced!");
-        refreshAllUIViews();
     }
+
+    if (currentSession && currentSession.role === 'assistant') {
+        logAssistantWorkActivity(`Saved Prescription Record for Patient ID ${pid}`);
+    }
+
+    refreshAllUIViews();
+    logAction(`Saved Prescription & EHR for Patient ${pid}`);
+    alert("Prescription Saved to EHR & Visit Synced!");
+    closeLetterheadModal();
 }
 
 function sendPrescriptionWhatsApp() {
-    const appt = appointments.find(a => a.id === activePrescriptionApptId);
-    if(appt) {
-        const notes = document.getElementById('lh_notes').value;
-        const rx = document.getElementById('lh_rx').value;
-        const nextVisit = document.getElementById('lh_next_visit').value;
+    const pid = document.getElementById('lh_pid').innerText;
+    const pname = document.getElementById('lh_pname').innerText;
+    const rx = document.getElementById('lh_rx').value;
+    const nextVisit = document.getElementById('lh_next_visit').value;
 
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const msg = `*N.S. DENTAL CARE - DIGITAL PRESCRIPTION*%0A%0APatient: *${appt.name}* (ID: ${appt.patientId})%0ADoctor: ${appt.doctor}%0A%0A*Findings & Reason:* ${notes}%0A*Rx / Medications Schedule:*%0A${rx}%0A%0A*Next Follow-Up Visit:* ${nextVisit}`;
-        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-    }
+    const p = patients.find(x => x.patientId === pid);
+    if (!p) return;
+
+    const cleanPhone = p.phone.replace(/[^0-9]/g, '');
+    const pageUrl = window.location.href.split('#')[0];
+
+    const msg = `*N.S. DENTAL CARE - OFFICIAL PRESCRIPTION*%0A%0ADear *${pname}* (${pid}),%0A%0A*Prescribed Medication:*%0A${encodeURIComponent(rx)}%0A%0A*Next Visit Date:* ${nextVisit}%0A%0A*Download Digital PDF Prescription & Receipt:*%0A${pageUrl}`;
+
+    window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
 }
 
-function applyRxPreset(type) {
-    const rxArea = document.getElementById('lh_rx');
-    if(!rxArea) return;
+function publicViewReadOnlyPrescription(pid, rxId) {
+    const recs = medicalRecords[pid] || [];
+    const r = recs.find(x => x.id === rxId) || recs[recs.length - 1];
 
-    if(type === 'rct') {
-        rxArea.value = "1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Zero-P (Aceclofenac + Paracetamol) | Morning-Evening (1-0-1) | After Food | 3 Days\n3. Cap Pantoprazole 40mg | Morning (1-0-0) | Before Breakfast | 5 Days";
-    } else if(type === 'extraction') {
-        rxArea.value = "1. Tab Augmentin 625mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Ketorol DT | Morning-Evening (1-0-1) | Dissolve in 1/2 glass water | 3 Days\n3. Chlorhexidine Mouthwash 0.2% | Rinse 10ml twice daily for 7 days";
-    } else if(type === 'scaling') {
-        rxArea.value = "1. Gum Paint (Tannic Acid) | Apply gently on gums twice daily\n2. Chlorhexidine 0.2% Mouthwash | Rinse 10ml twice daily after meals for 7 days";
-    }
-    logAction(`Applied Rx Speed-Dial preset: ${type.toUpperCase()}`);
-}
-
-function renderOdontogram() {
-    const grid = document.getElementById('odontogramGrid');
-    if(!grid) return;
-    let html = '';
-    for(let i = 1; i <= 32; i++) {
-        html += `<button type="button" onclick="toggleToothSelection(${i})" id="toothBtn_${i}" class="border border-slate-300 bg-white text-slate-900 px-2 py-1 rounded font-bold hover:bg-red-100">#${i}</button>`;
-    }
-    grid.innerHTML = html;
-}
-
-function toggleToothSelection(toothNum) {
-    const btn = document.getElementById(`toothBtn_${toothNum}`);
-    if(selectedTeeth.includes(toothNum)) {
-        selectedTeeth = selectedTeeth.filter(t => t !== toothNum);
-        btn.classList.remove('tooth-btn-selected');
+    if (r) {
+        const appt = appointments.find(a => a.patientId === pid) || { id: "NSD-5001", patientId: pid, name: "Verified Patient", ageGender: "34 / Male", doctor: r.doctor, date: r.date, reason: r.diagnosis, nextVisit: r.nextVisit };
+        openLetterhead(appt.id);
     } else {
-        selectedTeeth.push(toothNum);
-        btn.classList.add('tooth-btn-selected');
+        alert("Prescription record not found!");
     }
-
-    document.getElementById('lh_notes').value = `Teeth Selected: #${selectedTeeth.join(', #')} | Clinical Procedure Planned: `;
 }

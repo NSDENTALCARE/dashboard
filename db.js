@@ -2,7 +2,6 @@
 // INDEXEDB LOCAL DB + REAL-TIME FIREBASE CLOUD RELAY ENGINE
 // ==========================================================================
 
-// Initialize Firebase Engine for Instant Cross-Device Sync (Mobile <-> Desktop)
 const firebaseConfig = {
     databaseURL: "https://ns-dental-care-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
@@ -96,7 +95,6 @@ function notifySyncBroadcast(key, val) {
     }
     localStorage.setItem("ns_sync_trigger", Date.now().toString());
 
-    // PUSH IMMEDIATELY TO ONLINE CLOUD RELAY FOR DESKTOP LISTENERS
     if (typeof firebase !== 'undefined' && firebase.database) {
         try {
             firebase.database().ref('clinic_live_store/' + key).set(val);
@@ -111,13 +109,11 @@ function notifySyncBroadcast(key, val) {
     }
 }
 
-// REALTIME CLOUD LISTENER (INSTANTLY RECEIVES MOBILE EDITS ON DESKTOP)
 if (typeof firebase !== 'undefined' && firebase.database) {
     try {
         firebase.database().ref('last_update_trigger').on('value', async (snapshot) => {
             const data = snapshot.val();
             if (data && data.sender !== getDeviceId()) {
-                // Fetch updated key directly from cloud and save to local IndexedDB
                 firebase.database().ref('clinic_live_store/' + data.key).once('value', async (keySnap) => {
                     if (keySnap.exists()) {
                         await storageEngine.setItem(data.key, keySnap.val());
@@ -140,7 +136,7 @@ function getDeviceId() {
     return devId;
 }
 
-// MANUAL 1-CLICK FORCE SYNC TRIGGER FOR MOBILE & DESKTOP BROWSERS
+// MANUAL 1-CLICK FORCE SYNC TRIGGER
 async function forceSyncAllOnlineBrowsers() {
     notifySyncBroadcast('ns_appointments', appointments);
     notifySyncBroadcast('ns_patients', patients);
@@ -149,6 +145,92 @@ async function forceSyncAllOnlineBrowsers() {
     
     await reloadDataAndRefreshUI();
     alert("⚡ Cloud Sync Completed! Mobile & Desktop browsers updated across all devices.");
+}
+
+// ==========================================================================
+// MANUAL JSON IMPORT / PASTE DATA TRANSFER PROCESSORS
+// ==========================================================================
+
+async function handleJSONFileUpload() {
+    const fileInput = document.getElementById('json_file_input');
+    if (!fileInput || !fileInput.files[0]) {
+        alert("Please select a JSON backup file to upload!");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+        try {
+            const parsedData = JSON.parse(e.target.result);
+            await importFullStateFromJSON(parsedData);
+            alert("✓ JSON File Imported Successfully! All clinic data updated.");
+            fileInput.value = "";
+        } catch (err) {
+            alert("Error parsing JSON file. Please ensure it is a valid format.");
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+async function handleJSONTextPasteImport() {
+    const pasteInput = document.getElementById('json_paste_input');
+    if (!pasteInput || !pasteInput.value.trim()) {
+        alert("Please paste the raw JSON text into the box first!");
+        return;
+    }
+
+    try {
+        const parsedData = JSON.parse(pasteInput.value.trim());
+        await importFullStateFromJSON(parsedData);
+        alert("✓ JSON Text Applied Successfully! All records refreshed.");
+        pasteInput.value = "";
+    } catch (err) {
+        alert("Invalid JSON format! Please check the text you pasted.");
+    }
+}
+
+async function importFullStateFromJSON(data) {
+    if (data.patients) {
+        patients = data.patients;
+        await storageEngine.setItem('ns_patients', patients);
+    }
+    if (data.appointments) {
+        appointments = data.appointments;
+        await storageEngine.setItem('ns_appointments', appointments);
+    }
+    if (data.ledgers) {
+        ledgers = data.ledgers;
+        await storageEngine.setItem('ns_ledgers', ledgers);
+    }
+    if (data.medicalRecords) {
+        medicalRecords = data.medicalRecords;
+        await storageEngine.setItem('ns_records', medicalRecords);
+    }
+    if (data.labOrders) {
+        labOrders = data.labOrders;
+        await storageEngine.setItem('ns_lab_orders', labOrders);
+    }
+    if (data.users) {
+        users = data.users;
+        await storageEngine.setItem('ns_users', users);
+    }
+    if (data.treatmentPlans) {
+        treatmentPlans = data.treatmentPlans;
+        await storageEngine.setItem('ns_treatment_plans', treatmentPlans);
+    }
+    if (data.inventoryItems) {
+        inventoryItems = data.inventoryItems;
+        await storageEngine.setItem('ns_inventory', inventoryItems);
+    }
+    if (data.clinicExpenses) {
+        clinicExpenses = data.clinicExpenses;
+        await storageEngine.setItem('ns_expenses', clinicExpenses);
+    }
+
+    await reloadDataAndRefreshUI();
 }
 
 // GLOBAL STATE VARIABLES
@@ -208,7 +290,7 @@ async function loadStateFromIndexedDB() {
     assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
     assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Cloud Sync." }];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized Ready." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",

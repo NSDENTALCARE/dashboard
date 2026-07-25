@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
+// MAIN APPLICATION CONTROLLER & REAL-TIME DISPATCH ENGINE (v2.4.0)
 // ==========================================================================
 
 async function initApp() {
@@ -22,12 +22,10 @@ async function initApp() {
     fetchDeviceAndIPDetails();
     updateStorageMeter();
 
-    // AUTO-RESTORE ACTIVE DASHBOARD SESSION IF USER IS LOGGED IN
     if (currentSession) {
         openDashboard();
     }
 
-    // REAL-TIME AUTO-POLLING HEARTBEAT (3 SECONDS): MOBILE <-> DESKTOP SYNC
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -73,7 +71,6 @@ function startRealtimeClock() {
         if(elTicker) elTicker.innerText = `${dateStr} | ${timeStr}`;
         if(elDashClock) elDashClock.innerText = `${dateStr} | ${timeStr}`;
 
-        // UPDATE SESSION LIVE TIMER IF STAFF LOGGED IN
         if (currentSession && sessionStartTime) {
             const elapsedMs = now.getTime() - sessionStartTime;
             const secTotal = Math.floor(elapsedMs / 1000);
@@ -91,7 +88,6 @@ function startRealtimeClock() {
     setInterval(updateClock, 1000);
 }
 
-// STRICT CURRENT-DAY KPI CALCULATOR
 function updateMetricCards() {
     currentLiveDateStr = new Date().toISOString().split('T')[0];
 
@@ -128,7 +124,6 @@ function updateMetricCards() {
     if(document.getElementById('card_stat_risk')) document.getElementById('card_stat_risk').innerText = riskCount;
 }
 
-// UNIVERSAL STAFF PATIENT SEARCH
 function handleUniversalStaffSearch() {
     const input = document.getElementById('staffUniversalSearchInput').value.trim().toLowerCase();
     const container = document.getElementById('staffUniversalSearchResult');
@@ -169,7 +164,6 @@ function handleUniversalStaffSearch() {
     }).join('');
 }
 
-// APPOINTMENT ACTION ENGINE: APPROVE (FOR MANDATORY PUBLIC BOOKINGS), POSTPONE & DECLINE
 async function updateAppointmentStatus(apptId, actionType) {
     const appt = appointments.find(a => a.id === apptId);
     if (!appt) return;
@@ -189,7 +183,6 @@ async function updateAppointmentStatus(apptId, actionType) {
     }
 }
 
-// POSTPONE MODAL CONTROLLER
 function openPostponeModal(apptId) {
     const appt = appointments.find(a => a.id === apptId);
     if (!appt) return;
@@ -208,7 +201,6 @@ function openPostponeModal(apptId) {
     saveAndNotifyAppointmentAction(appt, `Postponed to ${newDate} (${newSlot})`);
 }
 
-// AUTOMATED MULTI-CHANNEL DISPATCHER: WHATSAPP, EMAIL & SMS
 async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
     await storageEngine.setItem('ns_appointments', appointments);
     refreshAllUIViews();
@@ -218,10 +210,8 @@ async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
     const cleanDoctorPhone = doctorObj.phone.replace(/[^0-9]/g, '');
 
     const patientMsg = `*N.S. DENTAL CARE - APPOINTMENT UPDATE*%0A%0ADear *${appt.name}*,%0AYour appointment status has been updated:%0A%0A*Status:* ${actionStatusText}%0A*Date:* ${appt.date}%0A*Slot:* ${appt.slot}%0A*Doctor:* ${appt.doctor}%0A*Token #:* ${appt.token || 'TK-01'}%0A%0AFor queries, call +91 8978883007.`;
-
     const doctorMsg = `*N.S. DENTAL CARE - DOCTOR ALERT*%0A%0APatient Appointment *${actionStatusText}*%0A%0A*Patient:* ${appt.name} (${appt.patientId})%0A*Date:* ${appt.date} | *Slot:* ${appt.slot}%0A*Token:* ${appt.token || 'TK-01'}%0A*Reason:* ${appt.reason}`;
 
-    // 1. WHATSAPP NOTIFICATION
     if (confirm(`Appointment status updated to "${actionStatusText}". Send WhatsApp confirmation to Patient (${cleanPatientPhone})?`)) {
         window.open(`https://wa.me/91${cleanPatientPhone}?text=${patientMsg}`, '_blank');
     }
@@ -230,12 +220,10 @@ async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
         window.open(`https://wa.me/91${cleanDoctorPhone}?text=${doctorMsg}`, '_blank');
     }
 
-    // 2. AUTOMATED EMAIL DISPATCH
     const emailSubject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${actionStatusText}`);
     const emailBody = encodeURIComponent(`Appointment Status Update:\n\nPatient: ${appt.name} (${appt.patientId})\nStatus: ${actionStatusText}\nDate: ${appt.date}\nSlot: ${appt.slot}\nDoctor: ${appt.doctor}\nReason: ${appt.reason}`);
     window.location.href = `mailto:${doctorEmail}?subject=${emailSubject}&body=${emailBody}`;
 
-    // 3. AUTOMATED SMS DISPATCH TRIGGER
     if (confirm(`Send direct Mobile SMS alert to Patient (${cleanPatientPhone})?`)) {
         const smsText = `NS Dental Care: Hello ${appt.name}, your appointment on ${appt.date} (${appt.slot}) is now ${actionStatusText}. Token: ${appt.token || 'TK-01'}. Clinic: 8978883007`;
         window.open(`sms:+91${cleanPatientPhone}?body=${encodeURIComponent(smsText)}`, '_blank');
@@ -559,7 +547,6 @@ async function deleteLedgerRecord(id) {
 }
 
 function calculateAdminStats() {
-    let totalRev = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
     let totalDue = ledgers.reduce((acc, curr) => acc + (parseFloat(curr.dueAmount) || 0), 0);
 
     let cashRev = 0, upiRev = 0, cardRev = 0;
@@ -673,7 +660,6 @@ function changeCalendarMonth(delta) {
     renderCalendar();
 }
 
-// MANUAL STAFF PATIENT ENTRY (AUTO-APPROVED / CONFIRMED DIRECTLY)
 async function handleManualPatientUpload(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('man_pphone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -709,7 +695,6 @@ async function handleManualPatientUpload(e) {
         const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
         const token = getNextTokenForDate(date);
 
-        // MANUAL STAFF BOOKINGS ARE AUTO-APPROVED / CONFIRMED AUTOMATICALLY WITH PATIENT & DOCTOR CONSENT
         appointments.push({ 
             id: apptId, 
             patientId: patient.patientId, 
@@ -777,7 +762,6 @@ async function handleManualPatientUpload(e) {
     }
 }
 
-// MANUAL TOKEN & TIME SLOT ASSIGNER
 function handleManualTokenAssignSubmit() {
     const pid = document.getElementById('manual_token_pid').value.trim();
     const tokenVal = document.getElementById('manual_token_val').value.trim();
@@ -937,7 +921,6 @@ function searchEHR() {
     }).join('');
 }
 
-// PUBLIC HOMEPAGE ONLINE BOOKING (MANDATORY APPROVAL REQUIRED BY STAFF)
 async function handlePublicBooking(e) {
     e.preventDefault();
     const phoneInput = document.getElementById('bk_phone').value.replace(/[^0-9a-zA-Z-]/g, '');
@@ -959,7 +942,6 @@ async function handlePublicBooking(e) {
     const apptId = "NSD-" + Math.floor(1000 + Math.random()*9000);
     const token = getNextTokenForDate(date);
 
-    // PUBLIC BOOKINGS SUBMIT WITH PENDING STATUS (STAFF MUST APPROVE)
     appointments.push({ 
         id: apptId, 
         patientId: patient.patientId, 
@@ -1014,7 +996,6 @@ function switchPortalTab(tab) {
     if(tab === 'register') document.getElementById('portalRegForm').classList.remove('hidden-section');
 }
 
-// LOGIN HANDLER WITH 1-CLICK 24-HOUR SAVE PASSWORDS & TIME LOGGING
 function handlePortalLogin(e) {
     e.preventDefault();
     const role = document.getElementById('portalRole').value;
@@ -1037,9 +1018,8 @@ function handlePortalLogin(e) {
         currentSession = authenticatedUser;
         sessionStartTime = Date.now();
 
-        // 24-HOUR SAVE PASSWORDS & PERSISTENT SESSION TOGGLE
         if (remember24) {
-            const expiry = sessionStartTime + (24 * 60 * 60 * 1000); // 24 hours in MS
+            const expiry = sessionStartTime + (24 * 60 * 60 * 1000);
             localStorage.setItem('ns_saved_session_24h', JSON.stringify({
                 session: authenticatedUser,
                 startTime: sessionStartTime,
@@ -1109,7 +1089,6 @@ function openDashboard() {
     refreshAllUIViews();
 }
 
-// LOGOUT ENGINE CLEARING PERSISTENT SESSION
 function logout() {
     currentSession = null;
     sessionStartTime = null;
@@ -1307,21 +1286,6 @@ function renderGallery() {
     }
 }
 
-async function uploadClinicPhotoFile(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async function(evt) {
-        galleryPhotos.unshift(evt.target.result);
-        await storageEngine.setItem('ns_gallery', galleryPhotos);
-        renderGallery();
-        logAction("Staff uploaded photo into gallery.");
-        alert("Photo Uploaded!");
-    };
-    reader.readAsDataURL(file);
-}
-
 function initShufflingReviews10Sec() {
     const container = document.getElementById('shufflingReviewsContainer');
     let currentIndex = 0;
@@ -1506,33 +1470,4 @@ function markDayAuditVerified() {
     closeDayWiseAuditModal();
 }
 
-function sendAppointmentWhatsAppLinks(apptId) {
-    const appt = appointments.find(a => a.id === apptId);
-    if(appt) {
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const pageUrl = window.location.href.split('#')[0];
-        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment/record has been updated!%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Doctor:* ${appt.doctor}%0A*Next Visit:* ${appt.nextVisit || appt.date}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}`;
-        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-    }
-}
-
-async function deletePatientRecordATOZ(pid) {
-    if(confirm(`PERMANENTLY DELETE all patient data, medical records, and receipts for ${pid}?`)) {
-        patients = patients.filter(p => p.patientId !== pid);
-        appointments = appointments.filter(a => a.patientId !== pid);
-        ledgers = ledgers.filter(l => l.patientId !== pid);
-        delete medicalRecords[pid];
-
-        await storageEngine.setItem('ns_patients', patients);
-        await storageEngine.setItem('ns_appointments', appointments);
-        await storageEngine.setItem('ns_ledgers', ledgers);
-        await storageEngine.setItem('ns_records', medicalRecords);
-
-        refreshAllUIViews();
-        logAction(`Deleted patient ${pid}`);
-        alert("Patient purged permanently!");
-    }
-}
-
-// INITIALIZE APPLICATION ON SCRIPT LOAD
 initApp();

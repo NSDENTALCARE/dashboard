@@ -2,7 +2,6 @@
 // INDEXEDB LOCAL DB + REAL-TIME FIREBASE CLOUD RELAY ENGINE
 // ==========================================================================
 
-// Initialize Firebase Engine for Instant Cross-Device Sync (Mobile <-> Desktop)
 const firebaseConfig = {
     databaseURL: "https://ns-dental-care-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
@@ -11,7 +10,7 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     try {
         firebase.initializeApp(firebaseConfig);
     } catch(err) {
-        console.log("Firebase initialized");
+        console.error("Firebase init error:", err);
     }
 }
 
@@ -45,14 +44,14 @@ class ClinicStorageEngine {
         });
     }
 
-    async setItem(key, val) {
+    async setItem(key, val, skipCloudPush = false) {
         if (!this.db) await this.init();
         return new Promise((resolve, reject) => {
             const tx = this.db.transaction("clinic_store", "readwrite");
             const store = tx.objectStore("clinic_store");
             const req = store.put(val, key);
             req.onsuccess = () => {
-                notifySyncBroadcast(key, val);
+                notifySyncBroadcast(key, val, skipCloudPush);
                 resolve(true);
             };
             req.onerror = () => reject(req.error);
@@ -77,7 +76,9 @@ class ClinicStorageEngine {
             const store = tx.objectStore("clinic_store");
             const req = store.clear();
             req.onsuccess = () => {
-                notifySyncBroadcast('clear', null);
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref('clinic_live_store').remove();
+                }
                 resolve(true);
             };
             req.onerror = () => reject(req.error);
@@ -90,14 +91,14 @@ const storageEngine = new ClinicStorageEngine();
 // REALTIME MULTI-TAB & CLOUD CROSS-DEVICE SYNC ENGINE
 const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sync_channel") : null;
 
-function notifySyncBroadcast(key, val) {
+function notifySyncBroadcast(key, val, skipCloudPush = false) {
     if (syncChannel) {
         syncChannel.postMessage({ type: "DATA_UPDATED", timestamp: Date.now() });
     }
     localStorage.setItem("ns_sync_trigger", Date.now().toString());
 
     // PUSH IMMEDIATELY TO ONLINE CLOUD RELAY FOR DESKTOP LISTENERS
-    if (typeof firebase !== 'undefined' && firebase.database) {
+    if (!skipCloudPush && typeof firebase !== 'undefined' && firebase.database) {
         try {
             firebase.database().ref('clinic_live_store/' + key).set(val);
             firebase.database().ref('last_update_trigger').set({
@@ -106,28 +107,8 @@ function notifySyncBroadcast(key, val) {
                 time: Date.now()
             });
         } catch(e) {
-            console.warn("Cloud push notice:", e);
+            console.warn("Cloud push error:", e);
         }
-    }
-}
-
-// REALTIME CLOUD LISTENER (INSTANTLY RECEIVES MOBILE EDITS ON DESKTOP)
-if (typeof firebase !== 'undefined' && firebase.database) {
-    try {
-        firebase.database().ref('last_update_trigger').on('value', async (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.sender !== getDeviceId()) {
-                // Fetch updated key directly from cloud and save to local IndexedDB
-                firebase.database().ref('clinic_live_store/' + data.key).once('value', async (keySnap) => {
-                    if (keySnap.exists()) {
-                        await storageEngine.setItem(data.key, keySnap.val());
-                        await reloadDataAndRefreshUI();
-                    }
-                });
-            }
-        });
-    } catch(err) {
-        console.warn("Cloud listener active locally.");
     }
 }
 
@@ -140,15 +121,61 @@ function getDeviceId() {
     return devId;
 }
 
-// MANUAL 1-CLICK FORCE SYNC TRIGGER FOR MOBILE & DESKTOP BROWSERS
+// REALTIME CLOUD LISTENER FOR INCOMING MOBILE UPDATES
+if (typeof firebase !== 'undefined' && firebase.database) {
+    try {
+        firebase.database().ref('last_update_trigger').on('value', async (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.sender !== getDeviceId()) {
+                firebase.database().ref('clinic_live_store/' + data.key).once('value', async (keySnap) => {
+                    if (keySnap.exists()) {
+                        await storageEngine.setItem(data.key, keySnap.val(), true);
+                        await reloadDataAndRefreshUI();
+                    }
+                });
+            }
+        });
+    } catch(err) {
+        console.warn("Cloud listener error:", err);
+    }
+}
+
+// FULL CLOUD FETCH ON APP STARTUP / REFRESH
+async function pullFullStateFromCloud() {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        try {
+            const snap = await firebase.database().ref('clinic_live_store').once('value');
+            if (snap.exists()) {
+                const cloudData = snap.val();
+                for (const key in cloudData) {
+                    await storageEngine.setItem(key, cloudData[key], true);
+                }
+            }
+        } catch(e) {
+            console.warn("Cloud fetch warning:", e);
+        }
+    }
+}
+
+// MANUAL FORCE SYNC BUTTON
 async function forceSyncAllOnlineBrowsers() {
+    const indicator = document.getElementById('cloud_sync_indicator');
+    if(indicator) indicator.innerText = "● SYNCING...";
+
+    await pullFullStateFromCloud();
+
     notifySyncBroadcast('ns_appointments', appointments);
     notifySyncBroadcast('ns_patients', patients);
     notifySyncBroadcast('ns_ledgers', ledgers);
     notifySyncBroadcast('ns_records', medicalRecords);
-    
+    notifySyncBroadcast('ns_treatment_plans', treatmentPlans);
+    notifySyncBroadcast('ns_inventory', inventoryItems);
+    notifySyncBroadcast('ns_expenses', clinicExpenses);
+    notifySyncBroadcast('ns_lab_orders', labOrders);
+
     await reloadDataAndRefreshUI();
-    alert("⚡ Cloud Sync Completed! Mobile & Desktop browsers updated across all devices.");
+    if(indicator) indicator.innerText = "● CLOUD LIVE";
+    alert("⚡ Cloud Sync Complete! All mobile and desktop entries pulled and synchronized.");
 }
 
 // GLOBAL STATE VARIABLES
@@ -188,10 +215,14 @@ let currentCalYear = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth();
 let selectedCalendarDateStr = currentLiveDateStr;
 
-// LOAD DATABASE DATA
+// LOAD DATABASE DATA (CHECKS CLOUD FIRST, THEN INDEXEDB)
 async function loadStateFromIndexedDB() {
     currentLiveDateStr = new Date().toISOString().split('T')[0];
 
+    // 1. Pull latest cloud snapshot
+    await pullFullStateFromCloud();
+
+    // 2. Read state into memory
     hospitalEmail = await storageEngine.getItem('ns_hospital_email') || "info@nsdentalcare.com";
     doctorEmail = await storageEngine.getItem('ns_doctor_email') || "ayub@nsdentalcare.com";
 
@@ -263,7 +294,19 @@ async function loadStateFromIndexedDB() {
 }
 
 async function reloadDataAndRefreshUI() {
-    await loadStateFromIndexedDB();
+    hospitalEmail = await storageEngine.getItem('ns_hospital_email') || hospitalEmail;
+    doctorEmail = await storageEngine.getItem('ns_doctor_email') || doctorEmail;
+    doctors = await storageEngine.getItem('ns_doctors') || doctors;
+    users = await storageEngine.getItem('ns_users') || users;
+    patients = await storageEngine.getItem('ns_patients') || patients;
+    appointments = await storageEngine.getItem('ns_appointments') || appointments;
+    labOrders = await storageEngine.getItem('ns_lab_orders') || labOrders;
+    medicalRecords = await storageEngine.getItem('ns_records') || medicalRecords;
+    ledgers = await storageEngine.getItem('ns_ledgers') || ledgers;
+    treatmentPlans = await storageEngine.getItem('ns_treatment_plans') || treatmentPlans;
+    inventoryItems = await storageEngine.getItem('ns_inventory') || inventoryItems;
+    clinicExpenses = await storageEngine.getItem('ns_expenses') || clinicExpenses;
+
     if(typeof refreshAllUIViews === 'function') {
         refreshAllUIViews();
     }

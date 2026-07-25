@@ -1,5 +1,5 @@
 // ==========================================================================
-// ODONTOGRAM CHARTING, PRESCRIPTION PRESETS & LETTERHEAD DISPATCHER
+// ODONTOGRAM CHARTING, PRESCRIPTION PRESETS & LETTERHEAD DISPATCHER (v2.4.0)
 // ==========================================================================
 
 function renderOdontogram() {
@@ -103,7 +103,6 @@ async function savePrescriptionAndSync() {
 
     await storageEngine.setItem('ns_records', medicalRecords);
 
-    // Update appointment follow-up date
     const appt = appointments.find(a => a.id === activeRxApptId);
     if (appt) {
         appt.nextVisit = nextVisit;

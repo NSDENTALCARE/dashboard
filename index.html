@@ -691,6 +691,41 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- MANUAL JSON FILE UPLOAD & PASTE DATA TRANSFER MODULE -->
+                        <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                                        <i data-lucide="file-json" class="w-4 h-4"></i> Manual JSON Data Transfer & Restore Suite
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Upload a exported JSON file from mobile OR paste raw JSON text directly to update database instantly.</p>
+                                </div>
+                                <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono px-2 py-0.5 rounded font-bold">Manual Transfer Active</span>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4 text-xs">
+                                <!-- OPTION A: FILE UPLOAD -->
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                    <span class="font-bold text-emerald-400 uppercase block">Option A: Upload JSON File</span>
+                                    <p class="text-slate-400 text-[11px]">Select `.json` file generated from mobile download.</p>
+                                    <input type="file" id="json_file_input" accept=".json,application/json" class="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-slate-300 text-xs">
+                                    <button onclick="handleJSONFileUpload()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl shadow mt-2">
+                                        Import Selected JSON File
+                                    </button>
+                                </div>
+
+                                <!-- OPTION B: PASTE TEXT -->
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                    <span class="font-bold text-sky-400 uppercase block">Option B: Direct Copy / Paste Raw JSON</span>
+                                    <p class="text-slate-400 text-[11px]">Paste JSON text copied from mobile clipboards.</p>
+                                    <textarea id="json_paste_input" rows="3" placeholder='Paste {"patients": [...], "appointments": [...]} here...' class="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white font-mono text-[10px]"></textarea>
+                                    <button onclick="handleJSONTextPasteImport()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-xl shadow mt-1">
+                                        Apply & Overwrite Database
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER -->
@@ -1526,7 +1561,7 @@
             </div>
         </div>
 
-        <!-- NEW MODAL: TREATMENT PLAN ESTIMATOR ENTRY FORM -->
+        <!-- TREATMENT PLAN ESTIMATOR ENTRY FORM MODAL -->
         <div id="newTreatmentPlanModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeNewTreatmentPlanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1563,7 +1598,7 @@
             </div>
         </div>
 
-        <!-- NEW MODAL: DENTAL INVENTORY STOCK ENTRY FORM -->
+        <!-- DENTAL INVENTORY STOCK ENTRY FORM MODAL -->
         <div id="newInventoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeNewInventoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1607,7 +1642,7 @@
             </div>
         </div>
 
-        <!-- NEW MODAL: LAB & CROWN ORDER CREATION FORM -->
+        <!-- LAB & CROWN ORDER CREATION FORM MODAL -->
         <div id="newLabOrderModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeNewLabOrderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">

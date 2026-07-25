@@ -1,5 +1,5 @@
 // ==========================================================================
-// INDEXEDB LOCAL DB + REAL-TIME FIREBASE CLOUD RELAY ENGINE
+// INDEXEDB LOCAL DB + REAL-TIME FIREBASE CLOUD RELAY ENGINE (ROBUST FAILSAFE)
 // ==========================================================================
 
 const firebaseConfig = {
@@ -10,7 +10,7 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     try {
         firebase.initializeApp(firebaseConfig);
     } catch(err) {
-        console.error("Firebase init error:", err);
+        console.warn("Firebase initialization skipped:", err);
     }
 }
 
@@ -39,49 +39,73 @@ class ClinicStorageEngine {
 
             request.onerror = (event) => {
                 console.error("IndexedDB initialization error:", event.target.error);
-                reject(event.target.error);
+                resolve(null); // Failsafe fallback
             };
         });
     }
 
     async setItem(key, val, skipCloudPush = false) {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readwrite");
-            const store = tx.objectStore("clinic_store");
-            const req = store.put(val, key);
-            req.onsuccess = () => {
+        return new Promise((resolve) => {
+            if (!this.db) {
+                localStorage.setItem(key, JSON.stringify(val));
                 notifySyncBroadcast(key, val, skipCloudPush);
-                resolve(true);
-            };
-            req.onerror = () => reject(req.error);
+                return resolve(true);
+            }
+            try {
+                const tx = this.db.transaction("clinic_store", "readwrite");
+                const store = tx.objectStore("clinic_store");
+                const req = store.put(val, key);
+                req.onsuccess = () => {
+                    notifySyncBroadcast(key, val, skipCloudPush);
+                    resolve(true);
+                };
+                req.onerror = () => {
+                    localStorage.setItem(key, JSON.stringify(val));
+                    resolve(false);
+                };
+            } catch(e) {
+                localStorage.setItem(key, JSON.stringify(val));
+                resolve(false);
+            }
         });
     }
 
     async getItem(key) {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readonly");
-            const store = tx.objectStore("clinic_store");
-            const req = store.get(key);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
+        return new Promise((resolve) => {
+            if (!this.db) {
+                const lsData = localStorage.getItem(key);
+                return resolve(lsData ? JSON.parse(lsData) : null);
+            }
+            try {
+                const tx = this.db.transaction("clinic_store", "readonly");
+                const store = tx.objectStore("clinic_store");
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                req.onerror = () => resolve(null);
+            } catch(e) {
+                const lsData = localStorage.getItem(key);
+                resolve(lsData ? JSON.parse(lsData) : null);
+            }
         });
     }
 
     async clear() {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readwrite");
-            const store = tx.objectStore("clinic_store");
-            const req = store.clear();
-            req.onsuccess = () => {
-                if (typeof firebase !== 'undefined' && firebase.database) {
-                    firebase.database().ref('clinic_live_store').remove();
-                }
-                resolve(true);
-            };
-            req.onerror = () => reject(req.error);
+        return new Promise((resolve) => {
+            if (this.db) {
+                try {
+                    const tx = this.db.transaction("clinic_store", "readwrite");
+                    const store = tx.objectStore("clinic_store");
+                    store.clear();
+                } catch(e) {}
+            }
+            localStorage.clear();
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                try { firebase.database().ref('clinic_live_store').remove(); } catch(e){}
+            }
+            resolve(true);
         });
     }
 }
@@ -93,11 +117,11 @@ const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sy
 
 function notifySyncBroadcast(key, val, skipCloudPush = false) {
     if (syncChannel) {
-        syncChannel.postMessage({ type: "DATA_UPDATED", timestamp: Date.now() });
+        try { syncChannel.postMessage({ type: "DATA_UPDATED", timestamp: Date.now() }); } catch(e){}
     }
     localStorage.setItem("ns_sync_trigger", Date.now().toString());
 
-    // PUSH IMMEDIATELY TO ONLINE CLOUD RELAY FOR DESKTOP LISTENERS
+    // SAFE BACKGROUND CLOUD PUSH
     if (!skipCloudPush && typeof firebase !== 'undefined' && firebase.database) {
         try {
             firebase.database().ref('clinic_live_store/' + key).set(val);
@@ -107,7 +131,7 @@ function notifySyncBroadcast(key, val, skipCloudPush = false) {
                 time: Date.now()
             });
         } catch(e) {
-            console.warn("Cloud push error:", e);
+            console.warn("Cloud push warning:", e);
         }
     }
 }
@@ -121,7 +145,7 @@ function getDeviceId() {
     return devId;
 }
 
-// REALTIME CLOUD LISTENER FOR INCOMING MOBILE UPDATES
+// BACKGROUND LISTENERS FOR CLOUD SYNC
 if (typeof firebase !== 'undefined' && firebase.database) {
     try {
         firebase.database().ref('last_update_trigger').on('value', async (snapshot) => {
@@ -136,28 +160,33 @@ if (typeof firebase !== 'undefined' && firebase.database) {
             }
         });
     } catch(err) {
-        console.warn("Cloud listener error:", err);
+        console.warn("Cloud listener standby.");
     }
 }
 
-// FULL CLOUD FETCH ON APP STARTUP / REFRESH
+// NON-BLOCKING BACKGROUND FETCH FROM CLOUD
 async function pullFullStateFromCloud() {
     if (typeof firebase !== 'undefined' && firebase.database) {
         try {
-            const snap = await firebase.database().ref('clinic_live_store').once('value');
-            if (snap.exists()) {
+            const snap = await Promise.race([
+                firebase.database().ref('clinic_live_store').once('value'),
+                new Promise((_, reject) => setTimeout(() => reject("Cloud timeout"), 2500))
+            ]);
+            if (snap && snap.exists()) {
                 const cloudData = snap.val();
                 for (const key in cloudData) {
-                    await storageEngine.setItem(key, cloudData[key], true);
+                    if (cloudData[key]) {
+                        await storageEngine.setItem(key, cloudData[key], true);
+                    }
                 }
             }
         } catch(e) {
-            console.warn("Cloud fetch warning:", e);
+            console.warn("Continuing with local storage state.");
         }
     }
 }
 
-// MANUAL FORCE SYNC BUTTON
+// 1-CLICK FORCE CLOUD SYNC
 async function forceSyncAllOnlineBrowsers() {
     const indicator = document.getElementById('cloud_sync_indicator');
     if(indicator) indicator.innerText = "● SYNCING...";
@@ -168,6 +197,7 @@ async function forceSyncAllOnlineBrowsers() {
     notifySyncBroadcast('ns_patients', patients);
     notifySyncBroadcast('ns_ledgers', ledgers);
     notifySyncBroadcast('ns_records', medicalRecords);
+    notifySyncBroadcast('ns_doctors', doctors);
     notifySyncBroadcast('ns_treatment_plans', treatmentPlans);
     notifySyncBroadcast('ns_inventory', inventoryItems);
     notifySyncBroadcast('ns_expenses', clinicExpenses);
@@ -175,7 +205,7 @@ async function forceSyncAllOnlineBrowsers() {
 
     await reloadDataAndRefreshUI();
     if(indicator) indicator.innerText = "● CLOUD LIVE";
-    alert("⚡ Cloud Sync Complete! All mobile and desktop entries pulled and synchronized.");
+    alert("⚡ 1-Click Sync Complete! Data refreshed across mobile & desktop.");
 }
 
 // GLOBAL STATE VARIABLES
@@ -215,49 +245,69 @@ let currentCalYear = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth();
 let selectedCalendarDateStr = currentLiveDateStr;
 
-// LOAD DATABASE DATA (CHECKS CLOUD FIRST, THEN INDEXEDB)
+// LOAD DATABASE DATA WITH FAILSAFE FALLBACKS
 async function loadStateFromIndexedDB() {
     currentLiveDateStr = new Date().toISOString().split('T')[0];
 
-    // 1. Pull latest cloud snapshot
-    await pullFullStateFromCloud();
-
-    // 2. Read state into memory
+    // 1. Read Local Values First (Fast Display)
     hospitalEmail = await storageEngine.getItem('ns_hospital_email') || "info@nsdentalcare.com";
     doctorEmail = await storageEngine.getItem('ns_doctor_email') || "ayub@nsdentalcare.com";
 
-    doctors = await storageEngine.getItem('ns_doctors') || [
-        { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
-        { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
-    ];
+    doctors = await storageEngine.getItem('ns_doctors');
+    if (!doctors || doctors.length === 0) {
+        doctors = [
+            { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
+            { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
+        ];
+        await storageEngine.setItem('ns_doctors', doctors);
+    }
 
-    users = await storageEngine.getItem('ns_users') || [
-        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved", accessTier: "full", idProofBase64: null },
-        { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved", accessTier: "limited", idProofBase64: null }
-    ];
+    users = await storageEngine.getItem('ns_users');
+    if (!users || users.length === 0) {
+        users = [
+            { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved", accessTier: "full", idProofBase64: null },
+            { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved", accessTier: "limited", idProofBase64: null }
+        ];
+        await storageEngine.setItem('ns_users', users);
+    }
 
-    assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
-    assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
+    patients = await storageEngine.getItem('ns_patients');
+    if (!patients || patients.length === 0) {
+        patients = [
+            { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male" }
+        ];
+        await storageEngine.setItem('ns_patients', patients);
+    }
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Cloud Sync." }];
+    appointments = await storageEngine.getItem('ns_appointments');
+    if (!appointments || appointments.length === 0) {
+        appointments = [
+            { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", chair: "Chair 1 (Main Operatory)", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
+        ];
+        await storageEngine.setItem('ns_appointments', appointments);
+    }
 
-    galleryPhotos = await storageEngine.getItem('ns_gallery') || [
-        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
-        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
-    ];
-
-    allReviews = await storageEngine.getItem('ns_reviews') || [
-        { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" }
-    ];
-
-    patients = await storageEngine.getItem('ns_patients') || [
-        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male" }
-    ];
-
-    appointments = await storageEngine.getItem('ns_appointments') || [
-        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", chair: "Chair 1 (Main Operatory)", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
-    ];
+    ledgers = await storageEngine.getItem('ns_ledgers');
+    if (!ledgers || ledgers.length === 0) {
+        ledgers = [
+            { 
+                id: "REC-1001", 
+                apptId: "NSD-1001", 
+                patientId: "PAT-1001", 
+                patientName: "Mohammed Ali", 
+                purpose: "Root Canal Treatment", 
+                totalCost: 5000, 
+                paidAmount: 3000, 
+                dueAmount: 2000, 
+                lastPaymentMode: "UPI (PhonePe/GPay)", 
+                date: currentLiveDateStr,
+                paymentHistory: [
+                    { amount: 3000, mode: "UPI (PhonePe/GPay)", timestamp: `${currentLiveDateStr} 10:30 AM` }
+                ]
+            }
+        ];
+        await storageEngine.setItem('ns_ledgers', ledgers);
+    }
 
     labOrders = await storageEngine.getItem('ns_lab_orders') || [
         { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: currentLiveDateStr, status: "In Lab Production", notes: "A2 Shade Translucent", fileBase64: null }
@@ -269,43 +319,63 @@ async function loadStateFromIndexedDB() {
         ]
     };
 
-    ledgers = await storageEngine.getItem('ns_ledgers') || [
-        { 
-            id: "REC-1001", 
-            apptId: "NSD-1001", 
-            patientId: "PAT-1001", 
-            patientName: "Mohammed Ali", 
-            purpose: "Root Canal Treatment", 
-            totalCost: 5000, 
-            paidAmount: 3000, 
-            dueAmount: 2000, 
-            lastPaymentMode: "UPI (PhonePe/GPay)", 
-            date: currentLiveDateStr,
-            paymentHistory: [
-                { amount: 3000, mode: "UPI (PhonePe/GPay)", timestamp: `${currentLiveDateStr} 10:30 AM` }
-            ]
-        }
+    assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
+    assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized Ready." }];
+
+    galleryPhotos = await storageEngine.getItem('ns_gallery') || [
+        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
+        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
+    ];
+
+    allReviews = await storageEngine.getItem('ns_reviews') || [
+        { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
+        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" }
     ];
 
     treatmentPlans = await storageEngine.getItem('ns_treatment_plans') || [];
     inventoryItems = await storageEngine.getItem('ns_inventory') || [];
     clinicExpenses = await storageEngine.getItem('ns_expenses') || [];
     patientConsents = await storageEngine.getItem('ns_consents') || [];
+
+    // 2. Fetch background cloud sync without blocking UI
+    pullFullStateFromCloud().then(() => {
+        if(typeof refreshAllUIViews === 'function') {
+            refreshAllUIViews();
+        }
+    });
 }
 
 async function reloadDataAndRefreshUI() {
-    hospitalEmail = await storageEngine.getItem('ns_hospital_email') || hospitalEmail;
-    doctorEmail = await storageEngine.getItem('ns_doctor_email') || doctorEmail;
-    doctors = await storageEngine.getItem('ns_doctors') || doctors;
-    users = await storageEngine.getItem('ns_users') || users;
-    patients = await storageEngine.getItem('ns_patients') || patients;
-    appointments = await storageEngine.getItem('ns_appointments') || appointments;
-    labOrders = await storageEngine.getItem('ns_lab_orders') || labOrders;
-    medicalRecords = await storageEngine.getItem('ns_records') || medicalRecords;
-    ledgers = await storageEngine.getItem('ns_ledgers') || ledgers;
-    treatmentPlans = await storageEngine.getItem('ns_treatment_plans') || treatmentPlans;
-    inventoryItems = await storageEngine.getItem('ns_inventory') || inventoryItems;
-    clinicExpenses = await storageEngine.getItem('ns_expenses') || clinicExpenses;
+    const freshDocs = await storageEngine.getItem('ns_doctors');
+    if (freshDocs && freshDocs.length > 0) doctors = freshDocs;
+
+    const freshUsers = await storageEngine.getItem('ns_users');
+    if (freshUsers && freshUsers.length > 0) users = freshUsers;
+
+    const freshPts = await storageEngine.getItem('ns_patients');
+    if (freshPts && freshPts.length > 0) patients = freshPts;
+
+    const freshAppts = await storageEngine.getItem('ns_appointments');
+    if (freshAppts && freshAppts.length > 0) appointments = freshAppts;
+
+    const freshLedg = await storageEngine.getItem('ns_ledgers');
+    if (freshLedg && freshLedg.length > 0) ledgers = freshLedg;
+
+    const freshLab = await storageEngine.getItem('ns_lab_orders');
+    if (freshLab) labOrders = freshLab;
+
+    const freshRecs = await storageEngine.getItem('ns_records');
+    if (freshRecs) medicalRecords = freshRecs;
+
+    const freshPlans = await storageEngine.getItem('ns_treatment_plans');
+    if (freshPlans) treatmentPlans = freshPlans;
+
+    const freshInv = await storageEngine.getItem('ns_inventory');
+    if (freshInv) inventoryItems = freshInv;
+
+    const freshExp = await storageEngine.getItem('ns_expenses');
+    if (freshExp) clinicExpenses = freshExp;
 
     if(typeof refreshAllUIViews === 'function') {
         refreshAllUIViews();

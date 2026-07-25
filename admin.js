@@ -1,5 +1,5 @@
 // ==========================================================================
-// ADMIN MASTER GOVERNANCE, LAYOUT CUSTOMIZER & EMERGENCY REPAIR SUITE
+// ADMIN MASTER GOVERNANCE & EMERGENCY REPAIR SUITE (v2.4.0)
 // ==========================================================================
 
 function setStaffViewMode(mode) {
@@ -220,23 +220,6 @@ async function rejectStaffUser(userId) {
     }
 }
 
-// 100% LAYOUT CUSTOMIZER TOGGLE
-function toggleAdminPageLayout(elementId, isVisible) {
-    const el = document.getElementById(elementId);
-    if (el) {
-        if (isVisible) {
-            el.classList.remove('hidden-section');
-        } else {
-            el.classList.add('hidden-section');
-        }
-        logAction(`Layout Customizer: ${elementId} set to ${isVisible ? 'Visible' : 'Hidden'}`);
-    }
-}
-
-function togglePerm(permName) {
-    logAction(`Permission toggled: ${permName}`);
-}
-
 // EMERGENCY FIX & REPAIR UTILITIES
 async function adminFixMissingReceipts() {
     let count = 0;
@@ -325,31 +308,10 @@ function calculateRevenueSplit() {
     document.getElementById('adm_calc_doc_share').innerText = `₹${docAmt.toLocaleString('en-IN')}`;
 }
 
-async function updateLiveTickerAdmin() {
-    const txt = document.getElementById('adm_ticker_input').value;
-    if (txt) {
-        document.getElementById('disp_marquee_text').innerText = txt;
-        await storageEngine.setItem('ns_ticker_text', txt);
-        logAction("Updated marquee announcement ticker text.");
-        alert("Top Marquee Notice Banner Updated!");
-    }
-}
-
 async function clearAuditLogs() {
     if (confirm("Clear system audit logs history?")) {
         auditLogs = [];
         await storageEngine.setItem('ns_logs', auditLogs);
         renderAuditLogs();
-    }
-}
-
-async function resetSystemData() {
-    if (confirm("CRITICAL WARNING: Wipe all local clinic records and re-initialize system?")) {
-        localStorage.clear();
-        const request = indexedDB.deleteDatabase(DB_NAME);
-        request.onsuccess = () => {
-            alert("Database deleted. Reloading page...");
-            window.location.reload();
-        };
     }
 }

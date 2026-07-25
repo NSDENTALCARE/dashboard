@@ -1,5 +1,5 @@
 // ==========================================================================
-// INDEXEDB STORAGE ENGINE & GLOBAL STATE DECLARATIONS
+// INDEXEDB STORAGE ENGINE & GLOBAL STATE DECLARATIONS WITH REALTIME SYNC
 // ==========================================================================
 
 class ClinicStorageEngine {
@@ -123,6 +123,8 @@ let activeReceiptId = null;
 let selectedTeeth = [];
 let currentSession = null;
 let staffViewMode = 'list';
+let sessionStartTime = null;
+let sessionTimerInterval = null;
 
 let currentCalYear = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth();
@@ -148,7 +150,7 @@ async function loadStateFromIndexedDB() {
     assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
     assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Immutable Assistant Timecards." }];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Auto-Sync Engine." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
@@ -161,11 +163,11 @@ async function loadStateFromIndexedDB() {
     ];
 
     patients = await storageEngine.getItem('ns_patients') || [
-        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" }
+        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male" }
     ];
 
     appointments = await storageEngine.getItem('ns_appointments') || [
-        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic", source: "dashboard" }
+        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
     ];
 
     labOrders = await storageEngine.getItem('ns_lab_orders') || [
@@ -214,7 +216,7 @@ async function updateStorageMeter() {
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
         const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
 
-        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Auto-Sync Engine)`;
         if (bar) {
             bar.style.width = `${Math.max(pct, 2)}%`;
             bar.className = "h-full rounded-full transition-all bg-emerald-500";

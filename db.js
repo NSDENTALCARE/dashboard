@@ -1,12 +1,12 @@
 // ==========================================================================
-// INDEXEDB HIGH-CAPACITY STORAGE ENGINE & CLOUD REAL-TIME RELAY (v2.4.0)
+// INDEXEDB HIGH-CAPACITY STORAGE ENGINE & CLOUD REAL-TIME RELAY
 // ==========================================================================
 
 const DB_NAME = 'NSDentalCareDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'app_state';
 
-// GLOBAL IN-MEMORY APP DATA STATE WITH COMPLETE UNTOUCHED MOCK DATA
+// GLOBAL IN-MEMORY APP DATA STATE
 let patients = [];
 let appointments = [];
 let medicalRecords = {};
@@ -39,8 +39,8 @@ let activeReceiptId = null;
 let activeRxApptId = null;
 let selectedTeethList = [];
 
-let staffViewMode = 'list';
-let asstActivityFilter = 'day';
+let staffViewMode = 'list'; // 'list' or 'grid'
+let asstActivityFilter = 'day'; // 'day', 'week', or 'month'
 
 // INDEXEDB ENGINE WRAPPER
 const storageEngine = {
@@ -157,10 +157,11 @@ async function loadStateFromIndexedDB() {
         { author: "Sheikh Ibrahim", rating: 5, text: "Excellent patient care, prompt appointment scheduling on WhatsApp." }
     ];
 
+    // RESTORE 24-HOUR SAVED LOGIN SESSION IF VALID
     await restoreSaved24HourSession();
 }
 
-// RESTORE 24-HOUR SAVED SESSION
+// RESTORE 24-HOUR SAVED STAFF SESSION
 async function restoreSaved24HourSession() {
     try {
         const savedAuthStr = localStorage.getItem('ns_saved_session_24h');
@@ -179,10 +180,12 @@ async function restoreSaved24HourSession() {
     }
 }
 
+// SIMULATED CLOUD POLLING RELAY
 async function pullDataFromCloudRelay() {
     return false;
 }
 
+// STORAGE METER CALCULATOR
 async function updateStorageMeter() {
     if (navigator.storage && navigator.storage.estimate) {
         const estimate = await navigator.storage.estimate();

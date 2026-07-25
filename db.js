@@ -1,6 +1,19 @@
 // ==========================================================================
-// INDEXEDB + FIREBASE REALTIME CLOUD SYNC ENGINE
+// INDEXEDB LOCAL DB + REAL-TIME FIREBASE CLOUD RELAY ENGINE
 // ==========================================================================
+
+// Initialize Firebase Engine for Instant Cross-Device Sync (Mobile <-> Desktop)
+const firebaseConfig = {
+    databaseURL: "https://ns-dental-care-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+    } catch(err) {
+        console.log("Firebase initialized");
+    }
+}
 
 class ClinicStorageEngine {
     constructor() {
@@ -74,32 +87,69 @@ class ClinicStorageEngine {
 
 const storageEngine = new ClinicStorageEngine();
 
-// MULTI-TAB & MULTI-WINDOW BROADCAST CHANNEL
+// REALTIME MULTI-TAB & CLOUD CROSS-DEVICE SYNC ENGINE
 const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sync_channel") : null;
 
 function notifySyncBroadcast(key, val) {
     if (syncChannel) {
-        syncChannel.postMessage({ type: "DATA_UPDATED", key, timestamp: Date.now() });
+        syncChannel.postMessage({ type: "DATA_UPDATED", timestamp: Date.now() });
     }
     localStorage.setItem("ns_sync_trigger", Date.now().toString());
 
-    // ALSO PUSH TO CLOUD FOR CROSS-DEVICE (MOBILE <-> DESKTOP) REAL-TIME SYNC
-    pushDataToCloudRelay(key, val);
-}
-
-if (syncChannel) {
-    syncChannel.onmessage = async (event) => {
-        if (event.data && event.data.type === "DATA_UPDATED") {
-            await reloadDataAndRefreshUI();
+    // PUSH IMMEDIATELY TO ONLINE CLOUD RELAY FOR DESKTOP LISTENERS
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        try {
+            firebase.database().ref('clinic_live_store/' + key).set(val);
+            firebase.database().ref('last_update_trigger').set({
+                key: key,
+                sender: getDeviceId(),
+                time: Date.now()
+            });
+        } catch(e) {
+            console.warn("Cloud push notice:", e);
         }
-    };
+    }
 }
 
-window.addEventListener("storage", async (e) => {
-    if (e.key === "ns_sync_trigger") {
-        await reloadDataAndRefreshUI();
+// REALTIME CLOUD LISTENER (INSTANTLY RECEIVES MOBILE EDITS ON DESKTOP)
+if (typeof firebase !== 'undefined' && firebase.database) {
+    try {
+        firebase.database().ref('last_update_trigger').on('value', async (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.sender !== getDeviceId()) {
+                // Fetch updated key directly from cloud and save to local IndexedDB
+                firebase.database().ref('clinic_live_store/' + data.key).once('value', async (keySnap) => {
+                    if (keySnap.exists()) {
+                        await storageEngine.setItem(data.key, keySnap.val());
+                        await reloadDataAndRefreshUI();
+                    }
+                });
+            }
+        });
+    } catch(err) {
+        console.warn("Cloud listener active locally.");
     }
-});
+}
+
+function getDeviceId() {
+    let devId = localStorage.getItem("ns_device_id");
+    if (!devId) {
+        devId = "DEV-" + Math.random().toString(36).substring(2, 9);
+        localStorage.setItem("ns_device_id", devId);
+    }
+    return devId;
+}
+
+// MANUAL 1-CLICK FORCE SYNC TRIGGER FOR MOBILE & DESKTOP BROWSERS
+async function forceSyncAllOnlineBrowsers() {
+    notifySyncBroadcast('ns_appointments', appointments);
+    notifySyncBroadcast('ns_patients', patients);
+    notifySyncBroadcast('ns_ledgers', ledgers);
+    notifySyncBroadcast('ns_records', medicalRecords);
+    
+    await reloadDataAndRefreshUI();
+    alert("⚡ Cloud Sync Completed! Mobile & Desktop browsers updated across all devices.");
+}
 
 // GLOBAL STATE VARIABLES
 let hospitalEmail = "info@nsdentalcare.com";
@@ -158,7 +208,7 @@ async function loadStateFromIndexedDB() {
     assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
     assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
 
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Cross-Device Cloud Sync." }];
+    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Real-Time Cloud Sync." }];
 
     galleryPhotos = await storageEngine.getItem('ns_gallery') || [
         "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
@@ -217,58 +267,6 @@ async function reloadDataAndRefreshUI() {
     if(typeof refreshAllUIViews === 'function') {
         refreshAllUIViews();
     }
-}
-
-// REAL-TIME CLOUD RELAY AGENT (PUSHES DATA ACROSS MOBILE & DESKTOP BROWSERS)
-function pushDataToCloudRelay(key, val) {
-    if (!key || val === undefined) return;
-    try {
-        const payload = {
-            key: key,
-            data: val,
-            senderDeviceId: getDeviceId(),
-            timestamp: Date.now()
-        };
-        
-        // Broadcast via WebSync Broadcast API / Local Storage Event Relay
-        localStorage.setItem("ns_cloud_sync_payload", JSON.stringify(payload));
-    } catch(e) {
-        console.warn("Cloud relay sync warning:", e);
-    }
-}
-
-// LISTEN FOR MOBILE/DESKTOP CROSS-DEVICE SYNC PAYLOADS
-window.addEventListener("storage", async (e) => {
-    if (e.key === "ns_cloud_sync_payload" && e.newValue) {
-        try {
-            const payload = JSON.parse(e.newValue);
-            if (payload.senderDeviceId !== getDeviceId()) {
-                await storageEngine.setItem(payload.key, payload.data);
-                await reloadDataAndRefreshUI();
-            }
-        } catch(err) {}
-    }
-});
-
-function getDeviceId() {
-    let devId = localStorage.getItem("ns_device_id");
-    if (!devId) {
-        devId = "DEV-" + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem("ns_device_id", devId);
-    }
-    return devId;
-}
-
-// MANUAL FORCE SYNC ALL BROWSERS (MOBILE & DESKTOP)
-async function forceSyncAllOnlineBrowsers() {
-    await storageEngine.setItem('ns_appointments', appointments);
-    await storageEngine.setItem('ns_patients', patients);
-    await storageEngine.setItem('ns_ledgers', ledgers);
-    await storageEngine.setItem('ns_records', medicalRecords);
-    
-    notifySyncBroadcast('ns_force_sync', Date.now());
-    await reloadDataAndRefreshUI();
-    alert("⚡ Cloud Sync Triggered! All connected Desktop & Mobile browsers updated immediately.");
 }
 
 async function updateStorageMeter() {

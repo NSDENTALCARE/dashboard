@@ -25,9 +25,6 @@ let doctors = [
 ];
 
 let currentSession = null;
-let sessionStartTime = null;
-let sessionTimerInterval = null;
-
 let currentLiveDateStr = new Date().toISOString().split('T')[0];
 let selectedCalendarDateStr = currentLiveDateStr;
 let currentCalMonth = new Date().getMonth();
@@ -115,8 +112,8 @@ async function loadStateFromIndexedDB() {
     ];
 
     appointments = (await storageEngine.getItem('ns_appointments')) || [
-        { id: "NSD-5001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "APPROVED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "140 mg/dL", risk: "None", source: "Manual Staff" },
-        { id: "NSD-5002", patientId: "PAT-1002", token: "TK-02", name: "Syeda Fatima", phone: "9812345678", ageGender: "28 / Female", doctor: "Dr. A. Rahaman", date: currentLiveDateStr, slot: "05:00 PM - 10:00 PM", status: "PENDING", reason: "Crown Fitting", nextVisit: currentLiveDateStr, modifiedToday: false, queueStatus: "In Waiting Room", bp: "110/70", sugar: "Normal", risk: "None", source: "Public Portal" }
+        { id: "NSD-5001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "140 mg/dL", risk: "None" },
+        { id: "NSD-5002", patientId: "PAT-1002", token: "TK-02", name: "Syeda Fatima", phone: "9812345678", ageGender: "28 / Female", doctor: "Dr. A. Rahaman", date: currentLiveDateStr, slot: "05:00 PM - 10:00 PM", status: "CONFIRMED", reason: "Crown Fitting", nextVisit: currentLiveDateStr, modifiedToday: false, queueStatus: "In Waiting Room", bp: "110/70", sugar: "Normal", risk: "None" }
     ];
 
     medicalRecords = (await storageEngine.getItem('ns_records')) || {
@@ -156,32 +153,12 @@ async function loadStateFromIndexedDB() {
         { author: "Farida Begum", rating: 5, text: "Painless root canal treatment done here. Highly recommended for families." },
         { author: "Sheikh Ibrahim", rating: 5, text: "Excellent patient care, prompt appointment scheduling on WhatsApp." }
     ];
-
-    // RESTORE 24-HOUR SAVED LOGIN SESSION IF VALID
-    await restoreSaved24HourSession();
 }
 
-// RESTORE 24-HOUR SAVED STAFF SESSION
-async function restoreSaved24HourSession() {
-    try {
-        const savedAuthStr = localStorage.getItem('ns_saved_session_24h');
-        if (savedAuthStr) {
-            const authObj = JSON.parse(savedAuthStr);
-            const now = Date.now();
-            if (authObj && authObj.expiry && now < authObj.expiry) {
-                currentSession = authObj.session;
-                sessionStartTime = authObj.startTime || now;
-            } else {
-                localStorage.removeItem('ns_saved_session_24h');
-            }
-        }
-    } catch(err) {
-        console.warn("Error restoring 24-hour saved session:", err);
-    }
-}
-
-// SIMULATED CLOUD POLLING RELAY
+// SIMULATED CLOUD POLLING RELAY (PULLS FRESH DATA FROM CLOUD)
 async function pullDataFromCloudRelay() {
+    // In production, this pulls from a server/Firebase/WebRelay endpoint.
+    // Returns true if new data was synced into local state.
     return false;
 }
 

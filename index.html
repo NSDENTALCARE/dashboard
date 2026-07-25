@@ -12,14 +12,33 @@
 </head>
 <body id="appBody" class="bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden selection:bg-red-600 selection:text-white">
 
-    <!-- TOP PORTAL UTILITY BAR -->
-    <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex justify-between items-center z-50">
-        <div class="flex items-center gap-2">
-            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs">Saturday, July 25, 2026 | 12:35:00 AM</span>
-            <span id="hdr_session_timer" class="hidden-section bg-emerald-600 text-white font-mono text-[10px] px-2 py-0.5 rounded font-bold">Active Session: 00:00:00</span>
+    <!-- TOP PORTAL UTILITY BAR WITH STAFF SESSION & LOGOUT AT TOP -->
+    <div class="bg-amber-100/90 text-slate-900 px-3 sm:px-6 py-1.5 text-xs font-semibold border-b border-amber-300/60 flex flex-wrap justify-between items-center z-50 gap-2">
+        <div class="flex items-center gap-3">
+            <span id="hdr_datetime_ticker" class="font-mono text-[11px] sm:text-xs font-bold">Saturday, July 25, 2026 | 12:35:00 AM</span>
+            <div id="hdr_active_timer_container" class="hidden-section bg-slate-900 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/40 text-[10px] font-mono flex items-center gap-1">
+                <i data-lucide="timer" class="w-3 h-3 text-emerald-400"></i> Active Session: <span id="hdr_session_timer" class="font-bold">00:00:00</span>
+            </div>
         </div>
+        
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
-            <span><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
+            <!-- TOP SESSION PROFILE DISPLAY BADGE & LOGOUT -->
+            <div id="hdr_user_badge" class="hidden-section bg-slate-900 text-white border border-slate-700 px-3 py-1 rounded-xl text-xs flex items-center gap-2 shadow">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                <div>
+                    <span id="hdr_user_role" class="text-[10px] text-amber-400 font-black uppercase block leading-none">ROLE</span>
+                    <span id="hdr_user_name" class="font-bold text-xs truncate max-w-[130px] block">User Name</span>
+                </div>
+                <button onclick="logout()" class="ml-2 bg-rose-600 hover:bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3 h-3"></i> Logout
+                </button>
+            </div>
+
+            <button id="btn_staff_login" onclick="openPortalModal()" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl text-xs font-bold shadow-md flex items-center gap-1">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Staff Login
+            </button>
+
+            <span class="hidden md:inline"><i data-lucide="mail" class="w-3.5 h-3.5 inline text-red-700"></i> <span id="disp_hdr_email">info@nsdentalcare.com</span></span>
             <span><i data-lucide="phone" class="w-3.5 h-3.5 inline text-red-700"></i> +91 8978883007</span>
         </div>
     </div>
@@ -37,25 +56,9 @@
                 </div>
             </div>
 
-            <!-- TOP POSITIONED SESSION CONTROLS & LOGOUT -->
             <div class="flex items-center space-x-2 shrink-0">
-                <div id="hdr_user_badge" class="hidden-section bg-slate-900 text-white border border-slate-700 px-3 py-1 rounded-xl text-xs flex items-center gap-2 shadow">
-                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <div>
-                        <span id="hdr_user_role" class="text-[10px] text-amber-400 font-black uppercase block leading-none">ROLE</span>
-                        <span id="hdr_user_name" class="font-bold text-xs truncate max-w-[130px] block">User Name</span>
-                    </div>
-                </div>
-
-                <button id="btn_hdr_logout" onclick="logout()" class="hidden-section bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
-                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
-                </button>
-
                 <button onclick="navigateTo('track-appointment')" class="bg-amber-100 hover:bg-amber-200 text-slate-900 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-red-700"></i> <span class="hidden sm:inline">Patient Downloads</span>
-                </button>
-                <button id="btn_staff_login" onclick="openPortalModal()" class="bg-red-700 hover:bg-red-800 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Staff Login
                 </button>
             </div>
         </div>
@@ -287,7 +290,7 @@
                 </button>
                 <div class="border-b border-slate-800 pb-2">
                     <h2 class="text-lg font-bold text-white">Book Appointment Request</h2>
-                    <p class="text-[11px] text-amber-400 font-semibold">Existing patients: enter registered mobile or PAT-XXXX ID! Dashboard bookings remain pending until staff approval.</p>
+                    <p class="text-[11px] text-amber-400 font-semibold">Note: Public online bookings remain strictly PENDING until staff approves!</p>
                 </div>
                 <form onsubmit="handlePublicBooking(event)" class="space-y-3">
                     <div>
@@ -298,6 +301,10 @@
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Patient Full Name *</label>
                         <input type="text" id="bk_name" required class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Email Address (Optional for Notifications)</label>
+                        <input type="email" id="bk_email" placeholder="patient@example.com" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white">
                     </div>
                     <div>
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Attending Doctor *</label>
@@ -320,12 +327,12 @@
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Chief Dental Issue</label>
                         <textarea id="bk_reason" rows="2" placeholder="e.g. Toothache, Root Canal Treatment, Crown Fitting" class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg text-xs">Submit Appointment Request (Pending Approval)</button>
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg text-xs">Submit Booking Request (Pending Staff Approval)</button>
                 </form>
             </div>
         </section>
 
-        <!-- LOGIN MODAL WITH 24-HOUR SAVE OPTION -->
+        <!-- LOGIN MODAL WITH 24-HOUR REMEMBER PASSWORD OPTION -->
         <div id="portalModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closePortalModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -358,9 +365,10 @@
                         <label class="block text-xs uppercase text-slate-300 font-semibold mb-1">Password</label>
                         <input type="password" id="portalPassword" required class="w-full bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl text-xs text-white" placeholder="••••••••">
                     </div>
-                    <div class="flex items-center gap-2 pt-1">
-                        <input type="checkbox" id="savePassword24h" class="accent-red-600 w-4 h-4 rounded">
-                        <label for="savePassword24h" class="text-xs text-amber-400 font-semibold cursor-pointer">Save login credentials for 24 hours (1-Click)</label>
+                    <!-- 24-HOUR SAVE PASSWORD OPTION -->
+                    <div class="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <input type="checkbox" id="remember24h" class="accent-red-600 w-4 h-4 rounded cursor-pointer">
+                        <label for="remember24h" class="text-xs text-slate-300 cursor-pointer font-medium">Save password for 24 hours (1-Click Quick Login)</label>
                     </div>
                     <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs">Sign In</button>
                 </form>
@@ -503,22 +511,22 @@
                 </div>
             </div>
 
-            <!-- MANUAL PATIENT TOKEN ASSIGNER TOOLBAR WITH SLOT SELECT -->
+            <!-- MANUAL PATIENT TOKEN ASSIGNER & SLOT SELECTOR TOOLBAR -->
             <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div class="flex items-center gap-2">
                     <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl font-bold">
                         <i data-lucide="ticket" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-white uppercase">Manual Patient Token & Slot Assigner</h4>
-                        <p class="text-[10px] text-slate-400">Assign custom sequence tokens & time slots for walk-ins or existing patients</p>
+                        <h4 class="text-xs font-bold text-white uppercase">Manual Token Assigner & Slot Selection</h4>
+                        <p class="text-[10px] text-slate-400">Assign custom tokens and select appointment time slots</p>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-xl">
+                <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-2xl">
                     <input type="text" id="manual_token_pid" placeholder="Patient ID / Mobile #" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
-                    <input type="text" id="manual_token_val" placeholder="Token # (TK-05)" class="w-24 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
-                    <select id="manual_token_slot" class="bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl text-white text-xs">
+                    <input type="text" id="manual_token_val" placeholder="Token #" class="w-24 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
+                    <select id="manual_token_slot" class="bg-slate-950 border border-slate-800 px-2 py-1.5 rounded-xl text-white">
                         <option value="10:00 AM - 02:00 PM">Morning Slot</option>
                         <option value="05:00 PM - 10:00 PM">Evening Slot</option>
                     </select>
@@ -636,11 +644,14 @@
                         </div>
                     </div>
 
-                    <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER WITH CONFIRM/APPROVE/DECLINE/POSTPONE CONTROLS -->
+                    <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER WITH APPROVE/POSTPONE/DECLINE/NOTIFICATIONS -->
                     <div id="viewAppts" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div class="p-3 border-b border-slate-800 flex justify-between items-center">
-                                <span class="text-xs font-bold text-white">Daily Roster, Tokens & Clinical Dispatcher</span>
+                                <div>
+                                    <span class="text-xs font-bold text-white">Daily Roster, Tokens & Clinical Dispatcher</span>
+                                    <p class="text-[10px] text-amber-400 font-medium">Public online bookings are marked PENDING until approved. Staff entries update auto.</p>
+                                </div>
                                 <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold border border-amber-500/30">Modified Today Highlighted</span>
                             </div>
                             <div class="overflow-x-auto">
@@ -654,7 +665,7 @@
                                             <th class="p-3">Visit Date & Slot</th>
                                             <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
-                                            <th class="p-3">Master Controls</th>
+                                            <th class="p-3">Actions & Approval Controls</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tblAppointments" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -668,6 +679,7 @@
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="user-plus" class="text-red-500"></i> Add Patient Record, Vitals & Payment Ledger
                         </h3>
+                        <p class="text-[11px] text-slate-400">Staff bookings automatically confirm and sync patient details without mandatory approval flow.</p>
                         <form onsubmit="handleManualPatientUpload(event)" class="space-y-3 text-xs">
                             <div class="grid sm:grid-cols-3 gap-3">
                                 <div>
@@ -680,8 +692,22 @@
                                     <input type="text" id="man_pname" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                                 </div>
                                 <div>
+                                    <label class="block uppercase text-slate-400 mb-1">Email (Optional)</label>
+                                    <input type="email" id="man_pemail" placeholder="email@domain.com" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-3">
+                                <div>
                                     <label class="block uppercase text-slate-400 mb-1">Age / Gender *</label>
                                     <input type="text" id="man_page_gender" placeholder="e.g. 34 / Male" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                                </div>
+                                <div>
+                                    <label class="block uppercase text-slate-400 mb-1">Time Slot *</label>
+                                    <select id="man_pslot" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                                        <option value="10:00 AM - 02:00 PM">Morning (10:00 AM - 02:00 PM)</option>
+                                        <option value="05:00 PM - 10:00 PM">Evening (05:00 PM - 10:00 PM)</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -754,7 +780,7 @@
                                     <input type="date" id="man_pnext" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg">Save Patient Record & Payment Entry</button>
+                            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg">Save Staff Patient Record & Payment Entry</button>
                         </form>
                     </div>
 
@@ -875,8 +901,6 @@
 
                     <!-- TAB 7: ASSISTANT TIMECARDS & WORK ACTIVITY RECORD LOG -->
                     <div id="viewAsstLogs" class="space-y-6 hidden-section">
-                        
-                        <!-- ASSISTANT TIMECARD PUNCH RECORDS -->
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <div>
@@ -905,7 +929,6 @@
                             </div>
                         </div>
 
-                        <!-- ASSISTANT WORK ACTIVITY LOG WITH DAY/WEEK/MONTH FILTER -->
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
                                 <div>
@@ -915,7 +938,6 @@
                                     <p class="text-[11px] text-slate-400">Detailed records of actions completed by assistant staff</p>
                                 </div>
 
-                                <!-- FILTER TOGGLES -->
                                 <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
                                     <button onclick="setAsstActivityFilter('day')" id="btn_asst_filter_day" class="px-3 py-1 rounded-lg font-bold bg-red-700 text-white shadow">Day</button>
                                     <button onclick="setAsstActivityFilter('week')" id="btn_asst_filter_week" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white">Week</button>
@@ -950,7 +972,6 @@
                     <!-- TAB 9: ADMIN MASTER CONTROL SUITE -->
                     <div id="viewAdminMaster" class="hidden-section space-y-6">
 
-                        <!-- ACTIVE DEVICE NAME & IP DETAILS PANEL -->
                         <div class="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-3 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                                 <h3 class="text-sm font-bold text-emerald-400 uppercase flex items-center gap-2">
@@ -974,7 +995,6 @@
                             </div>
                         </div>
 
-                        <!-- ADMIN PAGE LAYOUT CUSTOMIZER SUITE -->
                         <div class="bg-slate-900 border border-red-800 p-5 rounded-2xl space-y-4 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <div>
@@ -1025,7 +1045,6 @@
                             </div>
                         </div>
 
-                        <!-- EMERGENCY FIX & SYSTEM REPAIR MODULES -->
                         <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
@@ -1061,7 +1080,6 @@
                             </div>
                         </div>
 
-                        <!-- REVENUE SHARE CALCULATOR -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                                 <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor Split Modeler
@@ -1082,7 +1100,6 @@
                             </div>
                         </div>
 
-                        <!-- REVENUE STATS -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                                 <i data-lucide="indian-rupee" class="w-4 h-4"></i> Revenue & Payment Mode Analytics
@@ -1107,7 +1124,6 @@
                             </div>
                         </div>
 
-                        <!-- TICKER CONTROLLER -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3 text-xs">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
                                 <i data-lucide="megaphone" class="w-4 h-4"></i> Top Marquee Ticker Controller
@@ -1118,7 +1134,6 @@
                             </button>
                         </div>
 
-                        <!-- STAFF CREDENTIALS MANAGER WITH LIST / GRID SWITCHER -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
                                 <div>
@@ -1128,7 +1143,6 @@
                                     <p class="text-[11px] text-slate-400">View, edit, or modify staff passwords, roles, and system access levels</p>
                                 </div>
                                 
-                                <!-- LIST / GRID VIEW TOGGLE BUTTONS -->
                                 <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
                                     <button onclick="setStaffViewMode('list')" id="btn_staff_view_list" class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-red-700 text-white shadow">
                                         <i data-lucide="list" class="w-3.5 h-3.5"></i> List View
@@ -1139,7 +1153,6 @@
                                 </div>
                             </div>
 
-                            <!-- LIST TABLE VIEW CONTAINER -->
                             <div id="staffListViewContainer" class="overflow-x-auto">
                                 <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
@@ -1156,11 +1169,9 @@
                                 </table>
                             </div>
 
-                            <!-- GRID CARD VIEW CONTAINER -->
                             <div id="staffGridViewContainer" class="hidden-section grid sm:grid-cols-2 gap-3"></div>
                         </div>
 
-                        <!-- AUDIT LOGS & BACKUPS -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
                             <div class="flex justify-between items-center">
                                 <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
@@ -1182,6 +1193,47 @@
                 </div>
             </div>
         </section>
+
+        <!-- POSTPONE / RESCHEDULE APPOINTMENT MODAL -->
+        <div id="postponeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-amber-500/40 text-white w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closePostponeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Reschedule Appointment</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="calendar-clock" class="text-amber-400 w-4 h-4"></i> Postpone Visit Date & Slot
+                    </h3>
+                </div>
+                <form onsubmit="handlePostponeSubmit(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="postpone_target_id">
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Patient Name</label>
+                        <input type="text" id="postpone_pname" readonly class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-400 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Select Next Visit Date *</label>
+                        <input type="date" id="postpone_next_date" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Select Time Slot *</label>
+                        <select id="postpone_next_slot" required class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                            <option value="10:00 AM - 02:00 PM">Morning Shift (10:00 AM - 02:00 PM)</option>
+                            <option value="05:00 PM - 10:00 PM">Evening Shift (05:00 PM - 10:00 PM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Reason / Reschedule Note</label>
+                        <input type="text" id="postpone_reason" placeholder="e.g. Doctor out of station / Patient request" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="closePostponeModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-xl shadow-lg">Confirm & Send Notifications</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- LAB ORDER EDIT MODAL -->
         <div id="editLabOrderModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">

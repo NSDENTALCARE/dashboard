@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- FIREBASE REALTIME CLOUD SYNC ENGINE -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="appBody" class="bg-slate-950 text-slate-100 font-sans antialiased min-h-full flex flex-col overflow-x-hidden selection:bg-red-600 selection:text-white">
@@ -20,6 +23,7 @@
                 <i data-lucide="timer" class="w-3 h-3 text-emerald-400"></i> Active Session: <span id="hdr_session_timer" class="font-bold">00:00:00</span>
             </div>
             <span id="branch_badge_display" class="bg-red-700 text-white px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Santosh Nagar Branch</span>
+            <span id="cloud_sync_indicator" class="bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-bold font-mono">● CLOUD LIVE</span>
         </div>
         
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
@@ -44,7 +48,7 @@
         </div>
     </div>
 
-    <!-- MAIN BRANDING HEADER WITH FORCE SYNC BUTTON -->
+    <!-- MAIN BRANDING HEADER -->
     <header class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex justify-between items-center gap-2">
             <div class="flex items-center space-x-3 cursor-pointer min-w-0" onclick="navigateTo('public-home')">
@@ -58,17 +62,13 @@
             </div>
 
             <div class="flex items-center space-x-2 shrink-0">
-                <!-- ⚡ PROMINENT MULTI-DEVICE FORCE SYNC BUTTON IN MAIN HEADER -->
-                <button onclick="forceSyncAllOnlineBrowsers()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-1 shadow-md animate-pulse">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Force Sync Mobile & PC</span>
+                <!-- MULTI-DEVICE FORCE SYNC BUTTON (STAFF-ONLY) -->
+                <button id="hdr_force_sync_btn" onclick="forceSyncAllOnlineBrowsers()" class="hidden-section bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-1 shadow-md animate-pulse">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">1-Click Cloud Sync</span>
                 </button>
 
                 <button onclick="navigateTo('track-appointment')" class="bg-amber-100 hover:bg-amber-200 text-slate-900 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-red-700"></i> <span class="hidden sm:inline">Patient Downloads</span>
-                </button>
-
-                <button id="hdr_chairside_btn" onclick="openChairsideViewMode()" class="hidden-section bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-sm">
-                    <i data-lucide="monitor" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Chairside View</span>
                 </button>
             </div>
         </div>
@@ -565,15 +565,14 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span id="dashBadge" class="bg-red-500/20 text-red-400 text-xs font-black px-3 py-1 rounded-full border border-red-500/30 uppercase">ROLE</span>
-                        <span id="dashVerifiedStatus" class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">● Real-Time Auto-Sync Active</span>
+                        <span id="dashVerifiedStatus" class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">● Cloud Real-Time Active</span>
                     </div>
                     <h2 id="dashWelcome" class="text-base sm:text-lg font-bold text-white mt-1">Welcome</h2>
                     <p id="dashClockBar" class="text-xs text-amber-400 font-mono mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <!-- ⚡ MULTI-DEVICE FORCE SYNC BUTTON IN TOOLBAR -->
                     <button onclick="forceSyncAllOnlineBrowsers()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-md animate-pulse">
-                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Force Sync All Browsers
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 1-Click Cloud Sync
                     </button>
                     <button onclick="downloadExcelBackup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
                         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Daily Excel Backup
@@ -1527,47 +1526,133 @@
             </div>
         </div>
 
-        <!-- TABLET-OPTIMIZED CHAIRSIDE VIEW MODAL -->
-        <div id="chairsideModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg hidden items-center justify-center p-3 sm:p-6 z-50 overflow-y-auto">
-            <div class="bg-slate-900 border border-purple-500/40 text-white w-full max-w-5xl rounded-3xl p-6 shadow-2xl relative space-y-4 my-auto">
-                <button onclick="closeChairsideViewMode()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+        <!-- NEW MODAL: TREATMENT PLAN ESTIMATOR ENTRY FORM -->
+        <div id="newTreatmentPlanModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeNewTreatmentPlanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
                 </button>
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-purple-400 font-mono uppercase font-bold">Clinical Fee Estimator</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="text-purple-400 w-4 h-4"></i> Create Treatment Plan Estimate
+                    </h3>
+                </div>
+                <form onsubmit="handleNewTreatmentPlanSubmit(event)" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Patient ID / Mobile Number *</label>
+                        <input type="text" id="tp_pid" required placeholder="e.g. PAT-1001 or Mobile #" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Phase 1 Treatment & Fee *</label>
+                        <input type="text" id="tp_phase1" required placeholder="e.g. Scaling & Root Planing (₹1,500)" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Phase 2 Treatment & Fee *</label>
+                        <input type="text" id="tp_phase2" required placeholder="e.g. Root Canal & Zirconia Crown (₹5,500)" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Total Estimated Cost (₹) *</label>
+                        <input type="number" id="tp_total_estimate" required placeholder="7000" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-purple-400 font-bold text-sm">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeNewTreatmentPlanModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Estimate Plan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- NEW MODAL: DENTAL INVENTORY STOCK ENTRY FORM -->
+        <div id="newInventoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeNewInventoryModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Stock Control Engine</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="boxes" class="text-amber-400 w-4 h-4"></i> Add Dental Inventory Item
+                    </h3>
+                </div>
+                <form onsubmit="handleNewInventorySubmit(event)" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Material Item Name *</label>
+                        <input type="text" id="inv_name" required placeholder="e.g. Composite Kit (3M A2)" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                    </div>
+                    <div class="grid sm:grid-cols-3 gap-3">
                         <div>
-                            <span class="text-[10px] text-purple-400 font-mono uppercase font-black tracking-wider">Distraction-Free Chairside Mode</span>
-                            <h2 class="text-lg font-black text-white" id="cs_pname">Active Chairside Patient</h2>
+                            <label class="block text-slate-400 uppercase mb-1">Category *</label>
+                            <select id="inv_category" class="w-full bg-slate-950 border border-slate-800 px-2.5 py-2 rounded-xl text-white font-bold">
+                                <option value="Restorative">Restorative</option>
+                                <option value="Surgical">Surgical / LA</option>
+                                <option value="Prostho">Prostho / Crowns</option>
+                                <option value="General">General Clinic</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Stock Quantity *</label>
+                            <input type="number" id="inv_stock" required placeholder="10" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-emerald-400 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Min Threshold *</label>
+                            <input type="number" id="inv_min" required placeholder="3" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-amber-400 font-bold">
                         </div>
                     </div>
-                    <span id="cs_chair_badge" class="bg-purple-600 text-white text-xs font-mono font-bold px-3 py-1 rounded-full shadow">Chair 1 (Main Operatory)</span>
-                </div>
-
-                <div class="grid md:grid-cols-3 gap-4 text-xs">
-                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                        <span class="text-amber-400 font-bold uppercase text-[10px] block">Patient Vitals & Allergy Alert</span>
-                        <p class="text-slate-300">BP: <strong id="cs_bp" class="text-white">120/80</strong> | Sugar: <strong id="cs_sugar" class="text-white">140 mg/dL</strong></p>
-                        <p id="cs_risk_badge" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded font-bold inline-block">No Allergies Recorded</p>
-                        <p class="text-slate-400 text-[11px] mt-1">Chief Issue: <span id="cs_reason" class="text-white font-bold">Root Canal Treatment</span></p>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeNewInventoryModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-xl shadow-lg">Save Inventory Item</button>
                     </div>
+                </form>
+            </div>
+        </div>
 
-                    <div class="md:col-span-2 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-red-400 font-bold uppercase text-[10px]">Chairside Tooth Charting & Diagnostics</span>
-                            <button onclick="openLetterheadFromChairside()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow">Open Full Rx Pad</button>
+        <!-- NEW MODAL: LAB & CROWN ORDER CREATION FORM -->
+        <div id="newLabOrderModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeNewLabOrderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-red-500 font-mono uppercase font-bold">Lab Impression Order</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="package" class="text-red-500 w-4 h-4"></i> Create New Crown & Lab Order
+                    </h3>
+                </div>
+                <form onsubmit="handleNewLabOrderSubmit(event)" class="space-y-3 text-xs">
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Patient ID / Mobile *</label>
+                            <input type="text" id="lab_add_pid" required placeholder="PAT-1001" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
                         </div>
-                        <div id="cs_odontogram_grid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Tooth Quadrant / # *</label>
+                            <input type="text" id="lab_add_tooth" required placeholder="e.g. #14 Upper Molar" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                        </div>
                     </div>
-                </div>
-
-                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
-                    <span class="text-emerald-400 font-bold uppercase text-[10px] block">Chairside Prescribed Medications & Instructions</span>
-                    <textarea id="cs_rx_input" rows="3" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-white font-mono" placeholder="1. Tab Amoxicillin 500mg (1-0-1)..."></textarea>
-                    <div class="flex justify-end gap-2 pt-1">
-                        <button onclick="saveChairsideRx()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Chairside Entry & Notify Patient</button>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Crown Material *</label>
+                            <input type="text" id="lab_add_material" required placeholder="e.g. Zirconia Crown / PFM" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Lab Partner Name *</label>
+                            <input type="text" id="lab_add_labname" required placeholder="e.g. Apex Dental Lab" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                        </div>
                     </div>
-                </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase mb-1">Shade / Order Notes</label>
+                        <textarea id="lab_add_notes" rows="2" placeholder="A2 Shade, Translucent Finish" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white"></textarea>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                        <label class="block uppercase text-amber-400 font-bold">Attach Impression Scan (JPEG/PNG/PDF):</label>
+                        <input type="file" id="lab_add_file_input" accept="image/jpeg,image/png,application/pdf" class="w-full bg-slate-900 border border-slate-800 px-3 py-1 rounded-xl text-slate-300 text-xs">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeNewLabOrderModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Lab Order</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1964,7 +2049,6 @@
                         <button type="button" onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded shadow">Extraction Kit</button>
                         <button type="button" onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded shadow">Scaling Kit</button>
                     </div>
-                    <!-- AI VOICE DICTATION TRIGGER -->
                     <button type="button" onclick="toggleVoiceDictation('lh_rx')" id="btn_voice_rx" class="bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1 rounded shadow flex items-center gap-1">
                         <i data-lucide="mic" class="w-3 h-3"></i> AI Voice Dictate
                     </button>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>N.S. DENTAL CARE | Enterprise Operations Command Platform</title>
+    <title>N.S. DENTAL CARE | Enterprise Operations & Clinical Command Platform</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -19,6 +19,7 @@
             <div id="hdr_active_timer_container" class="hidden-section bg-slate-900 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/40 text-[10px] font-mono flex items-center gap-1">
                 <i data-lucide="timer" class="w-3 h-3 text-emerald-400"></i> Active Session: <span id="hdr_session_timer" class="font-bold">00:00:00</span>
             </div>
+            <span id="branch_badge_display" class="bg-red-700 text-white px-2 py-0.5 rounded-md text-[10px] font-bold uppercase">Santosh Nagar Branch</span>
         </div>
         
         <div class="flex items-center gap-3 text-[11px] sm:text-xs font-bold text-slate-800">
@@ -52,13 +53,16 @@
                 </div>
                 <div class="truncate">
                     <h1 class="text-base sm:text-2xl font-black text-red-700 tracking-wider uppercase truncate" id="hdr_clinic_name">N.S. DENTAL CARE</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-600 font-semibold truncate" id="hdr_clinic_contact">Santosh Nagar, Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
+                    <p class="text-[10px] sm:text-xs text-slate-600 font-semibold truncate" id="hdr_clinic_contact">Santosh Nagar & Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
                 </div>
             </div>
 
             <div class="flex items-center space-x-2 shrink-0">
                 <button onclick="navigateTo('track-appointment')" class="bg-amber-100 hover:bg-amber-200 text-slate-900 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-red-700"></i> <span class="hidden sm:inline">Patient Downloads</span>
+                </button>
+                <button id="hdr_chairside_btn" onclick="openChairsideViewMode()" class="hidden-section bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-sm">
+                    <i data-lucide="monitor" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Chairside View</span>
                 </button>
             </div>
         </div>
@@ -183,7 +187,7 @@
                                 <th class="p-2.5">Patient ID / Name</th>
                                 <th class="p-2.5">Time Slot</th>
                                 <th class="p-2.5">Purpose</th>
-                                <th class="p-2.5">Status</th>
+                                <th class="p-2.5">Chair / Status</th>
                             </tr>
                         </thead>
                         <tbody id="publicQueueTable" class="divide-y divide-slate-800 text-slate-300"></tbody>
@@ -407,7 +411,7 @@
         <section id="dashboard" class="hidden-section flex-1 w-full space-y-6">
             
             <!-- REAL-TIME DYNAMIC DATE-WISE KPI METRIC CARDS -->
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 text-xs">
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center gap-3 shadow-lg">
                     <div class="bg-red-500/20 text-red-400 p-2.5 rounded-xl font-bold">
                         <i data-lucide="users" class="w-5 h-5"></i>
@@ -440,11 +444,21 @@
 
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center gap-3 shadow-lg">
                     <div class="bg-sky-500/20 text-sky-400 p-2.5 rounded-xl font-bold">
+                        <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Estimated Net Profit</span>
+                        <span id="card_stat_profit" class="text-lg font-black text-sky-400">₹0</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center gap-3 shadow-lg">
+                    <div class="bg-purple-500/20 text-purple-400 p-2.5 rounded-xl font-bold">
                         <i data-lucide="package" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Pending Crown Orders</span>
-                        <span id="card_stat_lab" class="text-lg font-black text-sky-400">0</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Crown / Inventory Alert</span>
+                        <span id="card_stat_lab" class="text-lg font-black text-purple-400">0</span>
                     </div>
                 </div>
 
@@ -453,7 +467,7 @@
                         <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Risk Patient Alerts</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Risk & Allergy Alerts</span>
                         <span id="card_stat_risk" class="text-lg font-black text-rose-400">0</span>
                     </div>
                 </div>
@@ -512,26 +526,31 @@
                 </div>
             </div>
 
-            <!-- MANUAL PATIENT TOKEN ASSIGNER & SLOT SELECTOR TOOLBAR -->
+            <!-- MANUAL PATIENT TOKEN ASSIGNER & CHAIR SELECTOR TOOLBAR -->
             <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div class="flex items-center gap-2">
                     <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl font-bold">
                         <i data-lucide="ticket" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-white uppercase">Manual Token Assigner & Slot Selection</h4>
-                        <p class="text-[10px] text-slate-400">Assign custom tokens and select appointment time slots</p>
+                        <h4 class="text-xs font-bold text-white uppercase">Token Assigner, Slot & Chair Dispatcher</h4>
+                        <p class="text-[10px] text-slate-400">Assign custom tokens, select time slot, and dispatch to Chair 1/2/3</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 text-xs flex-1 max-w-2xl">
                     <input type="text" id="manual_token_pid" placeholder="Patient ID / Mobile #" class="flex-1 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white">
-                    <input type="text" id="manual_token_val" placeholder="Token #" class="w-24 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
+                    <input type="text" id="manual_token_val" placeholder="Token #" class="w-20 bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl text-amber-400 font-mono font-bold">
                     <select id="manual_token_slot" class="bg-slate-950 border border-slate-800 px-2 py-1.5 rounded-xl text-white">
                         <option value="10:00 AM - 02:00 PM">Morning Slot</option>
                         <option value="05:00 PM - 10:00 PM">Evening Slot</option>
                     </select>
-                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow">Assign Token & Slot</button>
+                    <select id="manual_token_chair" class="bg-slate-950 border border-slate-800 px-2 py-1.5 rounded-xl text-amber-300 font-bold">
+                        <option value="Chair 1 (Main Operatory)">Chair 1</option>
+                        <option value="Chair 2 (Surgical / RCT)">Chair 2</option>
+                        <option value="Chair 3 (Scaling / Ortho)">Chair 3</option>
+                    </select>
+                    <button onclick="handleManualTokenAssignSubmit()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow">Assign & Dispatch</button>
                 </div>
             </div>
 
@@ -589,9 +608,29 @@
                         <span>Upload / Edit Patient Profile</span>
                     </button>
 
+                    <button onclick="switchDashTab('treatmentPlan')" id="tabBtnTreatmentPlan" class="sidebar-menu-btn">
+                        <i data-lucide="clipboard-list" class="w-4 h-4 text-purple-400"></i>
+                        <span>Treatment Plan & Estimator</span>
+                    </button>
+
                     <button onclick="switchDashTab('calendar')" id="tabBtnCalendar" class="sidebar-menu-btn">
                         <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
                         <span>Interactive Real Calendar</span>
+                    </button>
+
+                    <button onclick="switchDashTab('inventory')" id="tabBtnInventory" class="sidebar-menu-btn">
+                        <i data-lucide="boxes" class="w-4 h-4 text-amber-400"></i>
+                        <span>Inventory & Materials Stock</span>
+                    </button>
+
+                    <button onclick="switchDashTab('expenses')" id="tabBtnExpenses" class="sidebar-menu-btn">
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-rose-400"></i>
+                        <span>Clinic Expenses & P&L Ledger</span>
+                    </button>
+
+                    <button onclick="switchDashTab('campaigns')" id="tabBtnCampaigns" class="sidebar-menu-btn">
+                        <i data-lucide="send" class="w-4 h-4 text-emerald-400"></i>
+                        <span>WhatsApp Bulk Campaigns</span>
                     </button>
 
                     <button onclick="switchDashTab('labTracker')" id="tabBtnLabTracker" class="sidebar-menu-btn">
@@ -601,22 +640,22 @@
 
                     <button onclick="switchDashTab('ehr')" id="tabBtnEHR" class="sidebar-menu-btn">
                         <i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i>
-                        <span>Patient History Ledger & X-Rays</span>
+                        <span>Patient EHR Timeline & X-Rays</span>
                     </button>
 
                     <button onclick="switchDashTab('ledger')" id="tabBtnLedger" class="sidebar-menu-btn">
                         <i data-lucide="indian-rupee" class="w-4 h-4 text-emerald-400"></i>
-                        <span>Billing Ledger & Multi-Mode Payments</span>
+                        <span>Billing Ledger & Payments</span>
                     </button>
 
                     <button onclick="switchDashTab('asstLogs')" id="tabBtnAsstLogs" class="sidebar-menu-btn">
                         <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
-                        <span>Assistant Timecards & Work Activity</span>
+                        <span>Assistant Timecards & Logs</span>
                     </button>
 
                     <button onclick="switchDashTab('approvals')" id="tabBtnApprovals" class="sidebar-menu-btn">
                         <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-                        <span>Registrations & Resets</span>
+                        <span>Registrations & Approvals</span>
                     </button>
 
                     <button onclick="switchDashTab('adminMaster')" id="tabBtnAdminMaster" class="sidebar-menu-btn hidden-section">
@@ -645,7 +684,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER WITH DYNAMIC SORTING & SERIAL NUMBERS -->
+                    <!-- TAB 1: APPOINTMENTS & QUEUE ROSTER -->
                     <div id="viewAppts" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div class="p-3.5 border-b border-slate-800 flex flex-wrap justify-between items-center gap-3">
@@ -656,7 +695,6 @@
                                     <p class="text-[10px] text-amber-400 font-medium mt-0.5">Public online bookings are marked PENDING until approved. Staff entries update auto.</p>
                                 </div>
 
-                                <!-- DYNAMIC SORTING DROPDOWN CONTROL -->
                                 <div class="flex items-center gap-2 text-xs">
                                     <span class="text-slate-400 font-bold uppercase text-[10px] flex items-center gap-1">
                                         <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-amber-400"></i> Sort Roster By:
@@ -680,7 +718,7 @@
                                             <th class="p-3">Patient ID / Name</th>
                                             <th class="p-3">Token #</th>
                                             <th class="p-3">Vitals / Risks</th>
-                                            <th class="p-3">Doctor</th>
+                                            <th class="p-3">Chair & Doctor</th>
                                             <th class="p-3">Visit Date & Slot</th>
                                             <th class="p-3">Next Visit Date</th>
                                             <th class="p-3">Status</th>
@@ -693,7 +731,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: MANUAL PATIENT UPLOADER & MULTI-MODE PAYMENT CREATOR -->
+                    <!-- TAB 2: MANUAL PATIENT UPLOADER -->
                     <div id="viewManualPatient" class="hidden-section max-w-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xl">
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="user-plus" class="text-red-500"></i> Add Patient Record, Vitals & Payment Ledger
@@ -803,7 +841,23 @@
                         </form>
                     </div>
 
-                    <!-- TAB 3: REAL INTERACTIVE CALENDAR WITH DIRECT MODIFICATION -->
+                    <!-- NEW TAB: TREATMENT PLAN & COST ESTIMATOR BUILDER (DOCTOR) -->
+                    <div id="viewTreatmentPlan" class="hidden-section space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white uppercase flex items-center gap-2">
+                                        <i data-lucide="clipboard-list" class="text-purple-400 w-4 h-4"></i> Interactive Treatment Plan & Fee Estimator
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Build phased dental treatment estimates and convert approved plans into billing ledgers in 1 click.</p>
+                                </div>
+                                <button onclick="openNewTreatmentPlanModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">+ New Plan Estimate</button>
+                            </div>
+                            <div id="treatmentPlanListContainer" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: REAL INTERACTIVE CALENDAR -->
                     <div id="viewCalendar" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
@@ -846,7 +900,114 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: LAB TRACKER WITH EDITABLE OPTIONS -->
+                    <!-- NEW TAB: DENTAL INVENTORY & ASSET MANAGEMENT (ADMIN/STAFF) -->
+                    <div id="viewInventory" class="hidden-section space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                                        <i data-lucide="boxes" class="w-4 h-4"></i> Dental Material Inventory & Stock Control
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Track composite kits, LA cartridges, implants, crowns, and receive low-stock alerts.</p>
+                                </div>
+                                <button onclick="openNewInventoryModal()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">+ Add Material Item</button>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5">S.No</th>
+                                            <th class="p-2.5">Material Name</th>
+                                            <th class="p-2.5">Category</th>
+                                            <th class="p-2.5">Stock Level</th>
+                                            <th class="p-2.5">Min Threshold</th>
+                                            <th class="p-2.5">Status</th>
+                                            <th class="p-2.5">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblInventory" class="divide-y divide-slate-800 text-slate-300"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW TAB: CLINIC EXPENSES & NET PROFIT/LOSS LEDGER (ADMIN) -->
+                    <div id="viewExpenses" class="hidden-section space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-rose-400 uppercase flex items-center gap-2">
+                                        <i data-lucide="dollar-sign" class="w-4 h-4"></i> Clinic Operational Expense Tracker & P&L Ledger
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Log rent, assistant salaries, material purchases, and auto-calculate real net profit.</p>
+                                </div>
+                                <button onclick="openAddExpenseModal()" class="bg-rose-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">+ Log Expense Entry</button>
+                            </div>
+
+                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                                    <span class="text-[10px] text-slate-400 uppercase">Total Revenue Collections</span>
+                                    <p id="pnl_total_revenue" class="text-lg font-black text-emerald-400">₹0</p>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                                    <span class="text-[10px] text-slate-400 uppercase">Total Clinic Expenses</span>
+                                    <p id="pnl_total_expenses" class="text-lg font-black text-rose-400">₹0</p>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                                    <span class="text-[10px] text-slate-400 uppercase">Real Net Profit Margin</span>
+                                    <p id="pnl_net_profit" class="text-lg font-black text-amber-400">₹0</p>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                                        <tr>
+                                            <th class="p-2.5">S.No</th>
+                                            <th class="p-2.5">Date</th>
+                                            <th class="p-2.5">Expense Description</th>
+                                            <th class="p-2.5">Category</th>
+                                            <th class="p-2.5">Amount (₹)</th>
+                                            <th class="p-2.5">Paid Via</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblExpenses" class="divide-y divide-slate-800 text-slate-300 font-mono"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW TAB: WHATSAPP BULK RECALL CAMPAIGNS (ADMIN/STAFF) -->
+                    <div id="viewCampaigns" class="hidden-section space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+                            <div class="border-b border-slate-800 pb-3">
+                                <h3 class="text-sm font-bold text-emerald-400 uppercase flex items-center gap-2">
+                                    <i data-lucide="send" class="w-4 h-4"></i> WhatsApp Bulk Recall & Follow-Up Campaign Center
+                                </h3>
+                                <p class="text-[11px] text-slate-400">Filter patients due for 6-month checkups or scaling and send personalized WhatsApp reminders in 1 click.</p>
+                            </div>
+
+                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Target Patient Segment</label>
+                                    <select id="camp_segment_select" onchange="renderCampaignTargetList()" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white">
+                                        <option value="all">All Registered Patients</option>
+                                        <option value="recall6m">Due for 6-Month Checkup / Scaling</option>
+                                        <option value="pending">Pending Unconfirmed Bookings</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-slate-400 mb-1">WhatsApp Broadcast Message Template</label>
+                                    <textarea id="camp_msg_template" rows="2" class="w-full bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-white text-xs">Dear {NAME}, it's time for your routine 6-month dental checkup & cleaning at N.S. Dental Care! Book your slot today.</textarea>
+                                </div>
+                            </div>
+
+                            <div id="campaignTargetList" class="space-y-2 max-h-60 overflow-y-auto font-mono text-xs"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: LAB TRACKER -->
                     <div id="viewLabTracker" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -889,7 +1050,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 6: BILLING LEDGER WITH SERIAL NUMBERS -->
+                    <!-- TAB 6: BILLING LEDGER -->
                     <div id="viewLedger" class="space-y-4 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div class="p-3 border-b border-slate-800 flex justify-between items-center">
@@ -897,7 +1058,7 @@
                                     <span class="text-xs font-bold text-white">Billing Ledger, Payment Modes & Patient Receipts</span>
                                     <p class="text-[10px] text-slate-400">Tracks Cash, UPI, Card, and Bank Net Banking payments with timestamps</p>
                                 </div>
-                                <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">Payment Audit Active</span>
+                                <span id="cashbook_lock_status_badge" class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">Payment Audit Active</span>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs">
@@ -919,7 +1080,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 7: ASSISTANT TIMECARDS & WORK ACTIVITY RECORD LOG -->
+                    <!-- TAB 7: ASSISTANT TIMECARDS & LOGS -->
                     <div id="viewAsstLogs" class="space-y-6 hidden-section">
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -1015,20 +1176,21 @@
                             </div>
                         </div>
 
+                        <!-- 100% ADMIN PAGE LAYOUT & GRANULAR PERMISSIONS MATRIX -->
                         <div class="bg-slate-900 border border-red-800 p-5 rounded-2xl space-y-4 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <div>
                                     <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                        <i data-lucide="layout" class="w-4 h-4"></i> 100% Admin Page Layout & Section Customizer Suite
+                                        <i data-lucide="layout" class="w-4 h-4"></i> 100% Admin Page Layout & Granular Permissions Suite
                                     </h3>
-                                    <p class="text-[11px] text-slate-400">Toggle public homepage and staff dashboard components on or off option-by-option</p>
+                                    <p class="text-[11px] text-slate-400">Toggle website sections, financial locks, geofencing, and staff permissions option-by-option</p>
                                 </div>
-                                <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">100% Full Admin Layout Control</span>
+                                <span class="bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded font-bold border border-amber-500/30">100% Admin Control Active</span>
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-4 text-xs">
                                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5">
-                                    <span class="text-xs font-bold text-red-400 uppercase block border-b border-slate-800 pb-1">Public Website Components</span>
+                                    <span class="text-xs font-bold text-red-400 uppercase block border-b border-slate-800 pb-1">Public Website Layout Toggles</span>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Hero Welcome Banner</span>
                                         <input type="checkbox" id="layout_pub_hero" checked onchange="toggleAdminPageLayout('pub_sec_hero', this.checked)" class="accent-red-600 w-4 h-4">
@@ -1052,19 +1214,28 @@
                                 </div>
 
                                 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2.5">
-                                    <span class="text-xs font-bold text-emerald-400 uppercase block border-b border-slate-800 pb-1">Staff Permissions Matrix</span>
+                                    <span class="text-xs font-bold text-emerald-400 uppercase block border-b border-slate-800 pb-1">Granular Staff Permission Controls</span>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
                                         <span>Allow Doctor to Edit Billing Ledgers</span>
                                         <input type="checkbox" id="perm_doc_edit_ledger" checked onchange="togglePerm('doc_edit_ledger')" class="accent-emerald-600 w-4 h-4">
                                     </label>
                                     <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
-                                        <span>Allow Assistant to Delete Records</span>
+                                        <span>Allow Assistant to Delete Patient Records</span>
                                         <input type="checkbox" id="perm_asst_delete" onchange="togglePerm('asst_delete')" class="accent-emerald-600 w-4 h-4">
+                                    </label>
+                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
+                                        <span>Enforce Daily Financial Cashbook Lock</span>
+                                        <input type="checkbox" id="perm_cashbook_lock" onchange="toggleCashbookLock(this.checked)" class="accent-emerald-600 w-4 h-4">
+                                    </label>
+                                    <label class="flex items-center justify-between bg-slate-900 p-2 rounded cursor-pointer">
+                                        <span>Enforce Wi-Fi IP Geofencing for Timecard Punch</span>
+                                        <input type="checkbox" id="perm_geofence" onchange="togglePerm('geofence')" class="accent-emerald-600 w-4 h-4">
                                     </label>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- EMERGENCY FIX & SYSTEM REPAIR MODULES -->
                         <div class="bg-slate-900 border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-2xl">
                             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                                 <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
@@ -1100,11 +1271,12 @@
                             </div>
                         </div>
 
+                        <!-- REVENUE SHARE & COMMISSION CALCULATOR -->
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                             <h3 class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
-                                <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor Split Modeler
+                                <i data-lucide="pie-chart" class="w-4 h-4"></i> Revenue Share & Doctor/Staff Commission Calculator
                             </h3>
-                            <div class="grid sm:grid-cols-3 gap-3 text-xs">
+                            <div class="grid sm:grid-cols-4 gap-3 text-xs">
                                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                                     <label class="block text-slate-400 mb-1">Clinic Share (%)</label>
                                     <input type="number" id="adm_split_clinic" value="60" onchange="calculateRevenueSplit()" class="w-full bg-slate-900 border border-slate-800 px-3 py-1.5 rounded text-white">
@@ -1116,6 +1288,10 @@
                                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
                                     <span class="text-[10px] text-slate-400 uppercase">Estimated Doctor Share</span>
                                     <p id="adm_calc_doc_share" class="text-base font-black text-emerald-400">₹0</p>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
+                                    <span class="text-[10px] text-slate-400 uppercase">Assistant Incentive Pool (2%)</span>
+                                    <p id="adm_calc_asst_pool" class="text-base font-black text-purple-400">₹0</p>
                                 </div>
                             </div>
                         </div>
@@ -1252,6 +1428,136 @@
                         <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-xl shadow-lg">Confirm & Send Notifications</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- NEW MODAL: DIGITAL PATIENT CONSENT & SIGNATURE CANVAS (DOCTOR/STAFF) -->
+        <div id="digitalConsentModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeDigitalConsentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="text-[10px] text-emerald-400 font-mono uppercase font-bold">Legal Clinical Documentation</span>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="file-signature" class="text-emerald-400 w-4 h-4"></i> Digital Patient Consent & Touch Signature
+                    </h3>
+                </div>
+                <form onsubmit="handleDigitalConsentSave(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="consent_target_pid">
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Patient Name</label>
+                            <input type="text" id="consent_pname" readonly class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-slate-300 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase mb-1">Procedure Type</label>
+                            <select id="consent_procedure_type" class="w-full bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-white font-bold">
+                                <option value="Root Canal Treatment & Anesthesia">Root Canal Treatment (RCT)</option>
+                                <option value="Surgical Tooth Extraction">Surgical Tooth Extraction</option>
+                                <option value="Dental Implant & Bone Grafting">Dental Implant Surgery</option>
+                                <option value="General Cosmetic & Scaling">General Dental Procedure</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-[11px] text-slate-400 leading-relaxed">
+                        <p>I hereby give my informed consent to N.S. Dental Care surgeons to perform the selected clinical procedure. I acknowledge the risks, benefits, and anesthesia instructions explained to me.</p>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-amber-400 uppercase font-bold text-[10px]">Sign Below (Touch Screen or Mouse):</label>
+                            <button type="button" onclick="clearConsentSignatureCanvas()" class="text-rose-400 text-[10px] hover:underline">Clear Canvas</button>
+                        </div>
+                        <canvas id="consentSignatureCanvas" width="400" height="120" class="w-full bg-white rounded-xl border border-slate-300 cursor-crosshair"></canvas>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeDigitalConsentModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Lock & Save Consent PDF</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- NEW MODAL: BEFORE & AFTER PHOTO COMPARISON GALLERY (DOCTOR) -->
+        <div id="photoComparisonModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-2xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closePhotoComparisonModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Cosmetic & Surgical Case Viewer</span>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="columns" class="text-amber-400 w-4 h-4"></i> Before & After Clinical Photo Comparison
+                        </h3>
+                    </div>
+                    <span id="comp_pid_badge" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-mono px-2 py-0.5 rounded font-bold">PAT-1001</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center text-xs">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <span class="text-rose-400 font-bold uppercase block">Pre-Treatment (BEFORE)</span>
+                        <div id="comp_before_box" class="h-48 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800">
+                            <span class="text-slate-500 italic">No Before Photo Attached</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <span class="text-emerald-400 font-bold uppercase block">Post-Treatment (AFTER)</span>
+                        <div id="comp_after_box" class="h-48 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800">
+                            <span class="text-slate-500 italic">No After Photo Attached</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center border-t border-slate-800 pt-3 text-xs">
+                    <label class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl font-bold cursor-pointer">
+                        Upload Comparison Pair
+                        <input type="file" multiple accept="image/*" onchange="handleComparisonPhotoUpload(event)" class="hidden">
+                    </label>
+                    <button onclick="closePhotoComparisonModal()" class="bg-slate-800 text-slate-300 font-bold px-4 py-1.5 rounded-xl">Close Viewer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLET-OPTIMIZED CHAIRSIDE VIEW MODAL (DOCTOR) -->
+        <div id="chairsideModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg hidden items-center justify-center p-3 sm:p-6 z-50 overflow-y-auto">
+            <div class="bg-slate-900 border border-purple-500/40 text-white w-full max-w-5xl rounded-3xl p-6 shadow-2xl relative space-y-4 my-auto">
+                <button onclick="closeChairsideViewMode()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+                        <div>
+                            <span class="text-[10px] text-purple-400 font-mono uppercase font-black tracking-wider">Distraction-Free Chairside Mode</span>
+                            <h2 class="text-lg font-black text-white" id="cs_pname">Active Chairside Patient</h2>
+                        </div>
+                    </div>
+                    <span id="cs_chair_badge" class="bg-purple-600 text-white text-xs font-mono font-bold px-3 py-1 rounded-full shadow">Chair 1 (Main Operatory)</span>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+                        <span class="text-amber-400 font-bold uppercase text-[10px] block">Patient Vitals & Allergy Alert</span>
+                        <p class="text-slate-300">BP: <strong id="cs_bp" class="text-white">120/80</strong> | Sugar: <strong id="cs_sugar" class="text-white">140 mg/dL</strong></p>
+                        <p id="cs_risk_badge" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded font-bold inline-block">No Allergies Recorded</p>
+                        <p class="text-slate-400 text-[11px] mt-1">Chief Issue: <span id="cs_reason" class="text-white font-bold">Root Canal Treatment</span></p>
+                    </div>
+
+                    <div class="md:col-span-2 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-red-400 font-bold uppercase text-[10px]">Chairside Tooth Charting & Diagnostics</span>
+                            <button onclick="openLetterheadFromChairside()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow">Open Full Rx Pad</button>
+                        </div>
+                        <div id="cs_odontogram_grid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                    <span class="text-emerald-400 font-bold uppercase text-[10px] block">Chairside Prescribed Medications & Instructions</span>
+                    <textarea id="cs_rx_input" rows="3" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-white font-mono" placeholder="1. Tab Amoxicillin 500mg (1-0-1)..."></textarea>
+                    <div class="flex justify-end gap-2 pt-1">
+                        <button onclick="saveChairsideRx()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl shadow-lg">Save Chairside Entry & Notify Patient</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1509,7 +1815,7 @@
             </div>
         </div>
 
-        <!-- EDIT STAFF CREDENTIALS & PERMISSIONS MODAL -->
+        <!-- EDIT STAFF CREDENTIALS MODAL -->
         <div id="editStaffModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeEditStaffModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1590,7 +1896,7 @@
             </div>
         </div>
 
-        <!-- PRESCRIPTION MODAL WITH COMPLETE RX, TIMETABLE & DOSE -->
+        <!-- PRESCRIPTION MODAL WITH VOICE DICTATION & ALLERGY WARNING (DOCTOR) -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">
@@ -1600,12 +1906,18 @@
                     <div>
                         <h1 class="text-2xl font-black text-red-700 uppercase">N.S. DENTAL CARE</h1>
                         <p class="text-xs font-bold text-slate-700">Cosmetic Dental Surgery & Implant Center</p>
-                        <p class="text-[10px] text-slate-500">Santosh Nagar, Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
+                        <p class="text-[10px] text-slate-500">Santosh Nagar & Edi Bazar, Hyderabad | 📞 +91 8978883007</p>
                     </div>
                     <div class="text-right text-xs">
                         <p id="lh_doctor" class="font-bold text-slate-900">Dr. Md Salahuddin Ayub</p>
                         <p id="lh_reg" class="text-[10px] text-slate-600">Regd No: A-6705 | A-7133</p>
                     </div>
+                </div>
+
+                <!-- ALLERGY WARNING BANNER -->
+                <div id="lh_allergy_warning" class="hidden-section bg-rose-600 text-white p-2 rounded-lg text-xs font-bold flex items-center justify-between animate-pulse">
+                    <span>⚠️ ALLERGY ALERT: Patient is marked allergic to Penicillin / Beta-Lactams!</span>
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-2 text-xs bg-slate-100 p-3 rounded border border-slate-200">
@@ -1623,16 +1935,29 @@
                 </div>
 
                 <div id="odontogramWrapper" class="no-print bg-slate-50 border border-slate-200 p-3 rounded-lg space-y-2">
-                    <span class="text-xs font-bold text-red-700 uppercase">Interactive 32-Tooth Charting</span>
-                    <p class="text-[11px] text-slate-500">Click individual teeth to toggle selection for diagnosis:</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-red-700 uppercase">Color-Coded Interactive 32-Tooth Charting</span>
+                        <div class="flex gap-2 text-[10px]">
+                            <span class="text-rose-600 font-bold">● Cavity</span>
+                            <span class="text-emerald-600 font-bold">● Crown</span>
+                            <span class="text-sky-600 font-bold">● Filled</span>
+                            <span class="text-amber-600 font-bold">● RCT</span>
+                        </div>
+                    </div>
                     <div id="odontogramGrid" class="flex flex-wrap gap-1 text-[10px] font-mono"></div>
                 </div>
 
-                <div id="rxPresetsBar" class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center text-[10px]">
-                    <span class="font-bold text-slate-700">Clinical Speed-Dial Rx Kits:</span>
-                    <button type="button" onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded shadow">RCT Kit</button>
-                    <button type="button" onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded shadow">Extraction Kit</button>
-                    <button type="button" onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded shadow">Scaling / Polishing</button>
+                <div id="rxPresetsBar" class="no-print bg-slate-100 border border-slate-200 p-2 rounded flex flex-wrap gap-1.5 items-center justify-between text-[10px]">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="font-bold text-slate-700">Rx Speed-Dial Kits:</span>
+                        <button type="button" onclick="applyRxPreset('rct')" class="bg-red-700 text-white font-bold px-2 py-0.5 rounded shadow">RCT Kit</button>
+                        <button type="button" onclick="applyRxPreset('extraction')" class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded shadow">Extraction Kit</button>
+                        <button type="button" onclick="applyRxPreset('scaling')" class="bg-emerald-700 text-white font-bold px-2 py-0.5 rounded shadow">Scaling Kit</button>
+                    </div>
+                    <!-- AI VOICE DICTATION TRIGGER -->
+                    <button type="button" onclick="toggleVoiceDictation('lh_rx')" id="btn_voice_rx" class="bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1 rounded shadow flex items-center gap-1">
+                        <i data-lucide="mic" class="w-3 h-3"></i> AI Voice Dictate
+                    </button>
                 </div>
 
                 <div class="space-y-3 text-xs">
@@ -1641,21 +1966,21 @@
                         <textarea id="lh_notes" rows="2" class="w-full border rounded p-2 text-xs"></textarea>
                     </div>
                     <div>
-                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Complete Prescribed Medication (Drug Name | Timetable / Dose | Food Instructions | Duration):</label>
+                        <label class="no-print block font-bold text-slate-700 mb-1">Rx / Complete Prescribed Medication:</label>
                         <textarea id="lh_rx" rows="5" class="w-full border rounded p-2 text-xs font-mono" placeholder="1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days"></textarea>
                     </div>
                     <div class="bg-red-50 border border-red-200 p-2.5 rounded flex items-center justify-between">
-                        <label class="font-bold text-red-900">Next Follow-Up Visit Date:</label>
+                        <label class="font-bold text-red-900">Next Follow-Up Visit Date (Auto-Schedules Calendar Entry):</label>
                         <input type="date" id="lh_next_visit" class="border border-red-300 rounded px-2 py-1 text-xs text-slate-900 font-bold">
                     </div>
                 </div>
 
                 <div class="no-print flex justify-between items-center border-t pt-3">
                     <button id="lh_wa_btn" onclick="sendPrescriptionWhatsApp()" class="bg-emerald-600 text-white font-bold px-3.5 py-1.5 rounded text-xs flex items-center gap-1 shadow">
-                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Send WhatsApp Rx
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Send WhatsApp Digital Rx
                     </button>
                     <div class="flex gap-2">
-                        <button id="lh_save_btn" onclick="savePrescriptionAndSync()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR & Sync Visit</button>
+                        <button id="lh_save_btn" onclick="savePrescriptionAndSync()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded text-xs">Save EHR & Auto-Schedule</button>
                         <button onclick="window.print()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded text-xs">Print / Download PDF</button>
                     </div>
                 </div>
@@ -1671,7 +1996,7 @@
                 <div class="border-b-4 border-red-600 pb-3 flex justify-between items-start">
                     <div>
                         <h1 class="text-xl font-black text-red-700 uppercase">N.S. DENTAL CARE</h1>
-                        <p class="text-xs text-slate-600">Santosh Nagar, Edi Bazar, Hyderabad</p>
+                        <p class="text-xs text-slate-600">Santosh Nagar & Edi Bazar, Hyderabad</p>
                         <p class="text-[10px] text-slate-500">Phone: +91 8978883007</p>
                     </div>
                     <div class="text-right">
@@ -1697,7 +2022,7 @@
 
                 <div class="flex justify-between items-end text-xs pt-2 border-t">
                     <div>
-                        <p class="text-[10px] text-slate-500">Authorized Hospital Seal & Signature</p>
+                        <p class="text-[10px] text-slate-500">Authorized Hospital Seal & Digitally Signed</p>
                         <p class="font-bold text-slate-800 mt-4">N.S. Dental Care Management</p>
                     </div>
                     <div class="text-right space-y-0.5">

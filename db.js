@@ -112,6 +112,12 @@ let labOrders = [];
 let medicalRecords = {};
 let ledgers = [];
 
+// NEW FEATURE STORAGE DATASTORES
+let treatmentPlans = [];
+let inventoryItems = [];
+let clinicExpenses = [];
+let patientConsents = [];
+
 let assistantPunchLogs = [];
 let assistantWorkActivity = [];
 let activeAsstActivityFilter = 'day';
@@ -167,7 +173,7 @@ async function loadStateFromIndexedDB() {
     ];
 
     appointments = await storageEngine.getItem('ns_appointments') || [
-        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
+        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", email: "patient@example.com", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", chair: "Chair 1 (Main Operatory)", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
     ];
 
     labOrders = await storageEngine.getItem('ns_lab_orders') || [
@@ -197,6 +203,23 @@ async function loadStateFromIndexedDB() {
             ]
         }
     ];
+
+    // LOAD NEW ADVANCED FEATURE STORES
+    treatmentPlans = await storageEngine.getItem('ns_treatment_plans') || [
+        { id: "TP-101", patientId: "PAT-1001", patientName: "Mohammed Ali", phase1: "Scaling & Root Planing (₹1,500)", phase2: "Root Canal & Crown (₹5,500)", totalEstimate: 7000, status: "Proposed" }
+    ];
+
+    inventoryItems = await storageEngine.getItem('ns_inventory') || [
+        { id: "INV-101", name: "Composite Kit (3M)", category: "Restorative", stock: 12, minThreshold: 3 },
+        { id: "INV-102", name: "Local Anesthesia Cartridges", category: "Surgical", stock: 45, minThreshold: 10 },
+        { id: "INV-103", name: "Zirconia Crown Blanks", category: "Prostho", stock: 2, minThreshold: 5 }
+    ];
+
+    clinicExpenses = await storageEngine.getItem('ns_expenses') || [
+        { id: "EXP-101", date: currentLiveDateStr, desc: "Dental Composite & LA Supplies", category: "Materials", amount: 2500, paidVia: "UPI" }
+    ];
+
+    patientConsents = await storageEngine.getItem('ns_consents') || [];
 }
 
 async function reloadDataAndRefreshUI() {

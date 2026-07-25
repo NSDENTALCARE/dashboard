@@ -4,6 +4,8 @@ lucide.createIcons();
 // CORE UI ROUTING, STRICT KPIS & REAL-TIME AUTO-UPDATE APPLICATION CONTROLLER
 // ==========================================================================
 
+let apptSortCriterion = 'token'; // Global sort state: 'token', 'pending', 'status', 'name', 'date', 'id'
+
 async function initApp() {
     await storageEngine.init();
     await loadStateFromIndexedDB();
@@ -88,6 +90,13 @@ function checkSaved24hSession() {
             localStorage.removeItem("ns_saved_session_24h");
         }
     }
+}
+
+// DYNAMIC SORTING HANDLER FOR DAILY ROSTER
+function changeApptSorting(criterion) {
+    apptSortCriterion = criterion;
+    renderAppointments();
+    logAction(`Appointment roster sorted by: ${criterion.toUpperCase()}`);
 }
 
 // STRICT CURRENT-DAY KPI CALCULATOR
@@ -413,12 +422,19 @@ async function handleAddPaymentSubmit(e) {
     closeAddPaymentModal();
 }
 
+// RENDER BILLING LEDGER WITH SERIAL NUMBERS (S.NO.)
 function renderLedgers() {
     const tbl = document.getElementById('tblLedger');
     if(!tbl) return;
 
-    tbl.innerHTML = ledgers.map(l => `
+    if (ledgers.length === 0) {
+        tbl.innerHTML = `<tr><td colspan="8" class="p-3 text-center text-slate-500">No ledger entries found.</td></tr>`;
+        return;
+    }
+
+    tbl.innerHTML = ledgers.map((l, idx) => `
         <tr class="hover:bg-slate-800/50">
+            <td class="p-3 font-mono font-black text-amber-400 text-center">${idx + 1}</td>
             <td class="p-3 font-mono text-red-500">${l.id}<br><span class="text-white font-sans font-bold">${l.patientName} (${l.patientId})</span></td>
             <td class="p-3">${l.purpose}</td>
             <td class="p-3">
@@ -1036,15 +1052,44 @@ function switchDashTab(tab) {
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
 }
 
-// RENDER APPOINTMENTS TABLE WITH FULL APPROVAL, DECLINE, POSTPONE & MULTI-CHANNEL NOTIFICATION CONTROLS
+// RENDER APPOINTMENTS TABLE WITH SERIAL NUMBERS (S.NO.) & DYNAMIC SORTING
 function renderAppointments() {
     const tbl = document.getElementById('tblAppointments');
     if(!tbl) return;
 
-    tbl.innerHTML = appointments.map(a => `
+    let sortedAppts = [...appointments];
+
+    sortedAppts.sort((a, b) => {
+        if (apptSortCriterion === 'pending') {
+            if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+            if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+            return (a.token || '').localeCompare(b.token || '');
+        } else if (apptSortCriterion === 'name') {
+            return (a.name || '').localeCompare(b.name || '');
+        } else if (apptSortCriterion === 'status') {
+            return (a.status || '').localeCompare(b.status || '');
+        } else if (apptSortCriterion === 'date') {
+            return (a.date || '').localeCompare(b.date || '');
+        } else if (apptSortCriterion === 'id') {
+            return (a.patientId || '').localeCompare(b.patientId || '');
+        } else {
+            // Default: Token sort
+            const tA = parseInt((a.token || '0').replace(/[^0-9]/g, '')) || 999;
+            const tB = parseInt((b.token || '0').replace(/[^0-9]/g, '')) || 999;
+            return tA - tB;
+        }
+    });
+
+    if (sortedAppts.length === 0) {
+        tbl.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-500 italic">No appointments registered yet.</td></tr>`;
+        return;
+    }
+
+    tbl.innerHTML = sortedAppts.map((a, idx) => `
         <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
+            <td class="p-3 font-mono font-black text-amber-400 text-center">${idx + 1}</td>
             <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
-            <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
+            <td class="p-3 font-mono font-bold text-amber-400 text-sm">${a.token || 'TK-01'}</td>
             <td class="p-3 text-[11px]">
                 <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
                 <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
@@ -1211,7 +1256,7 @@ function sendAppointmentEmailNotification(apptId) {
     if(appt) {
         const targetEmail = appt.email || doctorEmail;
         const subject = encodeURIComponent(`N.S. Dental Care - Appointment Status: ${appt.status}`);
-        const body = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment at N.S. Dental Care details:\n\nStatus: ${appt.status}\nToken #: ${appt.token}\nDate: ${a.date}\nTime Slot: ${appt.slot}\nDoctor: ${appt.doctor}\n\nThank you,\nN.S. Dental Care`);
+        const body = encodeURIComponent(`Dear ${appt.name},\n\nYour appointment at N.S. Dental Care details:\n\nStatus: ${appt.status}\nToken #: ${appt.token}\nDate: ${appt.date}\nTime Slot: ${appt.slot}\nDoctor: ${appt.doctor}\n\nThank you,\nN.S. Dental Care`);
         window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
     }
 }
@@ -1328,17 +1373,19 @@ async function openNewLabOrderModal() {
     }
 }
 
+// RENDER PUBLIC TOKEN QUEUE WITH SERIAL NUMBERS (S.NO.)
 function renderPublicTokenQueue() {
     const tbl = document.getElementById('publicQueueTable');
     const todays = appointments.filter(a => a.date === currentLiveDateStr && a.status !== 'DECLINED');
 
     if(tbl) {
         if(todays.length === 0) {
-            tbl.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-500">No patient visits scheduled for today yet.</td></tr>`;
+            tbl.innerHTML = `<tr><td colspan="6" class="p-3 text-center text-slate-500">No patient visits scheduled for today yet.</td></tr>`;
         } else {
-            tbl.innerHTML = todays.map(a => `
+            tbl.innerHTML = todays.map((a, idx) => `
                 <tr class="hover:bg-slate-800/40">
-                    <td class="p-2.5 font-bold font-mono text-amber-400">${a.token || 'TK-01'}</td>
+                    <td class="p-2.5 font-bold font-mono text-amber-400 text-center">${idx + 1}</td>
+                    <td class="p-2.5 font-bold font-mono text-amber-400 text-sm">${a.token || 'TK-01'}</td>
                     <td class="p-2.5 font-bold text-white">${a.patientId}<br><span class="text-[11px] text-slate-300">${a.name}</span></td>
                     <td class="p-2.5 font-mono text-[11px] text-slate-300">${a.slot}</td>
                     <td class="p-2.5 text-[11px] text-slate-300">${a.reason}</td>
@@ -1512,10 +1559,10 @@ function sendDoctorDailyBriefingEmail() {
 }
 
 function downloadExcelBackup() {
-    let csv = "Visit Date,Patient ID,Patient Full Name,Mobile Phone,Doctor,Purpose,Status,Total Fee (INR),Paid (INR),Due (INR)\n";
-    appointments.forEach(a => {
+    let csv = "S.No,Visit Date,Patient ID,Patient Full Name,Mobile Phone,Doctor,Purpose,Status,Total Fee (INR),Paid (INR),Due (INR)\n";
+    appointments.forEach((a, idx) => {
         const l = ledgers.find(x => x.apptId === a.id) || {};
-        csv += `"${a.date}","${a.patientId}","${a.name}","${a.phone}","${a.doctor}","${a.reason}","${a.status}",${l.totalCost || 0},${l.paidAmount || 0},${l.dueAmount || 0}\n`;
+        csv += `${idx + 1},"${a.date}","${a.patientId}","${a.name}","${a.phone}","${a.doctor}","${a.reason}","${a.status}",${l.totalCost || 0},${l.paidAmount || 0},${l.dueAmount || 0}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });

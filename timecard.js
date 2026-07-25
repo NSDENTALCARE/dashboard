@@ -1,5 +1,5 @@
 // ==========================================================================
-// IMMUTABLE ASSISTANT TIMECARD & WORK ACTIVITY TRACKING ENGINE
+// IMMUTABLE ASSISTANT TIMECARD & WORK ACTIVITY TRACKING ENGINE (v2.4.0)
 // ==========================================================================
 
 function renderAssistantPunchStatusUI() {

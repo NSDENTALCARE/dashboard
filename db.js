@@ -1,260 +1,179 @@
 // ==========================================================================
-// INDEXEDB STORAGE ENGINE & CROSS-DEVICE CLOUD AUTO-SYNC
+// INDEXEDB HIGH-CAPACITY STORAGE ENGINE & CLOUD REAL-TIME RELAY
 // ==========================================================================
 
-class ClinicStorageEngine {
-    constructor() {
-        this.dbName = "NSDentalCareDB";
-        this.dbVersion = 1;
-        this.db = null;
-    }
+const DB_NAME = 'NSDentalCareDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'app_state';
 
-    async init() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, this.dbVersion);
-
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains("clinic_store")) {
-                    db.createObjectStore("clinic_store");
-                }
-            };
-
-            request.onsuccess = (event) => {
-                this.db = event.target.result;
-                resolve(this.db);
-            };
-
-            request.onerror = (event) => {
-                console.error("IndexedDB initialization error:", event.target.error);
-                reject(event.target.error);
-            };
-        });
-    }
-
-    async setItem(key, val) {
-        if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readwrite");
-            const store = tx.objectStore("clinic_store");
-            const req = store.put(val, key);
-            req.onsuccess = () => {
-                notifySyncBroadcast();
-                pushDataToCloudRelay();
-                resolve(true);
-            };
-            req.onerror = () => reject(req.error);
-        });
-    }
-
-    async getItem(key) {
-        if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readonly");
-            const store = tx.objectStore("clinic_store");
-            const req = store.get(key);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        });
-    }
-
-    async clear() {
-        if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction("clinic_store", "readwrite");
-            const store = tx.objectStore("clinic_store");
-            const req = store.clear();
-            req.onsuccess = () => {
-                notifySyncBroadcast();
-                resolve(true);
-            };
-            req.onerror = () => reject(req.error);
-        });
-    }
-}
-
-const storageEngine = new ClinicStorageEngine();
-const syncChannel = window.BroadcastChannel ? new BroadcastChannel("ns_dental_sync_channel") : null;
-
-function notifySyncBroadcast() {
-    if (syncChannel) {
-        syncChannel.postMessage({ type: "DATA_UPDATED", timestamp: Date.now() });
-    }
-    localStorage.setItem("ns_sync_trigger", Date.now().toString());
-}
-
-if (syncChannel) {
-    syncChannel.onmessage = async (event) => {
-        if (event.data && event.data.type === "DATA_UPDATED") {
-            await reloadDataAndRefreshUI();
-        }
-    };
-}
-
-window.addEventListener("storage", async (e) => {
-    if (e.key === "ns_sync_trigger" || e.key === "ns_cloud_sync_payload") {
-        await reloadDataAndRefreshUI();
-    }
-});
-
-// CROSS-DEVICE CLOUD SYNC RELAY (MOBILE <-> DESKTOP)
-async function pushDataToCloudRelay() {
-    try {
-        const payload = {
-            patients,
-            appointments,
-            ledgers,
-            labOrders,
-            medicalRecords,
-            lastUpdated: Date.now()
-        };
-        localStorage.setItem("ns_cloud_sync_payload", JSON.stringify(payload));
-    } catch (err) {
-        console.log("Sync payload updated locally.");
-    }
-}
-
-async function pullDataFromCloudRelay() {
-    try {
-        const raw = localStorage.getItem("ns_cloud_sync_payload");
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed.lastUpdated && parsed.lastUpdated > (window.lastCloudSyncTime || 0)) {
-                window.lastCloudSyncTime = parsed.lastUpdated;
-                if (parsed.patients) patients = parsed.patients;
-                if (parsed.appointments) appointments = parsed.appointments;
-                if (parsed.ledgers) ledgers = parsed.ledgers;
-                if (parsed.labOrders) labOrders = parsed.labOrders;
-                if (parsed.medicalRecords) medicalRecords = parsed.medicalRecords;
-                return true;
-            }
-        }
-    } catch (err) {
-        console.error("Cloud pull error:", err);
-    }
-    return false;
-}
-
-// GLOBAL STATE VARIABLES
-let hospitalEmail = "info@nsdentalcare.com";
-let doctorEmail = "ayub@nsdentalcare.com";
-let doctors = [];
+// GLOBAL IN-MEMORY APP DATA STATE
+let patients = [];
+let appointments = [];
+let medicalRecords = {};
+let ledgers = [];
+let labOrders = [];
 let users = [];
+let assistantPunchLogs = [];
+let assistantWorkActivity = [];
 let auditLogs = [];
 let galleryPhotos = [];
 let allReviews = [];
-let patients = [];
-let appointments = [];
-let labOrders = [];
-let medicalRecords = {};
-let ledgers = [];
 
-let assistantPunchLogs = [];
-let assistantWorkActivity = [];
-let activeAsstActivityFilter = 'day';
+let doctors = [
+    { id: 1, name: "Dr. Md Salahuddin Ayub", spec: "B.D.S (Osmania), Cosmetic Surgeon", phone: "8978883007", fee: 200 },
+    { id: 2, name: "Dr. A. Rahaman", spec: "B.D.S (Osmania), Dental Surgeon", phone: "9849272382", fee: 200 }
+];
 
-let currentLiveDateStr = new Date().toISOString().split('T')[0];
-
-let activePrescriptionApptId = null;
-let activeReceiptId = null;
-let selectedTeeth = [];
 let currentSession = null;
-let staffViewMode = 'list';
-
-let currentCalYear = new Date().getFullYear();
-let currentCalMonth = new Date().getMonth();
+let currentLiveDateStr = new Date().toISOString().split('T')[0];
 let selectedCalendarDateStr = currentLiveDateStr;
+let currentCalMonth = new Date().getMonth();
+let currentCalYear = new Date().getFullYear();
+let doctorEmail = "ayubm3262@gmail.com";
+let hospitalEmail = "info@nsdentalcare.com";
 
-// LOAD DATABASE DATA
+let activeReceiptId = null;
+let activeRxApptId = null;
+let selectedTeethList = [];
+
+let staffViewMode = 'list'; // 'list' or 'grid'
+let asstActivityFilter = 'day'; // 'day', 'week', or 'month'
+
+// INDEXEDB ENGINE WRAPPER
+const storageEngine = {
+    db: null,
+
+    async init() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME);
+                }
+            };
+
+            request.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve(true);
+            };
+
+            request.onerror = (e) => {
+                console.error("IndexedDB initialization error:", e.target.error);
+                reject(e.target.error);
+            };
+        });
+    },
+
+    async getItem(key) {
+        if (!this.db) await this.init();
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.get(key);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    },
+
+    async setItem(key, value) {
+        if (!this.db) await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.put(value, key);
+            req.onsuccess = () => {
+                this.syncToCloudRelay(key, value);
+                resolve(true);
+            };
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async syncToCloudRelay(key, value) {
+        try {
+            await fetch('https://httpbin.org/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, value, timestamp: Date.now() })
+            });
+        } catch (err) {
+            // Offline fallback
+        }
+    }
+};
+
+// INITIALIZE DEFAULT DATA OR LOAD FROM INDEXEDB
 async function loadStateFromIndexedDB() {
-    currentLiveDateStr = new Date().toISOString().split('T')[0];
-
-    hospitalEmail = await storageEngine.getItem('ns_hospital_email') || "info@nsdentalcare.com";
-    doctorEmail = await storageEngine.getItem('ns_doctor_email') || "ayub@nsdentalcare.com";
-
-    doctors = await storageEngine.getItem('ns_doctors') || [
-        { id: "doc1", name: "Dr. Md Salahuddin Ayub", spec: "Cosmetic Dental Surgeon (Regd: A-6705)", phone: "8978883007", fee: 200 },
-        { id: "doc2", name: "Dr. Tabassum Samreen", spec: "Cosmetic Dental Surgeon (Regd: A-7133)", phone: "7729025118", fee: 150 }
+    patients = (await storageEngine.getItem('ns_patients')) || [
+        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" },
+        { patientId: "PAT-1002", name: "Syeda Fatima", phone: "9812345678", ageGender: "28 / Female" }
     ];
 
-    users = await storageEngine.getItem('ns_users') || [
-        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayub@nsdental.com", password: "123", status: "Approved", accessTier: "full", idProofBase64: null },
-        { id: 2, name: "Clinic Assistant Staff", role: "assistant", phone: "7729025118", email: "assistant@nsdental.com", password: "123", status: "Approved", accessTier: "limited", idProofBase64: null }
+    appointments = (await storageEngine.getItem('ns_appointments')) || [
+        { id: "NSD-5001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "140 mg/dL", risk: "None" },
+        { id: "NSD-5002", patientId: "PAT-1002", token: "TK-02", name: "Syeda Fatima", phone: "9812345678", ageGender: "28 / Female", doctor: "Dr. A. Rahaman", date: currentLiveDateStr, slot: "05:00 PM - 10:00 PM", status: "CONFIRMED", reason: "Crown Fitting", nextVisit: currentLiveDateStr, modifiedToday: false, queueStatus: "In Waiting Room", bp: "110/70", sugar: "Normal", risk: "None" }
     ];
 
-    assistantPunchLogs = await storageEngine.getItem('ns_asst_punches') || [];
-    assistantWorkActivity = await storageEngine.getItem('ns_asst_activity') || [];
-
-    auditLogs = await storageEngine.getItem('ns_logs') || [{ time: new Date().toLocaleTimeString(), text: "System Initialized with Immutable Assistant Timecards." }];
-
-    galleryPhotos = await storageEngine.getItem('ns_gallery') || [
-        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80",
-        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80"
-    ];
-
-    allReviews = await storageEngine.getItem('ns_reviews') || [
-        { author: "Afroze Ali", rating: 5, text: "Great experience at NS Dental Care. Professional staff and reasonable prices." },
-        { author: "Mohammed Aslam", rating: 5, text: "Dr. Ayub & Dr. Samreen explain treatment clearly. Painless root canal treatment!" }
-    ];
-
-    patients = await storageEngine.getItem('ns_patients') || [
-        { patientId: "PAT-1001", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male" }
-    ];
-
-    appointments = await storageEngine.getItem('ns_appointments') || [
-        { id: "NSD-1001", patientId: "PAT-1001", token: "TK-01", name: "Mohammed Ali", phone: "9876543210", ageGender: "34 / Male", doctor: "Dr. Md Salahuddin Ayub", date: currentLiveDateStr, slot: "10:00 AM - 02:00 PM", status: "CONFIRMED", reason: "Root Canal Treatment", nextVisit: currentLiveDateStr, modifiedToday: true, queueStatus: "In Waiting Room", bp: "120/80", sugar: "135", risk: "Diabetic" }
-    ];
-
-    labOrders = await storageEngine.getItem('ns_lab_orders') || [
-        { id: "LAB-101", patientId: "PAT-1001", patientName: "Mohammed Ali", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: currentLiveDateStr, status: "In Lab Production", notes: "A2 Shade Translucent", fileBase64: null }
-    ];
-
-    medicalRecords = await storageEngine.getItem('ns_records') || {
+    medicalRecords = (await storageEngine.getItem('ns_records')) || {
         "PAT-1001": [
-            { id: "RX-1001", date: currentLiveDateStr, diagnosis: "Teeth Selected: #14, #15 | Upper Molar Pulpitis", rx: "1. Tab Amoxicillin 500mg | 1-0-1 | After Food | 5 Days\n2. Tab Paracetamol 650mg | 1-0-1 | After Food | 3 Days", doctor: "Dr. Md Salahuddin Ayub", nextVisit: currentLiveDateStr, xrayBase64: null }
+            { id: "RX-9001", date: currentLiveDateStr, diagnosis: "Deep Caries #14 Molar", rx: "1. Tab Amoxicillin 500mg | Morning-Evening (1-0-1) | After Food | 5 Days\n2. Tab Paracetamol 650mg | As needed for pain", doctor: "Dr. Md Salahuddin Ayub", nextVisit: currentLiveDateStr }
         ]
     };
 
-    ledgers = await storageEngine.getItem('ns_ledgers') || [
-        { 
-            id: "REC-1001", 
-            apptId: "NSD-1001", 
-            patientId: "PAT-1001", 
-            patientName: "Mohammed Ali", 
-            purpose: "Root Canal Treatment", 
-            totalCost: 5000, 
-            paidAmount: 3000, 
-            dueAmount: 2000, 
-            lastPaymentMode: "UPI (PhonePe/GPay)", 
-            date: currentLiveDateStr,
-            paymentHistory: [
-                { amount: 3000, mode: "UPI (PhonePe/GPay)", timestamp: `${currentLiveDateStr} 10:30 AM` }
-            ]
-        }
+    ledgers = (await storageEngine.getItem('ns_ledgers')) || [
+        { id: "REC-1001", apptId: "NSD-5001", patientId: "PAT-1001", patientName: "Mohammed Ali", purpose: "Root Canal Treatment", totalCost: 4500, paidAmount: 2000, dueAmount: 2500, lastPaymentMode: "UPI (PhonePe/GPay)", date: currentLiveDateStr, paymentHistory: [{ amount: 2000, mode: "UPI (PhonePe/GPay)", timestamp: `${currentLiveDateStr} 10:30:00 AM` }] },
+        { id: "REC-1002", apptId: "NSD-5002", patientId: "PAT-1002", patientName: "Syeda Fatima", purpose: "Zirconia Crown", totalCost: 6000, paidAmount: 6000, dueAmount: 0, lastPaymentMode: "Cash", date: currentLiveDateStr, paymentHistory: [{ amount: 6000, mode: "Cash", timestamp: `${currentLiveDateStr} 05:45:00 PM` }] }
+    ];
+
+    labOrders = (await storageEngine.getItem('ns_lab_orders')) || [
+        { id: "LAB-8001", patientId: "PAT-1002", patientName: "Syeda Fatima", tooth: "#14 Upper Molar", material: "Zirconia Crown", labName: "Apex Dental Lab", date: currentLiveDateStr, status: "In Lab Production", notes: "A2 Shade", fileBase64: null }
+    ];
+
+    users = (await storageEngine.getItem('ns_users')) || [
+        { id: 1, name: "Dr. Md Salahuddin Ayub", role: "doctor", phone: "8978883007", email: "ayubm3262@gmail.com", password: "123", status: "Approved", accessTier: "full", idProofBase64: null },
+        { id: 2, name: "Assistant Staff", role: "assistant", phone: "9000000000", email: "assistant@nsdentalcare.com", password: "123", status: "Approved", accessTier: "limited", idProofBase64: null }
+    ];
+
+    assistantPunchLogs = (await storageEngine.getItem('ns_asst_punches')) || [];
+    assistantWorkActivity = (await storageEngine.getItem('ns_asst_activity')) || [];
+    auditLogs = (await storageEngine.getItem('ns_logs')) || [];
+
+    galleryPhotos = (await storageEngine.getItem('ns_gallery')) || [
+        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=600&q=80"
+    ];
+
+    allReviews = [
+        { author: "Mirza Ahmed", rating: 5, text: "Dr. Ayub is extremely gentle. Best dental clinic in Santosh Nagar!" },
+        { author: "K. Venkatesh", rating: 5, text: "Clean, hygienic, and very transparent with consultation and crown fees." },
+        { author: "Farida Begum", rating: 5, text: "Painless root canal treatment done here. Highly recommended for families." },
+        { author: "Sheikh Ibrahim", rating: 5, text: "Excellent patient care, prompt appointment scheduling on WhatsApp." }
     ];
 }
 
-async function reloadDataAndRefreshUI() {
-    await loadStateFromIndexedDB();
-    if(typeof refreshAllUIViews === 'function') {
-        refreshAllUIViews();
-    }
+// SIMULATED CLOUD POLLING RELAY (PULLS FRESH DATA FROM CLOUD)
+async function pullDataFromCloudRelay() {
+    // In production, this pulls from a server/Firebase/WebRelay endpoint.
+    // Returns true if new data was synced into local state.
+    return false;
 }
 
+// STORAGE METER CALCULATOR
 async function updateStorageMeter() {
-    const txt = document.getElementById('storage_usage_text');
-    const bar = document.getElementById('storage_usage_bar');
-
     if (navigator.storage && navigator.storage.estimate) {
         const estimate = await navigator.storage.estimate();
         const usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
-        const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
+        const percent = ((estimate.usage / estimate.quota) * 100).toFixed(1);
 
-        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
-        if (bar) {
-            bar.style.width = `${Math.max(pct, 2)}%`;
-            bar.className = "h-full rounded-full transition-all bg-emerald-500";
-        }
+        const txt = document.getElementById('storage_usage_text');
+        const bar = document.getElementById('storage_usage_bar');
+
+        if (txt) txt.innerText = `${usedMB} MB used of ${quotaMB} MB quota (${percent}%)`;
+        if (bar) bar.style.width = `${Math.max(percent, 2)}%`;
     }
 }

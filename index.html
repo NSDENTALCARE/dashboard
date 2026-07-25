@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <!-- MAIN BRANDING HEADER -->
+    <!-- MAIN BRANDING HEADER WITH FORCE SYNC BUTTON -->
     <header class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex justify-between items-center gap-2">
             <div class="flex items-center space-x-3 cursor-pointer min-w-0" onclick="navigateTo('public-home')">
@@ -58,9 +58,15 @@
             </div>
 
             <div class="flex items-center space-x-2 shrink-0">
+                <!-- ⚡ PROMINENT MULTI-DEVICE FORCE SYNC BUTTON IN MAIN HEADER -->
+                <button onclick="forceSyncAllOnlineBrowsers()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs flex items-center gap-1 shadow-md animate-pulse">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Force Sync Mobile & PC</span>
+                </button>
+
                 <button onclick="navigateTo('track-appointment')" class="bg-amber-100 hover:bg-amber-200 text-slate-900 font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-red-700"></i> <span class="hidden sm:inline">Patient Downloads</span>
                 </button>
+
                 <button id="hdr_chairside_btn" onclick="openChairsideViewMode()" class="hidden-section bg-purple-700 hover:bg-purple-600 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-sm">
                     <i data-lucide="monitor" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Chairside View</span>
                 </button>
@@ -565,6 +571,10 @@
                     <p id="dashClockBar" class="text-xs text-amber-400 font-mono mt-0.5"></p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <!-- ⚡ MULTI-DEVICE FORCE SYNC BUTTON IN TOOLBAR -->
+                    <button onclick="forceSyncAllOnlineBrowsers()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-md animate-pulse">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Force Sync All Browsers
+                    </button>
                     <button onclick="downloadExcelBackup()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
                         <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Daily Excel Backup
                     </button>
@@ -841,7 +851,7 @@
                         </form>
                     </div>
 
-                    <!-- NEW TAB: TREATMENT PLAN & COST ESTIMATOR BUILDER (DOCTOR) -->
+                    <!-- TREATMENT PLAN & COST ESTIMATOR BUILDER -->
                     <div id="viewTreatmentPlan" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
@@ -900,7 +910,7 @@
                         </div>
                     </div>
 
-                    <!-- NEW TAB: DENTAL INVENTORY & ASSET MANAGEMENT (ADMIN/STAFF) -->
+                    <!-- DENTAL INVENTORY & ASSET MANAGEMENT -->
                     <div id="viewInventory" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
@@ -932,7 +942,7 @@
                         </div>
                     </div>
 
-                    <!-- NEW TAB: CLINIC EXPENSES & NET PROFIT/LOSS LEDGER (ADMIN) -->
+                    <!-- CLINIC EXPENSES & NET PROFIT/LOSS LEDGER -->
                     <div id="viewExpenses" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3 gap-2">
@@ -978,7 +988,7 @@
                         </div>
                     </div>
 
-                    <!-- NEW TAB: WHATSAPP BULK RECALL CAMPAIGNS (ADMIN/STAFF) -->
+                    <!-- WHATSAPP BULK CAMPAIGN RECALL -->
                     <div id="viewCampaigns" class="hidden-section space-y-4">
                         <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
                             <div class="border-b border-slate-800 pb-3">
@@ -1431,7 +1441,7 @@
             </div>
         </div>
 
-        <!-- NEW MODAL: DIGITAL PATIENT CONSENT & SIGNATURE CANVAS (DOCTOR/STAFF) -->
+        <!-- DIGITAL PATIENT CONSENT & SIGNATURE CANVAS -->
         <div id="digitalConsentModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeDigitalConsentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1478,7 +1488,7 @@
             </div>
         </div>
 
-        <!-- NEW MODAL: BEFORE & AFTER PHOTO COMPARISON GALLERY (DOCTOR) -->
+        <!-- BEFORE & AFTER PHOTO COMPARISON GALLERY -->
         <div id="photoComparisonModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-slate-800 text-white w-full max-w-2xl rounded-2xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closePhotoComparisonModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1517,7 +1527,7 @@
             </div>
         </div>
 
-        <!-- TABLET-OPTIMIZED CHAIRSIDE VIEW MODAL (DOCTOR) -->
+        <!-- TABLET-OPTIMIZED CHAIRSIDE VIEW MODAL -->
         <div id="chairsideModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-lg hidden items-center justify-center p-3 sm:p-6 z-50 overflow-y-auto">
             <div class="bg-slate-900 border border-purple-500/40 text-white w-full max-w-5xl rounded-3xl p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeChairsideViewMode()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -1896,7 +1906,7 @@
             </div>
         </div>
 
-        <!-- PRESCRIPTION MODAL WITH VOICE DICTATION & ALLERGY WARNING (DOCTOR) -->
+        <!-- PRESCRIPTION MODAL WITH VOICE DICTATION & ALLERGY WARNING -->
         <div id="letterheadModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
             <div class="bg-white text-slate-900 w-full max-w-3xl rounded-xl p-5 sm:p-6 shadow-2xl relative space-y-4 my-auto">
                 <button onclick="closeLetterheadModal()" class="no-print absolute top-4 right-4 text-slate-500 hover:text-black">

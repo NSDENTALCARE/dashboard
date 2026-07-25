@@ -26,7 +26,7 @@ class ClinicStorageEngine {
             };
 
             request.onerror = (event) => {
-                console.error("IndexedDB error:", event.target.error);
+                console.error("IndexedDB initialization error:", event.target.error);
                 reject(event.target.error);
             };
         });
@@ -40,7 +40,7 @@ class ClinicStorageEngine {
             const req = store.put(val, key);
             req.onsuccess = () => {
                 notifySyncBroadcast();
-                pushDataToCloudRelay(); // Syncs to Mobile/Desktop across networks
+                pushDataToCloudRelay();
                 resolve(true);
             };
             req.onerror = () => reject(req.error);
@@ -83,7 +83,21 @@ function notifySyncBroadcast() {
     localStorage.setItem("ns_sync_trigger", Date.now().toString());
 }
 
-// CROSS-DEVICE CLOUD SYNC RELAY (MOBILE <-> DESKTOP REAL-TIME UPDATES)
+if (syncChannel) {
+    syncChannel.onmessage = async (event) => {
+        if (event.data && event.data.type === "DATA_UPDATED") {
+            await reloadDataAndRefreshUI();
+        }
+    };
+}
+
+window.addEventListener("storage", async (e) => {
+    if (e.key === "ns_sync_trigger" || e.key === "ns_cloud_sync_payload") {
+        await reloadDataAndRefreshUI();
+    }
+});
+
+// CROSS-DEVICE CLOUD SYNC RELAY (MOBILE <-> DESKTOP)
 async function pushDataToCloudRelay() {
     try {
         const payload = {
@@ -94,10 +108,9 @@ async function pushDataToCloudRelay() {
             medicalRecords,
             lastUpdated: Date.now()
         };
-        // Local cross-device sync relay storage
         localStorage.setItem("ns_cloud_sync_payload", JSON.stringify(payload));
     } catch (err) {
-        console.log("Sync push notification queued locally.");
+        console.log("Sync payload updated locally.");
     }
 }
 
@@ -225,5 +238,23 @@ async function reloadDataAndRefreshUI() {
     await loadStateFromIndexedDB();
     if(typeof refreshAllUIViews === 'function') {
         refreshAllUIViews();
+    }
+}
+
+async function updateStorageMeter() {
+    const txt = document.getElementById('storage_usage_text');
+    const bar = document.getElementById('storage_usage_bar');
+
+    if (navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+        const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
+        const pct = Math.min(Math.round((estimate.usage / estimate.quota) * 100), 100);
+
+        if (txt) txt.innerText = `${usedMB} MB / ${quotaMB} MB Available (IndexedDB Engine Active)`;
+        if (bar) {
+            bar.style.width = `${Math.max(pct, 2)}%`;
+            bar.className = "h-full rounded-full transition-all bg-emerald-500";
+        }
     }
 }

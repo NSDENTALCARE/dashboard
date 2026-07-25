@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// CORE UI ROUTING, APPOINTMENT ACTIONS & CLOUD REAL-TIME ENGINE
+// CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
 // ==========================================================================
 
 async function initApp() {
@@ -65,8 +65,8 @@ function startRealtimeClock() {
         const elTicker = document.getElementById('hdr_datetime_ticker');
         const elDashClock = document.getElementById('dashClockBar');
 
-        if(elTicker) elTicker.innerText = `${dateStr} | ${timeStr}`;
-        if(elDashClock) elDashClock.innerText = `${dateStr} | ${timeStr}`;
+        if(elTicker) elTicker.innerText = `${dateStr} \vert{}${timeStr}`;
+        if(elDashClock) elDashClock.innerText = `${dateStr} \vert{}${timeStr}`;
     }
     updateClock();
     setInterval(updateClock, 1000);
@@ -138,7 +138,7 @@ function handleUniversalStaffSearch() {
                     <span class="text-amber-400 font-mono font-bold">${p.patientId}</span>
                     <strong class="text-white ml-2">${p.name}</strong>
                     <span class="text-slate-400 ml-2 font-mono">📞 ${p.phone}</span>
-                    <p class="text-[11px] text-slate-400">Doctor: ${appt.doctor || 'Unassigned'} | Reason: ${appt.reason || 'N/A'}</p>
+                    <p class="text-[11px] text-slate-400">Doctor: ${appt.doctor \vert{}\vert{} 'Unassigned'} \vert{} Reason:${appt.reason || 'N/A'}</p>
                 </div>
                 <div class="flex gap-1.5">
                     <button onclick="openMasterEditModal('${p.patientId}')" class="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg font-bold">Edit Record</button>
@@ -190,7 +190,7 @@ function openPostponeModal(apptId) {
     saveAndNotifyAppointmentAction(appt, `Postponed to ${newDate} (${newSlot})`);
 }
 
-// IMMEDIATE WHATSAPP & EMAIL DISPATCHER TO PATIENT AND DOCTOR
+// IMMEDIATE WHATSAPP & EMAIL DISPATCHER
 async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
     await storageEngine.setItem('ns_appointments', appointments);
     refreshAllUIViews();
@@ -199,9 +199,9 @@ async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
     const cleanPatientPhone = appt.phone.replace(/[^0-9]/g, '');
     const cleanDoctorPhone = doctorObj.phone.replace(/[^0-9]/g, '');
 
-    const patientMsg = `*N.S. DENTAL CARE - APPOINTMENT STATUS UPDATE*%0A%0ADear *${appt.name}*,%0AYour appointment status has been updated:%0A%0A*Status:* ${actionStatusText}%0A*Date:* ${appt.date}%0A*Slot:* ${appt.slot}%0A*Doctor:* ${appt.doctor}%0A*Token #:* ${appt.token || 'TK-01'}%0A%0AFor queries, contact +91 8978883007.`;
+    const patientMsg = `*N.S. DENTAL CARE - APPOINTMENT STATUS UPDATE*%0A%0ADear *${appt.name}*,\%0AYour appointment status has been updated:\%0A\%0A*Status:*${actionStatusText}%0A*Date:* ${appt.date}\%0A*Slot:*${appt.slot}%0A*Doctor:* ${appt.doctor}\%0A*Token #:* ${appt.token || 'TK-01'}%0A%0AFor queries, contact +91 8978883007.`;
 
-    const doctorMsg = `*N.S. DENTAL CARE - DOCTOR ALERT*%0A%0APatient Appointment *${actionStatusText}*%0A%0A*Patient:* ${appt.name} (${appt.patientId})%0A*Date:* ${appt.date} | *Slot:* ${appt.slot}%0A*Token:* ${appt.token || 'TK-01'}%0A*Reason:* ${appt.reason}`;
+    const doctorMsg = `*N.S. DENTAL CARE - DOCTOR ALERT*%0A%0APatient Appointment *${actionStatusText}*%0A%0A*Patient:* ${appt.name} (${appt.patientId})%0A*Date:* ${appt.date} \vert{} *Slot:*${appt.slot}%0A*Token:* ${appt.token \vert{}\vert{} 'TK-01'}\%0A*Reason:*${appt.reason}`;
 
     if (confirm(`Status updated to "${actionStatusText}". Send WhatsApp update to Patient now?`)) {
         window.open(`https://wa.me/91${cleanPatientPhone}?text=${patientMsg}`, '_blank');
@@ -212,11 +212,11 @@ async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
     }
 
     const emailSubject = encodeURIComponent(`N.S. Dental Care - Appointment ${actionStatusText}`);
-    const emailBody = encodeURIComponent(`Appointment Status Update:\n\nPatient: ${appt.name} (${appt.patientId})\nStatus: ${actionStatusText}\nDate: ${appt.date}\nSlot: ${appt.slot}\nDoctor: ${appt.doctor}\nReason: ${appt.reason}`);
+    const emailBody = encodeURIComponent(`Appointment Status Update:\n\nPatient: ${appt.name} (${appt.patientId})\nStatus:${actionStatusText}\nDate: ${appt.date}\nSlot:${appt.slot}\nDoctor: ${appt.doctor}\nReason:${appt.reason}`);
     
     window.location.href = `mailto:${doctorEmail}?subject=${emailSubject}&body=${emailBody}`;
 
-    logAction(`Appointment ${appt.id} status updated to ${actionStatusText}`);
+    logAction(`Appointment ${appt.id} status updated to${actionStatusText}`);
 }
 
 function renderAppointments() {
@@ -228,7 +228,7 @@ function renderAppointments() {
             <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
             <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
             <td class="p-3 text-[11px]">
-                <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
+                <p>BP: <strong class="text-white">${a.bp \vert{}\vert{} '120/80'}</strong> \vert{} Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
                 <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
             </td>
             <td class="p-3">${a.doctor}</td>
@@ -405,7 +405,7 @@ function openReceiptModal(recId) {
                     </div>
                 `).join('');
             } else {
-                historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode || 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
+                historyBox.innerHTML = `<div class="flex justify-between"><span>Full Settlement (${item.lastPaymentMode \vert{}\vert{} 'Cash'})</span><strong class="text-emerald-700">₹${item.paidAmount}</strong></div>`;
             }
         }
 
@@ -448,7 +448,7 @@ function openAddPaymentModal(recId) {
     document.getElementById('pay_total_disp').innerText = `₹${item.totalCost.toLocaleString('en-IN')}`;
     document.getElementById('pay_due_disp').innerText = `₹${item.dueAmount.toLocaleString('en-IN')}`;
     document.getElementById('pay_amount_input').value = item.dueAmount;
-    document.getElementById('pay_timestamp').value = `${currentLiveDateStr} ${new Date().toLocaleTimeString()}`;
+    document.getElementById('pay_timestamp').value = `${currentLiveDateStr}${new Date().toLocaleTimeString()}`;
 
     document.getElementById('addPaymentModal').classList.remove('hidden');
     document.getElementById('addPaymentModal').classList.add('flex');
@@ -488,12 +488,12 @@ async function handleAddPaymentSubmit(e) {
 
     await storageEngine.setItem('ns_ledgers', ledgers);
     if(currentSession && currentSession.role === 'assistant') {
-        logAssistantWorkActivity(`Collected ₹${newPaymentVal} via ${mode} for Receipt ${recId} (${item.patientName})`);
+        logAssistantWorkActivity(`Collected ₹${newPaymentVal} via${mode} for Receipt ${recId} (${item.patientName})`);
     }
     refreshAllUIViews();
 
-    logAction(`Added ₹${newPaymentVal} via ${mode} for Receipt ${recId} (${item.patientName})`);
-    alert(`Payment of ₹${newPaymentVal} recorded successfully via ${mode}!`);
+    logAction(`Added ₹${newPaymentVal} via${mode} for Receipt ${recId} (${item.patientName})`);
+    alert(`Payment of ₹${newPaymentVal} recorded successfully via${mode}!`);
     closeAddPaymentModal();
 }
 
@@ -564,7 +564,7 @@ function renderCalendar() {
     if(!grid) return;
 
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    if(title) title.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
+    if(title) title.innerText = `${monthNames[currentCalMonth]}${currentCalYear}`;
 
     const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
     const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
@@ -585,8 +585,7 @@ function renderCalendar() {
         html += `
             <div onclick="selectCalendarDate('${fullDateStr}')" class="p-2 rounded-xl border transition cursor-pointer flex flex-col justify-between h-20 ${isSelected ? 'border-amber-400 bg-amber-500/20 text-amber-300 font-bold shadow-lg' : isToday ? 'border-red-500 bg-red-950/40 text-white font-bold' : 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'}">
                 <div class="flex justify-between items-center text-[10px] font-mono">
-                    <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>
-                    ${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
+                    <span class="${isToday ? 'bg-red-600 text-white px-1.5 py-0.5 rounded font-bold' : ''}">${d}</span>${dayAppts.length > 0 ? `<span class="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">${dayAppts.length}</span>` : ''}
                 </div>
             </div>
         `;
@@ -623,7 +622,7 @@ function renderSelectedCalendarAgenda() {
                         <span class="text-amber-400 font-mono font-bold">${a.token || 'TK-01'}</span>
                         <strong class="text-white">${a.name} (${a.patientId})</strong>
                     </div>
-                    <p class="text-slate-400 text-[11px]">Doctor: ${a.doctor} | Purpose: ${a.reason} | Slot: ${a.slot}</p>
+                    <p class="text-slate-400 text-[11px]">Doctor: ${a.doctor} | Purpose: ${a.reason} \vert{} Slot:${a.slot}</p>
                 </div>
                 <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1 rounded-xl font-bold text-xs shadow">
                     Modify Record
@@ -703,7 +702,7 @@ async function handleManualPatientUpload(e) {
             lastPaymentMode: payMode, 
             date,
             paymentHistory: [
-                { amount: paidAmount, mode: payMode, timestamp: `${date} ${new Date().toLocaleTimeString()}` }
+                { amount: paidAmount, mode: payMode, timestamp: `${date}${new Date().toLocaleTimeString()}` }
             ]
         });
         await storageEngine.setItem('ns_ledgers', ledgers);
@@ -712,7 +711,7 @@ async function handleManualPatientUpload(e) {
         if(currentSession && currentSession.role === 'assistant') {
             logAssistantWorkActivity(`Registered Patient & Payment Entry for ${name} (${patient.patientId})`);
         }
-        alert(`Patient Visit & Payment Logged! Patient ID: ${patient.patientId} | Token: ${token}`);
+        alert(`Patient Visit & Payment Logged! Patient ID: ${patient.patientId} \vert{} Token:${token}`);
         e.target.reset();
         document.getElementById('man_existing_badge').classList.add('hidden-section');
         refreshAllUIViews();
@@ -746,7 +745,7 @@ function handleManualTokenAssignSubmit() {
         appt.modifiedToday = true;
         storageEngine.setItem('ns_appointments', appointments);
         refreshAllUIViews();
-        logAction(`Assigned token ${tokenVal} to Patient ${appt.patientId}`);
+        logAction(`Assigned token ${tokenVal} to Patient${appt.patientId}`);
         alert(`Token ${tokenVal} assigned to ${appt.name} (${appt.patientId})!`);
         document.getElementById('manual_token_pid').value = '';
         document.getElementById('manual_token_val').value = '';
@@ -867,8 +866,7 @@ function searchEHR() {
                 </div>
 
                 <div class="space-y-1.5 text-xs">
-                    <h5 class="font-bold text-slate-300 uppercase">Complete Visit History Timeline (${pAppts.length} Visits):</h5>
-                    ${pAppts.map(a => {
+                    <h5 class="font-bold text-slate-300 uppercase">Complete Visit History Timeline (${pAppts.length} Visits):</h5>${pAppts.map(a => {
                         const l = pLedgers.find(x => x.apptId === a.id) || {};
                         return `
                             <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-0.5">
@@ -914,7 +912,7 @@ async function handlePublicBooking(e) {
     ledgers.push({ id: recId, apptId, patientId: patient.patientId, patientName: name, purpose: reason || "Consultation", totalCost: 0, paidAmount: 0, dueAmount: 0, lastPaymentMode: "Cash", date });
     await storageEngine.setItem('ns_ledgers', ledgers);
 
-    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} | Token: ${token}. Awaiting Staff Approval.`);
+    alert(`Booking Request Submitted! Patient ID: ${patient.patientId} \vert{} Token:${token}. Awaiting Staff Approval.`);
     document.getElementById('bk_existing_badge').classList.add('hidden-section');
     refreshAllUIViews();
     navigateTo('public-home');
@@ -962,7 +960,7 @@ function handlePortalLogin(e) {
     const u = users.find(x => x.role === role && (x.email === identifier || x.phone === identifier) && x.password === pwd);
     if (u && u.status === 'Approved') {
         currentSession = u;
-        logAction(`${u.role.toUpperCase()} logged in: ${u.name}`);
+        logAction(`${u.role.toUpperCase()} logged in:${u.name}`);
         openDashboard();
         closePortalModal();
     } else {
@@ -981,7 +979,7 @@ async function handleStaffRegistration(e) {
     users.push({ id: Date.now(), name, role, phone, email, password, status: "Pending", accessTier: "limited", idProofBase64: null });
     await storageEngine.setItem('ns_users', users);
 
-    logAction(`New ${role} registration request for ${name}.`);
+    logAction(`New ${role} registration request for${name}.`);
     alert("Registration request submitted!");
     closePortalModal();
 }
@@ -1410,38 +1408,4 @@ function closeDayWiseAuditModal() {
 }
 
 function markDayAuditVerified() {
-    logAction(`Verified day-wise audit summary for ${currentLiveDateStr}`);
-    alert(`Day Summary Locked & Verified!`);
-    closeDayWiseAuditModal();
-}
-
-function sendAppointmentWhatsAppLinks(apptId) {
-    const appt = appointments.find(a => a.id === apptId);
-    if(appt) {
-        const cleanPhone = appt.phone.replace(/[^0-9]/g, '');
-        const pageUrl = window.location.href.split('#')[0];
-        const msg = `*N.S. DENTAL CARE - PATIENT PORTAL ACCESS*%0A%0ADear *${appt.name}*,%0AYour appointment/record has been updated!%0A%0A*Patient ID:* ${appt.patientId}%0A*Token #:* ${appt.token || 'TK-01'}%0A*Doctor:* ${appt.doctor}%0A*Next Visit:* ${appt.nextVisit || appt.date}%0A%0A*Download Prescription & Receipt:*%0A${pageUrl}`;
-        window.open(`https://wa.me/91${cleanPhone}?text=${msg}`, '_blank');
-    }
-}
-
-async function deletePatientRecordATOZ(pid) {
-    if(confirm(`PERMANENTLY DELETE all patient data, medical records, and receipts for ${pid}?`)) {
-        patients = patients.filter(p => p.patientId !== pid);
-        appointments = appointments.filter(a => a.patientId !== pid);
-        ledgers = ledgers.filter(l => l.patientId !== pid);
-        delete medicalRecords[pid];
-
-        await storageEngine.setItem('ns_patients', patients);
-        await storageEngine.setItem('ns_appointments', appointments);
-        await storageEngine.setItem('ns_ledgers', ledgers);
-        await storageEngine.setItem('ns_records', medicalRecords);
-
-        refreshAllUIViews();
-        logAction(`Deleted patient ${pid}`);
-        alert("Patient purged permanently!");
-    }
-}
-
-// INITIALIZE APPLICATION ON SCRIPT LOAD
-initApp();
+    logAction(`Verified day-wise audit summary for ${I seem to be encountering an error. Can I try something else for you?

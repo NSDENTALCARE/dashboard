@@ -1,7 +1,7 @@
 lucide.createIcons();
 
 // ==========================================================================
-// CORE UI ROUTING, STRICT CURRENT-DAY KPIS & APPLICATION CONTROLLER
+// CORE UI ROUTING, APPOINTMENT ACTIONS & CLOUD REAL-TIME ENGINE
 // ==========================================================================
 
 async function initApp() {
@@ -22,7 +22,7 @@ async function initApp() {
     fetchDeviceAndIPDetails();
     updateStorageMeter();
 
-    // AUTO-POLLING HEARTBEAT (3 SECONDS) FOR REAL-TIME MULTI-DEVICE SYNC
+    // REAL-TIME AUTO-POLLING HEARTBEAT (3 SECONDS): MOBILE <-> DESKTOP SYNC
     setInterval(async () => {
         const freshDateStr = new Date().toISOString().split('T')[0];
         if (freshDateStr !== currentLiveDateStr) {
@@ -30,8 +30,11 @@ async function initApp() {
             updateMetricCards();
             renderPublicTokenQueue();
         }
-        await loadStateFromIndexedDB();
-        refreshAllUIViews();
+
+        const cloudUpdated = await pullDataFromCloudRelay();
+        if (cloudUpdated) {
+            refreshAllUIViews();
+        }
     }, 3000);
 }
 
@@ -145,6 +148,108 @@ function handleUniversalStaffSearch() {
             </div>
         `;
     }).join('');
+}
+
+// APPOINTMENT ACTION ENGINE: CONFIRM, APPROVE, DECLINE & POSTPONE
+async function updateAppointmentStatus(apptId, actionType) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt) return;
+
+    if (actionType === 'CONFIRM') {
+        appt.status = 'CONFIRMED';
+        await saveAndNotifyAppointmentAction(appt, 'Confirmed');
+    } else if (actionType === 'APPROVE') {
+        appt.status = 'APPROVED';
+        await saveAndNotifyAppointmentAction(appt, 'Approved');
+    } else if (actionType === 'DECLINE') {
+        if (confirm(`Are you sure you want to decline the appointment for ${appt.name}?`)) {
+            appt.status = 'DECLINED';
+            await saveAndNotifyAppointmentAction(appt, 'Declined');
+        }
+    } else if (actionType === 'POSTPONE') {
+        openPostponeModal(apptId);
+    }
+}
+
+// POSTPONE MODAL CONTROLLER
+function openPostponeModal(apptId) {
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt) return;
+
+    const newDate = prompt(`Select New Appointment Date for ${appt.name} (YYYY-MM-DD):`, appt.date);
+    if (!newDate) return;
+
+    const newSlot = prompt(`Select Time Slot:\n1. 10:00 AM - 02:00 PM\n2. 05:00 PM - 10:00 PM`, appt.slot) || appt.slot;
+
+    appt.date = newDate;
+    appt.slot = newSlot;
+    appt.status = 'POSTPONED';
+    appt.nextVisit = newDate;
+    appt.modifiedToday = true;
+
+    saveAndNotifyAppointmentAction(appt, `Postponed to ${newDate} (${newSlot})`);
+}
+
+// IMMEDIATE WHATSAPP & EMAIL DISPATCHER TO PATIENT AND DOCTOR
+async function saveAndNotifyAppointmentAction(appt, actionStatusText) {
+    await storageEngine.setItem('ns_appointments', appointments);
+    refreshAllUIViews();
+
+    const doctorObj = doctors.find(d => d.name === appt.doctor) || doctors[0];
+    const cleanPatientPhone = appt.phone.replace(/[^0-9]/g, '');
+    const cleanDoctorPhone = doctorObj.phone.replace(/[^0-9]/g, '');
+
+    const patientMsg = `*N.S. DENTAL CARE - APPOINTMENT STATUS UPDATE*%0A%0ADear *${appt.name}*,%0AYour appointment status has been updated:%0A%0A*Status:* ${actionStatusText}%0A*Date:* ${appt.date}%0A*Slot:* ${appt.slot}%0A*Doctor:* ${appt.doctor}%0A*Token #:* ${appt.token || 'TK-01'}%0A%0AFor queries, contact +91 8978883007.`;
+
+    const doctorMsg = `*N.S. DENTAL CARE - DOCTOR ALERT*%0A%0APatient Appointment *${actionStatusText}*%0A%0A*Patient:* ${appt.name} (${appt.patientId})%0A*Date:* ${appt.date} | *Slot:* ${appt.slot}%0A*Token:* ${appt.token || 'TK-01'}%0A*Reason:* ${appt.reason}`;
+
+    if (confirm(`Status updated to "${actionStatusText}". Send WhatsApp update to Patient now?`)) {
+        window.open(`https://wa.me/91${cleanPatientPhone}?text=${patientMsg}`, '_blank');
+    }
+
+    if (confirm(`Notify Dr. ${appt.doctor} via WhatsApp?`)) {
+        window.open(`https://wa.me/91${cleanDoctorPhone}?text=${doctorMsg}`, '_blank');
+    }
+
+    const emailSubject = encodeURIComponent(`N.S. Dental Care - Appointment ${actionStatusText}`);
+    const emailBody = encodeURIComponent(`Appointment Status Update:\n\nPatient: ${appt.name} (${appt.patientId})\nStatus: ${actionStatusText}\nDate: ${appt.date}\nSlot: ${appt.slot}\nDoctor: ${appt.doctor}\nReason: ${appt.reason}`);
+    
+    window.location.href = `mailto:${doctorEmail}?subject=${emailSubject}&body=${emailBody}`;
+
+    logAction(`Appointment ${appt.id} status updated to ${actionStatusText}`);
+}
+
+function renderAppointments() {
+    const tbl = document.getElementById('tblAppointments');
+    if(!tbl) return;
+
+    tbl.innerHTML = appointments.map(a => `
+        <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
+            <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
+            <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
+            <td class="p-3 text-[11px]">
+                <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
+                <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
+            </td>
+            <td class="p-3">${a.doctor}</td>
+            <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
+            <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
+            <td class="p-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' || a.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : a.status === 'DECLINED' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
+                    ${a.status}
+                </span>
+            </td>
+            <td class="p-3">
+                <div class="flex gap-1 flex-wrap">
+                    <button onclick="updateAppointmentStatus('${a.id}', 'CONFIRM')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">Confirm</button>
+                    <button onclick="updateAppointmentStatus('${a.id}', 'POSTPONE')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-0.5 rounded text-[10px] font-bold">Postpone</button>
+                    <button onclick="updateAppointmentStatus('${a.id}', 'DECLINE')" class="bg-rose-600 hover:bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">Decline</button>
+                    <button onclick="openMasterEditModal('${a.patientId}')" class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded text-[10px]">Edit</button>
+                    <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-0.5 rounded text-[10px]">Rx</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 async function fetchDeviceAndIPDetails() {
@@ -948,33 +1053,6 @@ function switchDashTab(tab) {
     if(tab === 'asstLogs') { document.getElementById('viewAsstLogs').classList.remove('hidden-section'); document.getElementById('tabBtnAsstLogs').classList.add('active-tab'); }
     if(tab === 'approvals') { document.getElementById('viewApprovals').classList.remove('hidden-section'); document.getElementById('tabBtnApprovals').classList.add('active-tab'); }
     if(tab === 'adminMaster') { document.getElementById('viewAdminMaster').classList.remove('hidden-section'); document.getElementById('tabBtnAdminMaster').classList.add('active-tab'); }
-}
-
-function renderAppointments() {
-    document.getElementById('tblAppointments').innerHTML = appointments.map(a => `
-        <tr class="${a.modifiedToday ? 'modified-today' : 'hover:bg-slate-800/50'}">
-            <td class="p-3 font-mono text-red-500">${a.patientId}<br><span class="text-white font-sans font-bold">${a.name}</span></td>
-            <td class="p-3 font-mono font-bold text-amber-400">${a.token || 'TK-01'}</td>
-            <td class="p-3 text-[11px]">
-                <p>BP: <strong class="text-white">${a.bp || '120/80'}</strong> | Sugar: <strong class="text-white">${a.sugar || 'N/A'}</strong></p>
-                <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">${a.risk || 'None'}</span>
-            </td>
-            <td class="p-3">${a.doctor}</td>
-            <td class="p-3">${a.date}<br><span class="text-[10px] text-slate-400">${a.slot}</span></td>
-            <td class="p-3 font-bold text-amber-400 font-mono">${a.nextVisit || a.date}</td>
-            <td class="p-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${a.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
-                    ${a.status}
-                </span>
-            </td>
-            <td class="p-3 flex gap-1 flex-wrap">
-                <button onclick="openMasterEditModal('${a.patientId}')" class="bg-amber-500 text-slate-950 px-2 py-1 rounded text-[10px] font-bold">Edit</button>
-                <button onclick="openLetterhead('${a.id}')" class="bg-red-600/20 text-red-300 border border-red-500/30 px-2 py-1 rounded text-[10px]">Rx</button>
-                <button onclick="sendAppointmentWhatsAppLinks('${a.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px] font-bold">WhatsApp</button>
-                ${(currentSession && (currentSession.role === 'admin' || currentSession.role === 'doctor')) ? `<button onclick="deletePatientRecordATOZ('${a.patientId}')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded text-[10px]">Delete</button>` : ''}
-            </td>
-        </tr>
-    `).join('');
 }
 
 function renderLabOrders() {
